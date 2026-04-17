@@ -3,25 +3,167 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Dashboard extends CI_Controller {
 
-	public function __construct(){
-		parent::__construct();
-		$this->load->model('admin/DashboardModel','dModel');
-		$this->load->library('session');
+    public function __construct(){
+        parent::__construct();
+        $this->load->model('admin/DashboardModel', 'dModel');
+        $this->load->library('session');
+    }
 
-	}
+    // =========================================================================
+    // MAIN DASHBOARD INDEX
+    // =========================================================================
+    public function index()
+    {
+        $data['title'] = 'Dashboard - DCPS Nashik';
 
-	public function index()
-	{
-		$data['title'] = 'Dashboard - DCPS Nashik';
-		
-		// Optional: Fetch actual counts from model
-		// $data['total_employees'] = $this->dModel->get_total_employees();
-		
-		$this->load->view('admin/common/header_new', $data);
-		$this->load->view('admin/dashboard', $data);
-		$this->load->view('admin/common/footer_new');
-	}
-	
-        
+        // --- Summary Counts ---
+        $data['total_records']         = $this->dModel->getTotalRecords();
+        $data['total_employees']       = $this->dModel->getTotalEmployees();
+        $data['total_emp_master']      = $this->dModel->getTotalEmployeesInMaster();
+        $data['duplicate_count']       = $this->dModel->getDuplicateRecordsCount();
+
+        // --- Filter dropdowns ---
+        $data['employee_list'] = $this->dModel->getEmployeeList();
+        $data['year_list']     = $this->dModel->getYearList();
+
+        // --- Missing months (computed in PHP for flexibility) ---
+        $missing = $this->_computeMissingMonths();
+        $data['missing_count']   = $missing['count'];
+        $data['missing_records'] = array_slice($missing['records'], 0, 300); // cap for view
+
+        // --- Chart data ---
+        $data['month_wise_counts'] = $this->dModel->getMonthWiseRecordCount();
+        $data['duplicate_trend']   = $this->dModel->getDuplicateTrend();
+
+        $this->load->view('admin/common/header_new', $data);
+        $this->load->view('admin/dashboard_new', $data);
+        $this->load->view('admin/common/footer_new');
+    }
+
+    // =========================================================================
+    // AJAX: Duplicate Records (DataTable server-side friendly)
+    // =========================================================================
+    public function getDuplicates()
+    {
+        $limit  = (int)($this->input->get('length') ?: 100);
+        $offset = (int)($this->input->get('start')  ?: 0);
+
+        $records = $this->dModel->getDuplicateRecords($limit, $offset);
+        $total   = $this->dModel->getDuplicateRecordsCount();
+
+        echo json_encode([
+            'draw'            => (int)$this->input->get('draw'),
+            'recordsTotal'    => $total,
+            'recordsFiltered' => $total,
+            'data'            => $records,
+        ]);
+    }
+
+    // =========================================================================
+    // AJAX: Missing Months (JSON response)
+    // =========================================================================
+    public function getMissingMonths()
+    {
+        $missing = $this->_computeMissingMonths();
+        echo json_encode([
+            'count'   => $missing['count'],
+            'records' => array_slice($missing['records'], 0, 500),
+        ]);
+    }
+
+    // =========================================================================
+    // HELPER: Compute missing months for every employee
+    // Logic: Find the span of months each employee has records for (min→max in
+    //        financial-year order: Apr=4 ... Mar=3 of next year) and flag gaps.
+    // =========================================================================
+    private function _computeMissingMonths()
+    {
+        $rows        = $this->dModel->getExistingMonthYearByEmp();
+        $employees   = $this->dModel->getEmployeesWithJoiningDate();
+
+        // Build a lookup: emp_td → set of "year-month" strings
+        $empMonths = [];
+        foreach ($rows as $row) {
+            $empMonths[$row['emp_td']][$row['for_year']][$row['for_month']] = true;
+        }
+
+        // Build emp info map
+        $empInfo = [];
+        foreach ($employees as $emp) {
+            $empInfo[$emp['emp_td']] = $emp;
+        }
+
+        // Financial year month order: 4,5,6,7,8,9,10,11,12,1,2,3
+        // For each employee determine the range: earliest financial year → latest
+        $missing  = [];
+        $totalMissing = 0;
+
+        foreach ($empMonths as $empId => $yearData) {
+            $allYears = array_keys($yearData);
+            $minYear  = min($allYears);
+            $maxYear  = max($allYears);
+
+            $empName = isset($empInfo[$empId]) ? $empInfo[$empId]['emp_name'] : "EMP-{$empId}";
+
+            // Iterate every financial year in range
+            for ($fy = $minYear; $fy <= $maxYear; $fy++) {
+                // April–December of $fy
+                for ($m = 4; $m <= 12; $m++) {
+                    if (!isset($yearData[$fy][$m])) {
+                        $missing[] = [
+                            'emp_td'   => $empId,
+                            'emp_name' => $empName,
+                            'for_year' => $fy,
+                            'for_month'=> $m,
+                            'f_year'   => $fy . '-' . ($fy + 1),
+                        ];
+                        $totalMissing++;
+                    }
+                }
+                // Jan–March of ($fy+1)
+                $nextYear = $fy + 1;
+                for ($m = 1; $m <= 3; $m++) {
+                    if (!isset($yearData[$nextYear][$m]) && $nextYear <= $maxYear) {
+                        $missing[] = [
+                            'emp_td'   => $empId,
+                            'emp_name' => $empName,
+                            'for_year' => $nextYear,
+                            'for_month'=> $m,
+                            'f_year'   => $fy . '-' . $nextYear,
+                        ];
+                        $totalMissing++;
+                    }
+                }
+            }
+        }
+
+        return ['count' => $totalMissing, 'records' => $missing];
+    }
+
+    // =========================================================================
+    // AJAX: Ledger Summary (filtered)
+    // =========================================================================
+    public function ledgerSummary()
+    {
+        $filters = [
+            'emp_id'   => $this->input->get_post('emp_id'),
+            'for_year' => $this->input->get_post('for_year'),
+        ];
+        $records = $this->dModel->getLedgerSummary($filters);
+        echo json_encode($records);
+    }
+
+    // =========================================================================
+    // AJAX: Deduction Summary (filtered)
+    // =========================================================================
+    public function deductionSummary()
+    {
+        $filters = [
+            'emp_id'   => $this->input->get_post('emp_id'),
+            'for_year' => $this->input->get_post('for_year'),
+        ];
+        $records = $this->dModel->getDeductionSummary($filters);
+        echo json_encode($records);
+    }
 }
 ?>
