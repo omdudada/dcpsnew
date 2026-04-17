@@ -45,7 +45,7 @@
 									<label for="inputCity">Joining Date</label>
 									<input type="text" name="wef_date" id="wef_date" class="form-control" placeholder="Joining Date" value="<?php echo $editData['joining_date']; ?>">
 							    </div>
-							    <div class="clearfix"></div>
+							    
 							    <div class="form-group col-md-4">
 									<label for="inputCity">Pay Center</label>
 									<input type="text" name="pay_center" id="pay_center" class="form-control" placeholder="Pay Center" value="<?php echo $editData['pay_center']; ?>">
@@ -58,7 +58,7 @@
 									<label for="inputCity">DA</label>
 									<input type="text" name="da" id="da" class="form-control" placeholder="da" value="<?php echo $editData['da']; ?>">
 							    </div>
-							    <div class="clearfix"></div>
+							    
 							    <div class="form-group col-md-4">
 									<label for="inputCity">Grade Pay</label>
 									<input type="text" name="grade_pay" id="grade_pay" class="form-control" placeholder="Grade Pay" value="<?php echo $editData['grade_pay']; ?>">
@@ -71,7 +71,7 @@
 									<label for="inputCity">Ideal Contribution Of NMC For DCPS</label>
 									<input type="text" name="Ideal_contribution_of_NMC_for_DCPS" id="Ideal_contribution_of_NMC_for_DCPS" class="form-control" placeholder="Ideal Contribution Of NMC For DCPS" value="<?php echo $editData['Ideal_contribution_of_NMC_for_DCPS']; ?>"  readonly="readonly">
 							    </div>
-							    <div class="clearfix"></div>
+							    
 							    <div class="form-group col-md-4">
 									<label for="inputCity">Opening Balance</label>
 									<input type="text" name="opening_balance" id="opening_balance" class="form-control" placeholder="Opening Balance" value="<?php echo $editData['opening_balance']; ?>">
@@ -84,7 +84,7 @@
 									<label for="inputCity">File No</label>
 									<input type="text" name="file_no" id="file_no" class="form-control" placeholder="File No" value="<?php echo $editData['file_no']; ?>">
 							    </div>
-							    <div class="clearfix"></div>
+							    
 							    <div class="form-group col-md-4">
 									<label for="inputCity">Recovered DCPS with Voucher No</label>
 									<input type="text" name="recovered_DCPS_with_voucher_no" id="recovered_DCPS_with_voucher_no" class="form-control" placeholder="Recovered DCPS with Voucher No" value="<?php echo $editData['recovered_DCPS_with_voucher_no']; ?>">
@@ -146,7 +146,7 @@
                                 </div>
 
 
-							    <div class="clearfix"></div>
+							    
 							    <div class="form-group col-md-4">
 									<label for="inputCity">Salary Start Date</label>
 									<input type="text" name="salary_start_date" id="salary_start_date" class="form-control" placeholder="Salary Start Date" value="<?php echo $editData['salary_start_date']; ?>">
@@ -189,7 +189,7 @@
 									<label for="inputCity">NMC's DCPS Regular Contribution</label>
 									<input type="text" name="NMC_DCPS_contribution" id="NMC_DCPS_contribution" class="form-control" placeholder="NMC's DCPS Regular Contribution" value="<?php echo $editData['NMC_DCPS_contribution']; ?>" <?php if (!empty($editData['salary_type']) && $editData['salary_type'] === 'Suplimentory') echo 'readonly'; ?> readonly>
 							    </div>
-							    <div class="clearfix"></div>
+							    
 							    <div class="form-group col-md-4">
 									<label for="inputCity">Employee DCPS Supplementary Contribution</label>
 									<input type="text" name="emp_DCPS_supplimentory_contribution" id="emp_DCPS_supplimentory_contribution" class="form-control" placeholder="Employee DCPS Supplementary Contribution" value="<?php echo $editData['emp_DCPS_supplimentory_contribution']; ?>" <?php if (!empty($editData['salary_type']) && $editData['salary_type'] === 'Regular') echo 'readonly'; ?>>
@@ -204,7 +204,7 @@
 									<label for="inputCity">DCPS Loan Taken by an Employee</label>
 									<input type="text" name="DCPS_loan_taken_by_an_employee" id="DCPS_loan_taken_by_an_employee" class="form-control" placeholder="DCPS Loan Taken by an Employee" value="<?php echo $editData['DCPS_loan_taken_by_an_employee']; ?>">
 							    </div>
-							    <div class="clearfix"></div>
+							    
 							    <div class="form-group col-md-4">
 									<label for="inputCity">Loan Installment Paid Through Regular Salary</label>
 									<input type="text" name="loan_installment_paid_through_salary" id="loan_installment_paid_through_salary" class="form-control" placeholder="Loan Installment Paid Through Salary" value="<?php echo $editData['loan_installment_paid_through_salary']; ?>">
@@ -217,7 +217,7 @@
 									<label for="inputCity">Loan Installment Paid Through Supplementary Salary</label>
 									<input type="text" name="supplimentory_loan_installment_paid" id="supplimentory_loan_installment_paid" class="form-control" placeholder="Supplementary Loan Installment Paid" value="<?php echo $editData['supplimentory_loan_installment_paid']; ?>">
 							    </div>
-							    <div class="clearfix"></div>
+							    
 							    <div class="form-group col-md-4">
 									<label for="inputCity">Total Amount Of Loan Installments Paid</label>
 									<input type="text" name="total_amount_of_loan_installments_paid" id="total_amount_of_loan_installments_paid" class="form-control" placeholder="Total Amount Of Loan Installments Paid" value="<?php echo $editData['total_amount_of_loan_installments_paid']; ?>">
@@ -230,7 +230,7 @@
 									<label for="inputCity">To be recovered for voucher No</label>
 									<input type="text" name="to_be_recovered_for_voucher_no" id="to_be_recovered_for_voucher_no" class="form-control" placeholder="To be recovered for voucher No" value="<?php echo $editData['to_be_recovered_for_voucher_no']; ?>">
 							    </div>
-							    <div class="clearfix"></div>
+							    
 							    <div class="form-group col-md-4">
 									<label for="inputCity">To be recovered for voucher Date</label>
 									<input type="text" name="to_be_recovered_for_voucher_date" id="to_be_recovered_for_voucher_date" class="form-control" placeholder="To be recovered for voucher Date" value="<?php echo $editData['to_be_recovered_for_voucher_date']; ?>">

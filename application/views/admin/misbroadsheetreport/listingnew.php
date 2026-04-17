@@ -411,7 +411,7 @@
                                                 <th>कर्मचारी क्रमांक</th>
                                                 <td><?= !empty($ownerDetail['emp_id']) ? $ownerDetail['emp_id'] : ''; ?></td>
                                                 <th>कर्मचारी नाव</th>
-                                                <td colspan="6"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
+                                                <td colspan="7"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी नियुक्ती दिनांक</th>
