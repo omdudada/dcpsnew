@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skin>
+	<stylesheets>
+	<stylesheet>style.css</stylesheet>
+		<stylesheet>ptax-front.css</stylesheet>
+		<stylesheet>thickbox.css</stylesheet>
+	</stylesheets>
+</skin>

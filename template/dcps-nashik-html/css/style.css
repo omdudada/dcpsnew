@@ -1,0 +1,236 @@
+/* DCPS Nashik Municipal Corporation - Custom Styles */
+
+:root {
+    --primary: #003366;
+    --primary-light: #0056b3;
+    --accent: #f90;
+    --sidebar-bg: #2c3e50;
+    --sidebar-hover: #1a252f;
+    --content-bg: #f4f6f9;
+    --white: #fff;
+    --border: #dee2e6;
+    --text-muted: #6c757d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; background: var(--content-bg); color: #333; }
+
+/* === TOP BAR === */
+.top-bar {
+    background: var(--primary);
+    color: #fff;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.top-bar .logo-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.top-bar .logo-circle {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 22px; color: var(--primary);
+}
+.top-bar .org-info h1 { font-size: 18px; font-weight: 700; }
+.top-bar .org-info p { font-size: 12px; opacity: .8; }
+.top-bar .user-menu { display: flex; align-items: center; gap: 10px; }
+.top-bar .user-menu a { color: #fff; text-decoration: none; font-size: 13px; }
+.top-bar .user-menu a:hover { text-decoration: underline; }
+.top-bar .user-menu .user-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px; cursor: pointer;
+}
+
+/* === NAVBAR === */
+.main-nav {
+    background: #1a3a5c;
+    padding: 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+}
+.main-nav a, .main-nav .dropdown > a {
+    display: inline-block;
+    color: #fff;
+    text-decoration: none;
+    padding: 12px 15px;
+    font-size: 13px;
+    transition: background .2s;
+}
+.main-nav a:hover, .main-nav .dropdown > a:hover { background: var(--accent); color: var(--primary); }
+.main-nav .dropdown { position: relative; }
+.main-nav .dropdown-menu {
+    display: none;
+    position: absolute;
+    left: 0; top: 100%;
+    background: #2c3e50;
+    min-width: 220px;
+    border-top: 3px solid var(--accent);
+    z-index: 1000;
+    list-style: none;
+    padding: 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,.3);
+}
+.main-nav .dropdown-menu li a {
+    display: block; padding: 10px 16px;
+    color: #ddd; font-size: 13px;
+}
+.main-nav .dropdown-menu li a:hover { background: var(--accent); color: var(--primary); }
+.main-nav .dropdown:hover .dropdown-menu { display: block; }
+
+/* === LAYOUT === */
+.wrapper { display: flex; min-height: calc(100vh - 120px); }
+.content-wrapper { flex: 1; padding: 20px; background: var(--content-bg); }
+
+/* === BREADCRUMB === */
+.page-header { margin-bottom: 20px; }
+.page-header h1 { font-size: 22px; color: var(--primary); margin-bottom: 4px; }
+.breadcrumb { list-style: none; display: flex; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.breadcrumb li:not(:last-child)::after { content: ' /'; }
+.breadcrumb a { color: var(--primary-light); text-decoration: none; }
+
+/* === BOX CARD === */
+.box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+.box-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to right, #f8f9fa, #fff);
+    border-radius: 6px 6px 0 0;
+}
+.box-header h3 { font-size: 16px; color: var(--primary); margin: 0; }
+.box-body { padding: 18px; }
+
+/* === BUTTONS === */
+.btn { 
+    display: inline-block; padding: 7px 16px; border-radius: 4px; 
+    font-size: 13px; cursor: pointer; border: none; text-decoration: none;
+    transition: all .2s; 
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-success { background: #28a745; color: #fff; }
+.btn-success:hover { background: #218838; }
+.btn-danger { background: #dc3545; color: #fff; }
+.btn-danger:hover { background: #c82333; }
+.btn-warning { background: var(--accent); color: var(--primary); }
+.btn-warning:hover { background: #e68900; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* === FORMS === */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 5px; color: #444; font-size: 13px; }
+.form-control {
+    width: 100%; padding: 8px 12px;
+    border: 1px solid #ccc; border-radius: 4px;
+    font-size: 14px; background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+}
+.form-control:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(0,86,179,.12); }
+select.form-control { appearance: auto; }
+.form-row { display: flex; flex-wrap: wrap; gap: 16px; }
+.form-row .form-group { flex: 1; min-width: 200px; }
+.required::after { content: ' *'; color: red; }
+
+/* === TABLE === */
+.table-responsive { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table thead th { 
+    background: var(--primary); color: #fff; 
+    padding: 10px 12px; text-align: left; 
+    font-weight: 600; border: 1px solid #1a4a7a;
+}
+table tbody td { padding: 9px 12px; border: 1px solid var(--border); }
+table tbody tr:nth-child(even) { background: #f9fafc; }
+table tbody tr:hover { background: #e8f0fe; }
+table tfoot th { background: #e9ecef; color: #333; padding: 9px 12px; border: 1px solid var(--border); }
+
+/* === ALERTS === */
+.alert { padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; }
+.alert-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+.alert-danger { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+.alert-warning { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; }
+.alert-info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+
+/* === DASHBOARD STATS === */
+.stats-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+.stat-card {
+    flex: 1; min-width: 180px; max-width: 240px;
+    background: #fff; border-radius: 8px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    border-left: 4px solid var(--primary);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.stat-card.green { border-left-color: #28a745; }
+.stat-card.orange { border-left-color: var(--accent); }
+.stat-card.red { border-left-color: #dc3545; }
+.stat-card .stat-info h3 { font-size: 28px; font-weight: 700; color: var(--primary); }
+.stat-card.green .stat-info h3 { color: #28a745; }
+.stat-card.orange .stat-info h3 { color: #856404; }
+.stat-card.red .stat-info h3 { color: #dc3545; }
+.stat-card .stat-info p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.stat-card .stat-icon { font-size: 36px; opacity: .2; }
+
+/* === PAGINATION === */
+.pagination { display: flex; gap: 4px; margin-top: 12px; flex-wrap: wrap; }
+.pagination a {
+    display: inline-block; padding: 5px 10px;
+    border: 1px solid var(--border); border-radius: 3px;
+    color: var(--primary); text-decoration: none; font-size: 13px;
+}
+.pagination a.active, .pagination a:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* === MARATHI TABLE headers (Devanagari) === */
+.devanagari { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+
+/* === FOOTER === */
+.main-footer {
+    background: var(--primary);
+    color: #aab;
+    text-align: center;
+    padding: 10px;
+    font-size: 12px;
+    margin-top: auto;
+}
+
+/* === LOGIN PAGE === */
+.login-page { 
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--primary) 0%, #1a5276 100%);
+}
+.login-box {
+    background: #fff; border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.25);
+    padding: 40px 36px; width: 360px; max-width: 95vw;
+}
+.login-box .login-logo { text-align: center; margin-bottom: 28px; }
+.login-box .login-logo h2 { color: var(--primary); font-size: 18px; margin-top: 10px; line-height: 1.4; }
+.login-box .login-logo .circle { 
+    width: 70px; height: 70px; border-radius: 50%;
+    background: var(--primary); color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 30px; font-weight: 700;
+}
+.login-box h3 { font-size: 16px; margin-bottom: 20px; color: #555; text-align: center; }
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .main-nav { display: none; }
+    .form-row { flex-direction: column; }
+    .stats-row { flex-direction: column; }
+    .stat-card { max-width: 100%; }
+}

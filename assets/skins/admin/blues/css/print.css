@@ -1,0 +1,44 @@
+
+@charset "utf-8";
+/* CSS Document */
+@font-face {
+    font-family: 'MAR';
+    src: url('../font/marmith0-webfont.eot');
+    src: url('../font/marmith0-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../font/marmith0-webfont.woff') format('woff'),
+         url('../font/marmith0-webfont.ttf') format('truetype'),
+         url('../font/marmith0-webfont.svg#MARmith0Regular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+body
+{
+	font-family:"Times New Roman", Times, serif !important;
+	font-size:12px !important;
+}
+.marathi
+{
+	font-family:MAR;
+	font-size:14px;
+}
+.eng
+{
+	font-family:"Times New Roman", Times, serif;
+	font-size:12px;
+}
+.borderright td
+{
+	border-right:1px solid  #000;
+}
+.borderbottom td
+{
+	border-bottom:1px solid  #000;
+}
+h3	{
+	color:#900;
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 18px;
+	margin-bottom: 10px;
+	}

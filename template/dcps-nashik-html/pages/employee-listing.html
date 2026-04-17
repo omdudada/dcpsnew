@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Master - DCPS Nashik Municipal Corporation</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo-section">
+        <div class="logo-circle">NMC</div>
+        <div class="org-info">
+            <h1>Nashik Municipal Corporation</h1>
+            <p>DCPS Management System</p>
+        </div>
+    </div>
+    <div class="user-menu">
+        <div class="user-icon">A</div>
+        <span>Welcome, Admin</span>
+        <a href="change-password.html">Change Password</a>
+        <a href="../login.html" style="background:#dc3545;padding:5px 12px;border-radius:4px;">Sign Out</a>
+    </div>
+</div>
+
+<nav class="main-nav">
+    <a href="../dashboard.html">Home</a>
+    <a href="ledger-report.html">Ledger Report</a>
+    <a href="monthly-record.html">Edit Month Wise Deduction Record</a>
+    <a href="pending-records.html">Pending Month &amp; Year Records</a>
+    <a href="deduction-report.html">Deduction Report</a>
+    <a href="deduction-record.html">Edit Employee Wise Deduction Record</a>
+    <a href="add-master.html">Add Master</a>
+    <div class="dropdown">
+        <a href="#">Team Tasks &#9660;</a>
+        <ul class="dropdown-menu">
+            <li><a href="team-tasks.html?team=1">Team 1</a></li>
+            <li><a href="team-tasks.html?team=2">Team 2</a></li>
+            <li><a href="team-tasks.html?team=3">Team 3</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="wrapper">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1>Employee Master</h1>
+            <ul class="breadcrumb">
+                <li><a href="../dashboard.html">Home</a></li>
+                <li>Employee Master</li>
+            </ul>
+        </div>
+
+        <div class="alert alert-success" id="success-alert" style="display:none;">
+            <button class="close" onclick="this.parentElement.remove()">&#215;</button>
+            <strong>Success:</strong> Record updated successfully.
+        </div>
+
+        <div class="box">
+            <div class="box-header">
+                <h3>Employee Master</h3>
+                <a href="add-employee.html" class="btn btn-primary btn-sm">&#43; Add New</a>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table id="empTable">
+                        <thead>
+                            <tr>
+                                <th width="60">Sr. No.</th>
+                                <th>Employee Name</th>
+                                <th>Employee ID</th>
+                                <th>Joining Date</th>
+                                <th>Pay Center</th>
+                                <th width="80">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>Ramesh Kumar Patil</td><td>NMC-001</td><td>15/06/2005</td><td>Nashik City</td><td><a href="edit-employee.html?id=1" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>2</td><td>Sunil Ganesh Jadhav</td><td>NMC-002</td><td>22/09/2005</td><td>Nashik West</td><td><a href="edit-employee.html?id=2" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>3</td><td>Kavita Ashok Shinde</td><td>NMC-003</td><td>01/04/2006</td><td>Nashik East</td><td><a href="edit-employee.html?id=3" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>4</td><td>Prashant Manohar Desai</td><td>NMC-004</td><td>10/07/2006</td><td>Nashik City</td><td><a href="edit-employee.html?id=4" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>5</td><td>Anita Vijay More</td><td>NMC-005</td><td>28/11/2006</td><td>Nashik North</td><td><a href="edit-employee.html?id=5" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>6</td><td>Dinesh Raju Kulkarni</td><td>NMC-006</td><td>05/03/2007</td><td>Nashik South</td><td><a href="edit-employee.html?id=6" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>7</td><td>Seema Prakash Pawar</td><td>NMC-007</td><td>18/08/2007</td><td>Nashik City</td><td><a href="edit-employee.html?id=7" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>8</td><td>Mahesh Baburao Chavan</td><td>NMC-008</td><td>02/01/2008</td><td>Nashik West</td><td><a href="edit-employee.html?id=8" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>9</td><td>Pooja Santosh Gaikwad</td><td>NMC-009</td><td>14/05/2008</td><td>Nashik East</td><td><a href="edit-employee.html?id=9" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>10</td><td>Anil Dattatray Bhosale</td><td>NMC-010</td><td>30/09/2008</td><td>Nashik City</td><td><a href="edit-employee.html?id=10" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-footer">
+    &copy; 2024 Nashik Municipal Corporation. All rights reserved. | DCPS Management System
+</div>
+
+<script src="../js/main.js"></script>
+<script>initTable('empTable');</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Master - DCPS Nashik Municipal Corporation</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo-section">
+        <div class="logo-circle">NMC</div>
+        <div class="org-info">
+            <h1>Nashik Municipal Corporation</h1>
+            <p>DCPS Management System</p>
+        </div>
+    </div>
+    <div class="user-menu">
+        <div class="user-icon">A</div>
+        <span>Welcome, Admin</span>
+        <a href="../login.html" style="background:#dc3545;padding:5px 12px;border-radius:4px;">Sign Out</a>
+    </div>
+</div>
+
+<nav class="main-nav">
+    <a href="../dashboard.html">Home</a>
+    <a href="ledger-report.html">Ledger Report</a>
+    <a href="monthly-record.html">Edit Month Wise Deduction Record</a>
+    <a href="deduction-record.html">Edit Employee Wise Deduction Record</a>
+    <a href="add-master.html" style="background:var(--accent);color:var(--primary);">Add Master</a>
+</nav>
+
+<div class="wrapper">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1>Add DCPS Master Data</h1>
+            <ul class="breadcrumb">
+                <li><a href="../dashboard.html">Home</a></li>
+                <li>Add Master</li>
+            </ul>
+        </div>
+
+        <div class="alert alert-success" id="success-msg" style="display:none;">
+            <strong>Success:</strong> Master data record added successfully.
+        </div>
+
+        <div class="box">
+            <div class="box-header">
+                <h3>Add DCPS Master Record</h3>
+            </div>
+            <div class="box-body">
+                <form action="#" method="post" id="masterForm" onsubmit="return submitMaster(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="required">Employee ID</label>
+                            <input type="text" name="emp_id" id="emp_id" class="form-control" placeholder="Employee ID">
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Month</label>
+                            <select name="month" id="month" class="form-control">
+                                <option value="">Select Month</option>
+                                <option value="1">January</option><option value="2">February</option>
+                                <option value="3">March</option><option value="4">April</option>
+                                <option value="5">May</option><option value="6">June</option>
+                                <option value="7">July</option><option value="8">August</option>
+                                <option value="9">September</option><option value="10">October</option>
+                                <option value="11">November</option><option value="12">December</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Year</label>
+                            <select name="year" id="year" class="form-control">
+                                <option value="">Select Year</option>
+                                <option value="2005">2005-2006</option><option value="2006">2006-2007</option>
+                                <option value="2007">2007-2008</option><option value="2008">2008-2009</option>
+                                <option value="2009">2009-2010</option><option value="2010">2010-2011</option>
+                                <option value="2011">2011-2012</option><option value="2012">2012-2013</option>
+                                <option value="2013">2013-2014</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Employee DCPS Contribution</label>
+                            <input type="number" name="emp_dcps_contribution" class="form-control" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>NMC DCPS Contribution</label>
+                            <input type="number" name="nmc_dcps_contribution" class="form-control" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Contribution</label>
+                            <input type="number" name="total_contribution" class="form-control" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Loan Installment Paid Through Salary</label>
+                            <input type="number" name="loan_installment" class="form-control" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>DCPS Loan Taken by Employee</label>
+                            <input type="number" name="dcps_loan_amount" class="form-control" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Opening Balance</label>
+                            <input type="number" name="opening_balance" class="form-control" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div style="text-align:right;margin-top:10px;">
+                        <button type="submit" class="btn btn-primary">&#128190; Submit</button>
+                        <button type="reset" class="btn btn-danger" style="margin-left:8px;">&#8635; Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Master Data Listing -->
+        <div class="box">
+            <div class="box-header">
+                <h3>Master Data Records</h3>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table id="masterTable">
+                        <thead>
+                            <tr>
+                                <th>Sr.</th>
+                                <th>Employee ID</th>
+                                <th>Month</th>
+                                <th>Year</th>
+                                <th>Emp Contribution</th>
+                                <th>NMC Contribution</th>
+                                <th>Total</th>
+                                <th>Loan Inst.</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>NMC-001</td><td>April</td><td>2010</td><td>1,200</td><td>1,200</td><td>2,400</td><td>500</td><td><a href="#" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>2</td><td>NMC-002</td><td>April</td><td>2010</td><td>1,350</td><td>1,350</td><td>2,700</td><td>0</td><td><a href="#" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                            <tr><td>3</td><td>NMC-003</td><td>May</td><td>2010</td><td>980</td><td>980</td><td>1,960</td><td>300</td><td><a href="#" class="btn btn-warning btn-sm">&#9998; Edit</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-footer">
+    &copy; 2024 Nashik Municipal Corporation. All rights reserved. | DCPS Management System
+</div>
+
+<script src="../js/main.js"></script>
+<script>
+initTable('masterTable');
+function submitMaster(e) {
+    e.preventDefault();
+    var empId = document.getElementById('emp_id').value.trim();
+    var month = document.getElementById('month').value;
+    var year = document.getElementById('year').value;
+    if (!empId || !month || !year) { alert('Please fill all required fields.'); return false; }
+    document.getElementById('success-msg').style.display = 'block';
+    document.getElementById('masterForm').reset();
+}
+</script>
+</body>
+</html>

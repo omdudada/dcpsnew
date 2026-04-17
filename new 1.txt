@@ -1,0 +1,2 @@
+SELECT `emp_td`, `emp_DCPS_contribution`, `emp_DCPS_contribution` as `NMC_DCPS_contribution`, (emp_DCPS_contribution+emp_DCPS_contribution+loan_installment_paid_through_salary) as total_contribution, `loan_installment_paid_through_salary`, `DCPS_loan_taken_by_an_employee`, `for_month`, `for_year` FROM `dpt_master_dcps` where 1  `for_month` = 2 `for_year` = 2006 AND `emp_td` = 5914
+

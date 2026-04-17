@@ -1,0 +1,30 @@
+.left_c {
+	width: 200px;
+	float: left;
+	background-color: #CCCCCC;
+	height: 373px;
+}
+.wel_text {
+	float: right;
+	padding-left: 10px;
+}
+.corner_tbl_content table td {
+	padding:10px;
+	border:1px dotted #B6B6B6;
+}
+.corner_tbl_top, .corner_tbl_top div, .corner_tbl_top div div {
+	height:44px;
+	display:block;
+	padding-left: 5px;
+	width: 520px;
+	float: right;
+}
+.corner_tbl_content {
+	display:block;
+	margin:0;
+	padding:50px;
+	line-height:20px;
+	background:#FAFAFA;
+	border-left:1px solid #E3E3E3;
+	border-right:1px solid #E3E3E3;
+}

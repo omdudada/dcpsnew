@@ -1,0 +1,8 @@
+1. Do not compulsory the pay center.
+2. Total Amounts of all "Amount columns."मूळ वेतन to कर्मचारी अंशदानातील फरक
+3. Pay center & Designation - Copy the pay center / designation where ever missing from next year which having the pay center & designation
+4. Add one more column for वेतन प्रकार - Regular Salary & Supp. Salary
+5. Rename existing वेतन प्रकार column to शेरा
+6. Date format as DD-MM-YYYY for प्रमाणक दिनांक column.
+7. Date format as DD-MM-YYYY for वेतन कालावधी पासून column.
+8. Date format as DD-MM-YYYY for वेतन कालावधी पर्यंत column.

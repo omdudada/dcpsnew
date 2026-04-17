@@ -1,0 +1,25 @@
+DCPS Dev Environment Access
+http://nmcdcps.webcoretech.co.in/cpanel
+User : dcpsnmc
+password : hpp6hlci2aqo
+NP: mvYyGTbSzPfLXzHxMk
+
+DB Info
+DB name:  dcpsnmc_dcpsdb
+DB User : dcpsnmc_dcpsdbus
+DB Userpwd  : 2yXZ5)drcMd;-]{[&a
+
+admin
+http://nmcdcps.webcoretech.co.in/admin/
+user- admin
+pass- 123456
+-----------------------------------------------------------------------------------------
+
+NMC Festival Cpanel
+nmcfest.nmc.gov.in/cpanel/
+User name : nmcfestnmcgov
+Password : ZCGcH9K/Dn@w
+-----------------------------------------------------------------------------------------
+https://nmcdcps.webcoretech.co.in/admin/misreport/broad_sheet_report
+https://nmcdcps.webcoretech.co.in/admin/dcps-deduction-record
+https://nmcdcps.webcoretech.co.in/admin/misreport/broad_sheet_report

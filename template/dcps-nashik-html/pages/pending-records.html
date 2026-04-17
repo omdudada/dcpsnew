@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Records - DCPS Nashik Municipal Corporation</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo-section">
+        <div class="logo-circle">NMC</div>
+        <div class="org-info">
+            <h1>Nashik Municipal Corporation</h1>
+            <p>DCPS Management System</p>
+        </div>
+    </div>
+    <div class="user-menu">
+        <div class="user-icon">A</div>
+        <span>Welcome, Admin</span>
+        <a href="../login.html" style="background:#dc3545;padding:5px 12px;border-radius:4px;">Sign Out</a>
+    </div>
+</div>
+
+<nav class="main-nav">
+    <a href="../dashboard.html">Home</a>
+    <a href="ledger-report.html">Ledger Report</a>
+    <a href="monthly-record.html">Edit Month Wise Deduction Record</a>
+    <a href="pending-records.html" style="background:var(--accent);color:var(--primary);">Pending Month &amp; Year Records</a>
+    <a href="deduction-report.html">Deduction Report</a>
+    <a href="deduction-record.html">Edit Employee Wise Deduction Record</a>
+    <a href="add-master.html">Add Master</a>
+</nav>
+
+<div class="wrapper">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1>Pending Month &amp; Year Records</h1>
+            <ul class="breadcrumb">
+                <li><a href="../dashboard.html">Home</a></li>
+                <li>Pending Records</li>
+            </ul>
+        </div>
+
+        <div class="alert alert-warning">
+            <strong>Note:</strong> The following records are missing deduction entries. Please update these records at the earliest.
+        </div>
+
+        <div class="box">
+            <div class="box-header">
+                <h3>Missing Month &amp; Year Records</h3>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table id="pendingTable">
+                        <thead>
+                            <tr>
+                                <th>Sr. No.</th>
+                                <th>Employee ID</th>
+                                <th>Employee Name</th>
+                                <th>Missing Month</th>
+                                <th>Missing Year</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>NMC-001</td><td>Ramesh Kumar Patil</td><td>March</td><td>2009-2010</td><td><span style="color:#dc3545;font-weight:700;">Pending</span></td><td><a href="edit-monthly-record.html" class="btn btn-warning btn-sm">&#9998; Update</a></td></tr>
+                            <tr><td>2</td><td>NMC-004</td><td>Prashant Manohar Desai</td><td>November</td><td>2010-2011</td><td><span style="color:#dc3545;font-weight:700;">Pending</span></td><td><a href="edit-monthly-record.html" class="btn btn-warning btn-sm">&#9998; Update</a></td></tr>
+                            <tr><td>3</td><td>NMC-007</td><td>Seema Prakash Pawar</td><td>January</td><td>2008-2009</td><td><span style="color:#dc3545;font-weight:700;">Pending</span></td><td><a href="edit-monthly-record.html" class="btn btn-warning btn-sm">&#9998; Update</a></td></tr>
+                            <tr><td>4</td><td>NMC-002</td><td>Sunil Ganesh Jadhav</td><td>August</td><td>2007-2008</td><td><span style="color:#dc3545;font-weight:700;">Pending</span></td><td><a href="edit-monthly-record.html" class="btn btn-warning btn-sm">&#9998; Update</a></td></tr>
+                            <tr><td>5</td><td>NMC-009</td><td>Pooja Santosh Gaikwad</td><td>June</td><td>2011-2012</td><td><span style="color:#dc3545;font-weight:700;">Pending</span></td><td><a href="edit-monthly-record.html" class="btn btn-warning btn-sm">&#9998; Update</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-footer">
+    &copy; 2024 Nashik Municipal Corporation. All rights reserved. | DCPS Management System
+</div>
+
+<script src="../js/main.js"></script>
+<script>initTable('pendingTable');</script>
+</body>
+</html>

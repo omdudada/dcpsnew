@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Tasks - DCPS Nashik Municipal Corporation</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo-section">
+        <div class="logo-circle">NMC</div>
+        <div class="org-info">
+            <h1>Nashik Municipal Corporation</h1>
+            <p>DCPS Management System</p>
+        </div>
+    </div>
+    <div class="user-menu">
+        <div class="user-icon">A</div>
+        <span>Welcome, Admin</span>
+        <a href="../login.html" style="background:#dc3545;padding:5px 12px;border-radius:4px;">Sign Out</a>
+    </div>
+</div>
+
+<nav class="main-nav">
+    <a href="../dashboard.html">Home</a>
+    <a href="ledger-report.html">Ledger Report</a>
+    <a href="monthly-record.html">Edit Month Wise Deduction Record</a>
+    <a href="deduction-record.html">Edit Employee Wise Deduction Record</a>
+    <a href="add-master.html">Add Master</a>
+    <div class="dropdown">
+        <a href="#" style="background:var(--accent);color:var(--primary);">Team Tasks &#9660;</a>
+        <ul class="dropdown-menu">
+            <li><a href="team-tasks.html?team=1">Team 1</a></li>
+            <li><a href="team-tasks.html?team=2">Team 2</a></li>
+            <li><a href="team-tasks.html?team=3">Team 3</a></li>
+            <li><a href="team-tasks.html?team=4">Team 4</a></li>
+            <li><a href="team-tasks.html?team=5">Team 5</a></li>
+            <li><a href="team-tasks.html?team=6">Team 6</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="wrapper">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1 id="teamTitle">Team Tasks</h1>
+            <ul class="breadcrumb">
+                <li><a href="../dashboard.html">Home</a></li>
+                <li>Team Tasks</li>
+            </ul>
+        </div>
+
+        <div class="box">
+            <div class="box-header">
+                <h3 id="teamSubTitle">Team Wise Tasks</h3>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table id="teamTable">
+                        <thead>
+                            <tr>
+                                <th>Sr. No.</th>
+                                <th>Employee ID</th>
+                                <th>Employee Name</th>
+                                <th>Task Description</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-footer">
+    &copy; 2024 Nashik Municipal Corporation. All rights reserved. | DCPS Management System
+</div>
+
+<script src="../js/main.js"></script>
+<script>
+var taskData = [
+    {id:'NMC-001',name:'Ramesh Kumar Patil',task:'Update April 2010 deduction record',status:'Pending',due:'30/04/2024'},
+    {id:'NMC-003',name:'Kavita Ashok Shinde',task:'Verify joining date entry',status:'Completed',due:'15/04/2024'},
+    {id:'NMC-005',name:'Anita Vijay More',task:'Enter missing month record for Jan 2009',status:'In Progress',due:'05/05/2024'},
+    {id:'NMC-007',name:'Seema Prakash Pawar',task:'Correct opening balance for 2011',status:'Pending',due:'10/05/2024'},
+];
+var statusColors = {Pending:'#dc3545', Completed:'#28a745', 'In Progress':'#f90'};
+var params = new URLSearchParams(window.location.search);
+var team = params.get('team') || '1';
+document.getElementById('teamTitle').textContent = 'Team ' + team + ' - Tasks';
+document.getElementById('teamSubTitle').textContent = 'Team ' + team + ' Wise Tasks';
+var tbody = document.getElementById('teamTableBody');
+taskData.forEach(function(row, i) {
+    tbody.innerHTML += '<tr><td>'+(i+1)+'</td><td>'+row.id+'</td><td>'+row.name+'</td><td>'+row.task+'</td><td style="color:'+statusColors[row.status]+';font-weight:600;">'+row.status+'</td><td>'+row.due+'</td></tr>';
+});
+initTable('teamTable');
+</script>
+</body>
+</html>

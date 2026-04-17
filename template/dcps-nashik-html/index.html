@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCPS Nashik Municipal Corporation - Page Index</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .page-index { max-width: 900px; margin: 40px auto; }
+        .page-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .page-card {
+            background: #fff; border: 1px solid var(--border); border-radius: 8px;
+            padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,.08);
+            transition: box-shadow .2s, transform .2s;
+        }
+        .page-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.15); transform: translateY(-2px); }
+        .page-card h4 { color: var(--primary); margin-bottom: 6px; font-size: 15px; }
+        .page-card p { color: #666; font-size: 12px; margin-bottom: 12px; }
+        .page-card a { color: var(--primary-light); text-decoration: none; font-size: 13px; font-weight: 600; }
+        .page-card a:hover { text-decoration: underline; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+        .badge-main { background: #e8f0fe; color: var(--primary); }
+        .badge-form { background: #d4edda; color: #155724; }
+        .badge-report { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body style="background:#f4f6f9;">
+
+<div class="top-bar">
+    <div class="logo-section">
+        <div class="logo-circle">NMC</div>
+        <div class="org-info">
+            <h1>Nashik Municipal Corporation</h1>
+            <p>DCPS Management System - HTML Pages</p>
+        </div>
+    </div>
+</div>
+
+<div style="padding: 30px 20px;">
+    <div class="page-index">
+        <div style="text-align:center;margin-bottom:30px;">
+            <h2 style="color:var(--primary);font-size:24px;">DCPS HTML Pages — Site Map</h2>
+            <p style="color:#666;">All pages extracted from DCPS CodeIgniter project for Nashik Municipal Corporation</p>
+        </div>
+
+        <div class="page-list">
+            <div class="page-card">
+                <span class="badge badge-main">Auth</span>
+                <h4>&#128274; Login Page</h4>
+                <p>Admin panel login with username/password validation</p>
+                <a href="login.html">&#8594; Open Login Page</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-main">Main</span>
+                <h4>&#127968; Dashboard</h4>
+                <p>Admin dashboard with stats overview and quick links</p>
+                <a href="dashboard.html">&#8594; Open Dashboard</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-main">Master</span>
+                <h4>&#128100; Employee Master - Listing</h4>
+                <p>List of all employees with search and edit functionality</p>
+                <a href="pages/employee-listing.html">&#8594; Open Employee List</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-form">Form</span>
+                <h4>&#43; Add Employee</h4>
+                <p>Form to add a new employee with all required details</p>
+                <a href="pages/add-employee.html">&#8594; Open Add Employee</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-main">Records</span>
+                <h4>&#128197; Monthly Record</h4>
+                <p>Search and edit DCPS month-wise deduction records</p>
+                <a href="pages/monthly-record.html">&#8594; Open Monthly Record</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-main">Records</span>
+                <h4>&#128203; Deduction Record</h4>
+                <p>Employee-wise DCPS deduction record search and edit</p>
+                <a href="pages/deduction-record.html">&#8594; Open Deduction Record</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-report">Report</span>
+                <h4>&#128196; Ledger Report</h4>
+                <p>Year-wise DCPS ledger with Marathi column headers and interest calculation</p>
+                <a href="pages/ledger-report.html">&#8594; Open Ledger Report</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-report">Report</span>
+                <h4>&#128202; Deduction Report</h4>
+                <p>Month/Year-wise deduction summary report with export</p>
+                <a href="pages/deduction-report.html">&#8594; Open Deduction Report</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-form">Master</span>
+                <h4>&#9998; Add DCPS Master</h4>
+                <p>Add new DCPS master data records with all fields</p>
+                <a href="pages/add-master.html">&#8594; Open Add Master</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-main">Records</span>
+                <h4>&#9888; Pending Records</h4>
+                <p>List of missing/pending month and year deduction entries</p>
+                <a href="pages/pending-records.html">&#8594; Open Pending Records</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-main">Tasks</span>
+                <h4>&#128101; Team Wise Tasks</h4>
+                <p>View and manage tasks assigned to each team (Team 1-12)</p>
+                <a href="pages/team-tasks.html">&#8594; Open Team Tasks</a>
+            </div>
+
+            <div class="page-card">
+                <span class="badge badge-form">Auth</span>
+                <h4>&#128274; Change Password</h4>
+                <p>Admin password change form with validation</p>
+                <a href="pages/change-password.html">&#8594; Open Change Password</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-footer">
+    &copy; 2024 Nashik Municipal Corporation. All rights reserved. | DCPS Management System
+</div>
+</body>
+</html>

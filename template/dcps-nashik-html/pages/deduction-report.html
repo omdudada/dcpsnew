@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deduction Report - DCPS Nashik Municipal Corporation</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo-section">
+        <div class="logo-circle">NMC</div>
+        <div class="org-info">
+            <h1>Nashik Municipal Corporation</h1>
+            <p>DCPS Management System</p>
+        </div>
+    </div>
+    <div class="user-menu">
+        <div class="user-icon">A</div>
+        <span>Welcome, Admin</span>
+        <a href="../login.html" style="background:#dc3545;padding:5px 12px;border-radius:4px;">Sign Out</a>
+    </div>
+</div>
+
+<nav class="main-nav">
+    <a href="../dashboard.html">Home</a>
+    <a href="ledger-report.html">Ledger Report</a>
+    <a href="monthly-record.html">Edit Month Wise Deduction Record</a>
+    <a href="pending-records.html">Pending Month &amp; Year Records</a>
+    <a href="deduction-report.html" style="background:var(--accent);color:var(--primary);">Deduction Report</a>
+    <a href="deduction-record.html">Edit Employee Wise Deduction Record</a>
+    <a href="add-master.html">Add Master</a>
+</nav>
+
+<div class="wrapper">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1>Deduction Report</h1>
+            <ul class="breadcrumb">
+                <li><a href="../dashboard.html">Home</a></li>
+                <li>MIS Reports</li>
+                <li>Deduction Report</li>
+            </ul>
+        </div>
+
+        <div class="box">
+            <div class="box-header">
+                <h3>Deduction Report</h3>
+            </div>
+            <div class="box-body">
+                <form id="reportForm" onsubmit="return generateReport(event)">
+                    <div class="form-row">
+                        <div class="form-group" style="max-width:200px;">
+                            <label>Month</label>
+                            <select id="for_month" name="for_month" class="form-control">
+                                <option value="">Select Month</option>
+                                <option value="1">January</option><option value="2">February</option>
+                                <option value="3">March</option><option value="4">April</option>
+                                <option value="5">May</option><option value="6">June</option>
+                                <option value="7">July</option><option value="8">August</option>
+                                <option value="9">September</option><option value="10">October</option>
+                                <option value="11">November</option><option value="12">December</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="max-width:200px;">
+                            <label>Year</label>
+                            <select id="year" name="year" class="form-control">
+                                <option value="">Select Year</option>
+                                <option value="2005">2005-2006</option><option value="2006">2006-2007</option>
+                                <option value="2007">2007-2008</option><option value="2008">2008-2009</option>
+                                <option value="2009">2009-2010</option><option value="2010">2010-2011</option>
+                                <option value="2011">2011-2012</option><option value="2012">2012-2013</option>
+                                <option value="2013">2013-2014</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display:flex;align-items:flex-end;">
+                            <button type="submit" class="btn btn-primary">&#128269; Generate Report</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div id="reportResult" style="display:none;margin-top:20px;">
+                    <div style="margin-bottom:12px;display:flex;gap:8px;">
+                        <button class="btn btn-success btn-sm" onclick="window.print()">&#128424; Print</button>
+                        <button class="btn btn-primary btn-sm" onclick="exportCSV()">&#128190; Export CSV</button>
+                    </div>
+                    <h4 style="color:var(--primary);margin-bottom:10px;" id="reportTitle"></h4>
+                    <div class="table-responsive">
+                        <table id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th>Sr. No.</th>
+                                    <th>Employee ID</th>
+                                    <th>Employee Name</th>
+                                    <th>Pay Center</th>
+                                    <th>Employee Contribution</th>
+                                    <th>NMC Contribution</th>
+                                    <th>Total Contribution</th>
+                                    <th>Loan Installment</th>
+                                    <th>DCPS Loan Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportBody"></tbody>
+                            <tfoot>
+                                <tr style="background:#e8f0fe;font-weight:700;">
+                                    <th colspan="4">Grand Total</th>
+                                    <th id="gt-emp"></th>
+                                    <th id="gt-nmc"></th>
+                                    <th id="gt-tot"></th>
+                                    <th id="gt-loan"></th>
+                                    <th id="gt-lamt"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-footer">
+    &copy; 2024 Nashik Municipal Corporation. All rights reserved. | DCPS Management System
+</div>
+
+<script src="../js/main.js"></script>
+<script>
+var months = {1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',7:'July',8:'August',9:'September',10:'October',11:'November',12:'December'};
+var sampleData = [
+    {id:'NMC-001',name:'Ramesh Kumar Patil',pc:'Nashik City',ec:1200,nc:1200,tot:2400,li:500,la:0},
+    {id:'NMC-002',name:'Sunil Ganesh Jadhav',pc:'Nashik West',ec:1350,nc:1350,tot:2700,li:0,la:5000},
+    {id:'NMC-003',name:'Kavita Ashok Shinde',pc:'Nashik East',ec:980,nc:980,tot:1960,li:300,la:0},
+    {id:'NMC-004',name:'Prashant Manohar Desai',pc:'Nashik City',ec:1500,nc:1500,tot:3000,li:700,la:0},
+    {id:'NMC-005',name:'Anita Vijay More',pc:'Nashik North',ec:1100,nc:1100,tot:2200,li:0,la:0},
+    {id:'NMC-006',name:'Dinesh Raju Kulkarni',pc:'Nashik South',ec:1250,nc:1250,tot:2500,li:400,la:0},
+];
+
+function generateReport(e) {
+    e.preventDefault();
+    var m = document.getElementById('for_month').value;
+    var y = document.getElementById('year').value;
+    if (!m || !y) { alert('Please select Month and Year.'); return false; }
+    document.getElementById('reportTitle').textContent = 'Deduction Report: ' + months[m] + ' ' + y + '-' + (parseInt(y)+1);
+
+    var tbody = document.getElementById('reportBody');
+    tbody.innerHTML = '';
+    var te=0,tn=0,tt=0,tl=0,tla=0;
+    sampleData.forEach(function(row, i) {
+        te+=row.ec;tn+=row.nc;tt+=row.tot;tl+=row.li;tla+=row.la;
+        tbody.innerHTML += '<tr><td>'+(i+1)+'</td><td>'+row.id+'</td><td>'+row.name+'</td><td>'+row.pc+'</td><td>'+row.ec+'</td><td>'+row.nc+'</td><td>'+row.tot+'</td><td>'+row.li+'</td><td>'+row.la+'</td></tr>';
+    });
+    document.getElementById('gt-emp').textContent=te;
+    document.getElementById('gt-nmc').textContent=tn;
+    document.getElementById('gt-tot').textContent=tt;
+    document.getElementById('gt-loan').textContent=tl;
+    document.getElementById('gt-lamt').textContent=tla;
+    document.getElementById('reportResult').style.display='block';
+}
+
+function exportCSV() {
+    var rows = [['Sr. No.','Employee ID','Employee Name','Pay Center','Emp Contribution','NMC Contribution','Total','Loan Installment','Loan Amount']];
+    sampleData.forEach(function(r,i){rows.push([i+1,r.id,r.name,r.pc,r.ec,r.nc,r.tot,r.li,r.la]);});
+    var csv = rows.map(r=>r.join(',')).join('\n');
+    var a = document.createElement('a');
+    a.href = 'data:text/csv,' + encodeURIComponent(csv);
+    a.download = 'deduction-report.csv'; a.click();
+}
+</script>
+</body>
+</html>

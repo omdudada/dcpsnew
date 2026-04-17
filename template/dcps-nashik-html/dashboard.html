@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DCPS Nashik Municipal Corporation</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+    <div class="logo-section">
+        <div class="logo-circle">NMC</div>
+        <div class="org-info">
+            <h1>Nashik Municipal Corporation</h1>
+            <p>DCPS (Defined Contribution Pension Scheme) Management System</p>
+        </div>
+    </div>
+    <div class="user-menu">
+        <div class="user-icon">A</div>
+        <span>Welcome, Admin</span>
+        <a href="change-password.html">Change Password</a>
+        <a href="login.html" style="background:#dc3545;padding:5px 12px;border-radius:4px;">Sign Out</a>
+    </div>
+</div>
+
+<!-- NAVIGATION -->
+<nav class="main-nav">
+    <a href="dashboard.html" style="background:var(--accent);color:var(--primary);">Home</a>
+    <a href="pages/ledger-report.html">Ledger Report</a>
+    <a href="pages/monthly-record.html">Edit Month Wise Deduction Record</a>
+    <a href="pages/pending-records.html">Pending Month &amp; Year Records</a>
+    <a href="pages/deduction-report.html">Deduction Report</a>
+    <a href="pages/deduction-record.html">Edit Employee Wise Deduction Record</a>
+    <a href="pages/add-master.html">Add Master</a>
+    <div class="dropdown">
+        <a href="#">Team Tasks &#9660;</a>
+        <ul class="dropdown-menu">
+            <li><a href="pages/team-tasks.html?team=1">Team 1</a></li>
+            <li><a href="pages/team-tasks.html?team=2">Team 2</a></li>
+            <li><a href="pages/team-tasks.html?team=3">Team 3</a></li>
+            <li><a href="pages/team-tasks.html?team=4">Team 4</a></li>
+            <li><a href="pages/team-tasks.html?team=5">Team 5</a></li>
+            <li><a href="pages/team-tasks.html?team=6">Team 6</a></li>
+            <li><a href="pages/team-tasks.html?team=7">Team 7</a></li>
+            <li><a href="pages/team-tasks.html?team=8">Team 8</a></li>
+            <li><a href="pages/team-tasks.html?team=9">Team 9</a></li>
+            <li><a href="pages/team-tasks.html?team=10">Team 10</a></li>
+            <li><a href="pages/team-tasks.html?team=11">Team 11</a></li>
+            <li><a href="pages/team-tasks.html?team=12">Team 12</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- CONTENT -->
+<div class="wrapper">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1>Dashboard</h1>
+            <ul class="breadcrumb">
+                <li><a href="dashboard.html">Home</a></li>
+                <li>Dashboard</li>
+            </ul>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>1,248</h3>
+                    <p>Total Employees</p>
+                </div>
+                <div class="stat-icon">&#128100;</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-info">
+                    <h3>1,192</h3>
+                    <p>Active Records</p>
+                </div>
+                <div class="stat-icon">&#9989;</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-info">
+                    <h3>56</h3>
+                    <p>Pending Month Records</p>
+                </div>
+                <div class="stat-icon">&#9203;</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-info">
+                    <h3>14</h3>
+                    <p>Missing Entries</p>
+                </div>
+                <div class="stat-icon">&#9888;</div>
+            </div>
+        </div>
+
+        <!-- Welcome Banner -->
+        <div class="box">
+            <div class="box-header">
+                <h3>Welcome to DCPS Admin Panel</h3>
+            </div>
+            <div class="box-body" style="text-align:center;padding:40px;">
+                <div style="font-size:60px;margin-bottom:16px;">&#127979;</div>
+                <h2 style="color:var(--primary);margin-bottom:10px;">Nashik Municipal Corporation</h2>
+                <p style="color:#555;font-size:15px;">Defined Contribution Pension Scheme (DCPS) Management System</p>
+                <p style="color:#888;margin-top:8px;font-size:13px;">Manage employee pension records, monthly deductions, ledger reports, and more.</p>
+                <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                    <a href="pages/employee-listing.html" class="btn btn-primary">View Employees</a>
+                    <a href="pages/monthly-record.html" class="btn btn-success">Monthly Records</a>
+                    <a href="pages/ledger-report.html" class="btn btn-warning">Ledger Report</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="box">
+            <div class="box-header">
+                <h3>Quick Links</h3>
+            </div>
+            <div class="box-body">
+                <div style="display:flex;flex-wrap:wrap;gap:12px;">
+                    <a href="pages/employee-listing.html" class="btn btn-primary">&#128100; Employee Master</a>
+                    <a href="pages/add-employee.html" class="btn btn-success">&#43; Add Employee</a>
+                    <a href="pages/monthly-record.html" class="btn btn-primary">&#128197; Monthly Record</a>
+                    <a href="pages/deduction-record.html" class="btn btn-primary">&#128203; Deduction Record</a>
+                    <a href="pages/ledger-report.html" class="btn btn-primary">&#128196; Ledger Report</a>
+                    <a href="pages/deduction-report.html" class="btn btn-primary">&#128202; Deduction Report</a>
+                    <a href="pages/add-master.html" class="btn btn-warning">&#9998; Add Master</a>
+                    <a href="pages/pending-records.html" class="btn btn-danger">&#9888; Pending Records</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<div class="main-footer">
+    &copy; 2024 Nashik Municipal Corporation. All rights reserved. | DCPS Management System
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
