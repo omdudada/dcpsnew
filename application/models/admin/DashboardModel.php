@@ -296,5 +296,42 @@ class DashboardModel extends CI_Model
         $query = $this->db->query($sql);
         return $query ? $query->result_array() : [];
     }
+
+    // =========================================================================
+    // Records for a specific month + year (used by dashboard month-wise table)
+    // =========================================================================
+    public function getRecordsByMonthYear($month, $year) {
+        $sql = "
+            SELECT
+                mst.id,
+                mst.emp_td,
+                COALESCE(em.emp_name, mst.emp_name, 'N/A') AS emp_name,
+                mst.bunch_no,
+                mst.file_no,
+                mst.recovered_DCPS_with_voucher_no,
+                mst.recovered_DCPS_with_voucher_date,
+                mst.pay_center,
+                mst.basic,
+                mst.grade_pay,
+                mst.da,
+                mst.total_salary,
+                mst.salary_start_date,
+                mst.salary_end_date,
+                mst.for_month,
+                mst.for_year,
+                mst.emp_DCPS_contribution,
+                mst.Ideal_contribution_of_employee_for_DCPS,
+                mst.salary_type,
+                mst.remark
+            FROM dpt_master_dcps mst
+            LEFT JOIN dpt_emp_master em ON em.emp_id = mst.emp_td
+            WHERE mst.is_deleted = 0
+              AND mst.for_month = " . (int)$month . "
+              AND mst.for_year  = " . (int)$year . "
+            ORDER BY mst.emp_td ASC
+        ";
+        $query = $this->db->query($sql);
+        return $query ? $query->result_array() : [];
+    }
 }
 ?>

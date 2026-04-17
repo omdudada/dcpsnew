@@ -1,5 +1,5 @@
 <?php
-// Month names (Marathi/English bilingual)
+// Month names
 $monthNames = [
     1=>'January',2=>'February',3=>'March',4=>'April',
     5=>'May',6=>'June',7=>'July',8=>'August',
@@ -111,21 +111,37 @@ $monthNames = [
 }
 .dash-panel-body { padding: 20px 22px; }
 
-/* ---- Charts Grid ---- */
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-    gap: 22px;
-    margin-bottom: 28px;
+/* ---- Month-wise Table ---- */
+.monthwise-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.monthwise-table th {
+    background: var(--dash-blue); color: #fff;
+    padding: 10px 14px; text-align: left; white-space: nowrap;
 }
-.chart-box {
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: var(--card-shadow);
-    padding: 20px 22px;
+.monthwise-table td {
+    padding: 9px 14px; border-bottom: 1px solid #eef0f5;
+    vertical-align: middle;
 }
-.chart-box h3 { font-size: 14px; color: #555; margin-bottom: 14px; font-weight: 600; }
-.chart-canvas { width: 100% !important; }
+.monthwise-table tr:hover td { background: #f0f4ff; }
+.monthwise-table tr:nth-child(even) td { background: #f8f9fc; }
+.monthwise-table tr:nth-child(even):hover td { background: #f0f4ff; }
+
+/* clickable count badge */
+.count-link {
+    display: inline-block;
+    background: #e3eaf5;
+    color: var(--dash-blue);
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+}
+.count-link:hover {
+    background: var(--dash-blue);
+    color: #fff;
+    text-decoration: none;
+}
 
 /* ---- Filters Bar ---- */
 .filter-bar {
@@ -201,6 +217,12 @@ $monthNames = [
     animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* month search filter */
+.monthwise-search {
+    padding: 7px 12px; border: 1px solid #ccc; border-radius: 6px;
+    font-size: 13px; min-width: 220px; margin-bottom: 14px;
+}
 </style>
 
 <!-- =========================================================
@@ -222,7 +244,7 @@ $monthNames = [
         <div class="kpi-card">
             <div class="kpi-icon blue">📋</div>
             <div class="kpi-info">
-                <div class="num" id="kpiTotalRecords"><?php echo number_format($total_records); ?></div>
+                <div class="num"><?php echo number_format($total_records); ?></div>
                 <div class="lbl">Total Records</div>
             </div>
         </div>
@@ -250,23 +272,74 @@ $monthNames = [
         <div class="kpi-card orange">
             <div class="kpi-icon orange">📅</div>
             <div class="kpi-info">
-                <div class="num"><?php echo number_format($missing_count); ?></div>
+                <div class="num" id="kpiMissingCount">—</div>
                 <div class="lbl">Missing Month-Entries</div>
+                <button onclick="loadMissingMonths()" style="margin-top:6px;font-size:11px;padding:4px 10px;border:1px solid #e65100;border-radius:4px;background:#fff;color:#e65100;cursor:pointer;">Calculate</button>
             </div>
         </div>
     </div>
 
-    <!-- ===================== CHARTS ===================== -->
-    <div class="charts-grid">
-        <!-- Month-wise record count -->
-        <div class="chart-box">
-            <h3>📈 Month-wise Record Count</h3>
-            <canvas id="chartMonthWise" class="chart-canvas" height="220"></canvas>
+    <!-- ===================== MONTH-WISE RECORD COUNT TABLE ===================== -->
+    <div class="dash-panel">
+        <div class="dash-panel-header">
+            <h2>📈 Month-wise Record Count</h2>
+            <span style="font-size:12px;color:#888;">Click a count to view &amp; edit records for that month</span>
         </div>
-        <!-- Duplicate trend by year -->
-        <div class="chart-box">
-            <h3>🔁 Duplicate Groups by Year</h3>
-            <canvas id="chartDupTrend" class="chart-canvas" height="220"></canvas>
+        <div class="dash-panel-body">
+            <?php if (!empty($month_wise_counts)): ?>
+            <input type="text" class="monthwise-search" id="monthWiseSearch"
+                   placeholder="🔍  Search month or year..." oninput="filterMonthTable()">
+            <div class="table-scroll">
+                <table class="monthwise-table" id="tblMonthWise">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Month</th>
+                            <th>Year</th>
+                            <th>Financial Year</th>
+                            <th style="text-align:center;">Record Count</th>
+                            <th style="text-align:center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $serial = 1;
+                        foreach ($month_wise_counts as $r):
+                            $mNum  = (int)$r['for_month'];
+                            $yr    = (int)$r['for_year'];
+                            $mName = isset($monthNames[$mNum]) ? $monthNames[$mNum] : $mNum;
+                            // Financial year: Apr-Dec → FY = yr-(yr+1), Jan-Mar → FY = (yr-1)-yr
+                            $fyStart = ($mNum >= 4) ? $yr : ($yr - 1);
+                            $fyLabel = $fyStart . '-' . ($fyStart + 1);
+                            // Link to monthly record listing filtered by month+year
+                            $viewUrl = base_url('admin/monthly-record') . '?for_month=' . $mNum . '&for_year=' . $yr;
+                        ?>
+                        <tr>
+                            <td><?php echo $serial++; ?></td>
+                            <td><strong><?php echo $mName; ?></strong></td>
+                            <td><?php echo $yr; ?></td>
+                            <td><span class="badge badge-blue"><?php echo $fyLabel; ?></span></td>
+                            <td style="text-align:center;">
+                                <a href="<?php echo base_url('admin/dashboard/recordsByMonthYear/' . $mNum . '/' . $yr); ?>"
+                                   class="count-link" target="_blank">
+                                    <?php echo number_format((int)$r['record_count']); ?>
+                                </a>
+                            </td>
+                            <td style="text-align:center;">
+                                <a href="<?php echo base_url('admin/dashboard/recordsByMonthYear/' . $mNum . '/' . $yr); ?>"
+                                   target="_blank"
+                                   style="font-size:12px;color:var(--dash-blue);text-decoration:none;">
+                                    View / Edit →
+                                </a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <div style="text-align:center;color:#888;padding:30px;">No month-wise data available.</div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -290,7 +363,7 @@ $monthNames = [
                 <div class="filter-bar" style="margin-bottom: 12px;">
                     <span style="font-size:13px;color:#888;">
                         Found <strong style="color:#c62828"><?php echo number_format($duplicate_count); ?></strong> duplicate records
-                        across <strong style="color:#c62828"><?php echo $this->dModel->getDuplicateCount(); ?></strong> duplicate groups.
+                        across <strong style="color:#c62828"><?php echo number_format($duplicate_groups); ?></strong> duplicate groups.
                         Records sharing the same Voucher No, Date, Basic, Grade Pay, DA, Total Salary and Ideal Contribution are flagged.
                     </span>
                     <button class="btn-filter" style="margin-left:auto" onclick="loadDuplicates()">Load Records</button>
@@ -325,21 +398,20 @@ $monthNames = [
 
             <!-- ===== TAB: MISSING MONTHS ===== -->
             <div id="tabMissing" class="tab-pane">
-                <div style="margin-bottom:12px;">
-                    <span style="font-size:13px;color:#888;">
-                        Total <strong style="color:#e65100"><?php echo number_format($missing_count); ?></strong> missing month-year entries.
+                <div class="filter-bar" style="margin-bottom:14px;align-items:center;">
+                    <span style="font-size:13px;color:#888;flex:1;">
+                        Total <strong style="color:#e65100" id="missingTotalCount">—</strong> missing month-year entries.
                         Logic: For each employee, all months between their earliest and latest recorded year are checked; gaps are flagged.
                     </span>
+                    <button class="btn-filter" onclick="loadMissingMonths()">📅 Load Missing Months</button>
                 </div>
-
-                <!-- Search inside missing -->
                 <div class="filter-bar">
                     <div class="fg">
                         <label>Search Employee</label>
                         <input type="text" id="missingSearch" placeholder="Emp ID or Name..." oninput="filterMissingTable()">
                     </div>
                 </div>
-
+                <div id="missingSpinner" style="display:none;" class="spinner-wrap"><div class="spinner"></div></div>
                 <div class="table-scroll">
                     <table class="dash-table" id="tblMissing">
                         <thead>
@@ -354,33 +426,9 @@ $monthNames = [
                             </tr>
                         </thead>
                         <tbody id="bodyMissing">
-                        <?php if (empty($missing_records)): ?>
-                            <tr><td colspan="7" style="text-align:center;color:green;padding:30px;">✅ No missing months detected!</td></tr>
-                        <?php else:
-                            $monthNames = [1=>'January',2=>'February',3=>'March',4=>'April',
-                                           5=>'May',6=>'June',7=>'July',8=>'August',
-                                           9=>'September',10=>'October',11=>'November',12=>'December'];
-                            foreach ($missing_records as $i => $row): ?>
-                            <tr>
-                                <td><?php echo $i+1; ?></td>
-                                <td><strong><?php echo htmlspecialchars($row['emp_td']); ?></strong></td>
-                                <td><?php echo htmlspecialchars($row['emp_name']); ?></td>
-                                <td><?php echo $monthNames[$row['for_month']] ?? $row['for_month']; ?></td>
-                                <td><?php echo $row['for_year']; ?></td>
-                                <td><span class="badge badge-orange"><?php echo $row['f_year']; ?></span></td>
-                                <td>
-                                    <a href="<?php echo base_url('admin/add-edit-master-record?emp_id='.$row['emp_td'].'&month='.$row['for_month'].'&year='.$row['for_year']); ?>"
-                                       style="color:var(--dash-blue);font-size:12px;text-decoration:none;" target="_blank">+ Add Record</a>
-                                </td>
-                            </tr>
-                            <?php endforeach; endif; ?>
+                            <tr><td colspan="7" style="text-align:center;color:#888;padding:30px;">Click "Load Missing Months" to calculate gaps.</td></tr>
                         </tbody>
                     </table>
-                    <?php if (count($missing_records) >= 300): ?>
-                    <p style="text-align:center;color:#888;font-size:12px;margin-top:10px;">
-                        Showing first 300 records. Total: <?php echo number_format($missing_count); ?>
-                    </p>
-                    <?php endif; ?>
                 </div>
             </div>
 
@@ -487,84 +535,16 @@ $monthNames = [
 
 </div><!-- /.dash-page -->
 
-<!-- =========================================================
-     CHART.JS (CDN)
-========================================================== -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // ================================================================
-// CHART DATA FROM PHP
+// MONTH TABLE SEARCH FILTER
 // ================================================================
-const monthWiseData = <?php
-    $labels  = [];
-    $counts  = [];
-    foreach ($month_wise_counts as $r) {
-        $mName = $monthNames[$r['for_month']] ?? $r['for_month'];
-        $labels[] = $mName . ' ' . $r['for_year'];
-        $counts[] = (int)$r['record_count'];
-    }
-    echo json_encode(['labels' => $labels, 'counts' => $counts]);
-?>;
-
-const dupTrendData = <?php
-    $dtLabels = [];
-    $dtCounts = [];
-    foreach ($duplicate_trend as $r) {
-        $dtLabels[] = $r['for_year'];
-        $dtCounts[] = (int)$r['dup_groups'];
-    }
-    echo json_encode(['labels' => $dtLabels, 'counts' => $dtCounts]);
-?>;
-
-// ---- Month-wise Chart ----
-new Chart(document.getElementById('chartMonthWise'), {
-    type: 'bar',
-    data: {
-        labels: monthWiseData.labels,
-        datasets: [{
-            label: 'Records',
-            data: monthWiseData.counts,
-            backgroundColor: 'rgba(0,51,102,.65)',
-            borderColor: '#003366',
-            borderWidth: 1,
-            borderRadius: 4,
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-            x: { ticks: { font: { size: 10 }, maxRotation: 60 } },
-            y: { beginAtZero: true, ticks: { font: { size: 11 } } }
-        }
-    }
-});
-
-// ---- Duplicate Trend Chart ----
-new Chart(document.getElementById('chartDupTrend'), {
-    type: 'line',
-    data: {
-        labels: dupTrendData.labels,
-        datasets: [{
-            label: 'Dup Groups',
-            data: dupTrendData.counts,
-            backgroundColor: 'rgba(198,40,40,.15)',
-            borderColor: '#c62828',
-            borderWidth: 2,
-            pointBackgroundColor: '#c62828',
-            fill: true,
-            tension: 0.4,
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-            x: { ticks: { font: { size: 11 } } },
-            y: { beginAtZero: true, ticks: { font: { size: 11 } } }
-        }
-    }
-});
+function filterMonthTable() {
+    const val = document.getElementById('monthWiseSearch').value.toLowerCase();
+    document.querySelectorAll('#tblMonthWise tbody tr').forEach(tr => {
+        tr.style.display = tr.innerText.toLowerCase().includes(val) ? '' : 'none';
+    });
+}
 
 // ================================================================
 // TAB SWITCHING
@@ -618,6 +598,62 @@ function loadDuplicates() {
         })
         .catch(() => {
             tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:red;padding:20px;">Error loading data.</td></tr>';
+        });
+}
+
+// ================================================================
+// LOAD MISSING MONTHS (AJAX — triggered on demand)
+// ================================================================
+function loadMissingMonths() {
+    const spinner = document.getElementById('missingSpinner');
+    const tbody   = document.getElementById('bodyMissing');
+    const kpi     = document.getElementById('kpiMissingCount');
+    const counter = document.getElementById('missingTotalCount');
+    const addUrl  = '<?php echo base_url("admin/add-edit-master-record"); ?>';
+
+    spinner.style.display = 'flex';
+    tbody.innerHTML = '';
+
+    const monthMap = {1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',
+                      7:'July',8:'August',9:'September',10:'October',11:'November',12:'December'};
+
+    fetch('<?php echo base_url("admin/dashboard/getMissingMonths"); ?>')
+        .then(r => r.json())
+        .then(resp => {
+            spinner.style.display = 'none';
+            const total = resp.count;
+            kpi.textContent     = total.toLocaleString();
+            counter.textContent = total.toLocaleString();
+
+            const rows = resp.records || [];
+            if (rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:green;padding:30px;">✅ No missing months detected!</td></tr>';
+                return;
+            }
+            let html = '';
+            rows.forEach((r, i) => {
+                const fy = r.f_year;
+                const mn = monthMap[r.for_month] || r.for_month;
+                html += `<tr>
+                    <td>${i+1}</td>
+                    <td><b>${r.emp_td}</b></td>
+                    <td>${r.emp_name}</td>
+                    <td>${mn}</td>
+                    <td>${r.for_year}</td>
+                    <td><span class="badge badge-orange">${fy}</span></td>
+                    <td><a href="${addUrl}?emp_id=${r.emp_td}&month=${r.for_month}&year=${r.for_year}"
+                           style="color:var(--dash-blue);font-size:12px;text-decoration:none;" target="_blank">+ Add Record</a></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            if (total > 500) {
+                tbody.innerHTML += `<tr><td colspan="7" style="text-align:center;color:#888;font-size:12px;padding:8px;">
+                    Showing first 500. Total missing: ${total.toLocaleString()}</td></tr>`;
+            }
+        })
+        .catch(() => {
+            spinner.style.display = 'none';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;padding:20px;">Error loading missing months data.</td></tr>';
         });
 }
 

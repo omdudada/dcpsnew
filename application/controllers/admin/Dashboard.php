@@ -21,19 +21,22 @@ class Dashboard extends CI_Controller {
         $data['total_employees']       = $this->dModel->getTotalEmployees();
         $data['total_emp_master']      = $this->dModel->getTotalEmployeesInMaster();
         $data['duplicate_count']       = $this->dModel->getDuplicateRecordsCount();
+        $data['duplicate_groups']      = $this->dModel->getDuplicateCount();
 
         // --- Filter dropdowns ---
         $data['employee_list'] = $this->dModel->getEmployeeList();
         $data['year_list']     = $this->dModel->getYearList();
 
-        // --- Missing months (computed in PHP for flexibility) ---
-        $missing = $this->_computeMissingMonths();
-        $data['missing_count']   = $missing['count'];
-        $data['missing_records'] = array_slice($missing['records'], 0, 300); // cap for view
+        // --- Missing months: computed via AJAX to avoid page-load timeout ---
+        // Count only — much lighter than computing all records
+        $data['missing_count']   = 0; // loaded via AJAX button in the view
+        $data['missing_records'] = [];
 
         // --- Chart data ---
-        $data['month_wise_counts'] = $this->dModel->getMonthWiseRecordCount();
-        $data['duplicate_trend']   = $this->dModel->getDuplicateTrend();
+        $monthWise = $this->dModel->getMonthWiseRecordCount();
+        $data['month_wise_counts'] = is_array($monthWise) ? $monthWise : [];
+        $dupTrend = $this->dModel->getDuplicateTrend();
+        $data['duplicate_trend']   = is_array($dupTrend) ? $dupTrend : [];
 
         $this->load->view('admin/common/header_new', $data);
         $this->load->view('admin/dashboard_new', $data);
@@ -164,6 +167,30 @@ class Dashboard extends CI_Controller {
         ];
         $records = $this->dModel->getDeductionSummary($filters);
         echo json_encode($records);
+    }
+
+    // =========================================================================
+    // PAGE: Records By Month & Year (linked from month-wise count table)
+    // Opens full record listing for a given month+year — same layout as
+    // admin/monthlyrecord/missing_month_year_listing so user can Edit records.
+    // =========================================================================
+    public function recordsByMonthYear($month = 0, $year = 0)
+    {
+        $month = (int)$month;
+        $year  = (int)$year;
+
+        if ($month < 1 || $month > 12 || $year < 1900) {
+            show_404();
+        }
+
+        $data['records']    = $this->dModel->getRecordsByMonthYear($month, $year);
+        $data['for_month']  = $month;
+        $data['for_year']   = $year;
+        $data['title']      = 'Records — ' . date('F', mktime(0,0,0,$month,1)) . ' ' . $year;
+
+        $this->load->view('admin/common/header_new', $data);
+        $this->load->view('admin/dashboard_records_by_month', $data);
+        $this->load->view('admin/common/footer_new');
     }
 }
 ?>
