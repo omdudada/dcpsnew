@@ -21,17 +21,19 @@ class Masterdata extends CI_Controller {
 		
 		$data['month'] = $this->mModel->getMonthData();
 		$data['year'] = $this->mModel->getYearData();
-		$this->load->view('admin/common/header');
+		$data['title'] = 'Master Data Listing';
+		$this->load->view('admin/common/header_new', $data);
 		$this->load->view('admin/masterdata/listing',$data);
-		
+		$this->load->view('admin/common/footer_new');
 	}
 	
 
 	public function empMaster(){
 		$data['results'] = $this->mModel->getEmpMasterData();
-		$this->load->view('admin/common/header');
+		$data['title'] = 'Employee Master';
+		$this->load->view('admin/common/header_new', $data);
 		$this->load->view('admin/employeemaster/listing',$data);
-		
+		$this->load->view('admin/common/footer_new');
 	}
 	public function addEmp(){
 		
@@ -46,8 +48,10 @@ class Masterdata extends CI_Controller {
 				redirect('admin/emp-master');	
 			}
 		}else{
-			$this->load->view('admin/common/header');
+			$data['title'] = 'Add Employee';
+			$this->load->view('admin/common/header_new', $data);
 			$this->load->view('admin/employeemaster/add_employee_form');
+			$this->load->view('admin/common/footer_new');
 		}
 	}
 	public function editEmp($id){
@@ -66,9 +70,20 @@ class Masterdata extends CI_Controller {
 			
 			$data['results'] = $this->mModel->getEmployeeDataForEdit($id);
 			// echo "<pre>";print_r($res);die();
-			$this->load->view('admin/common/header');
+			$this->load->view('admin/common/header_new');
 			$this->load->view('admin/employeemaster/edit_employee_form',$data);
+			$this->load->view('admin/common/footer_new');
 		}
+	}
+
+	public function deleteEmp($id){
+		$res = $this->mModel->deleteEmpData($id);
+		if ($res == 1) {
+			$this->session->set_flashdata('success', "Employee Details Deleted successfully.");
+		} else {
+			$this->session->set_flashdata('error', "Failed to delete employee details.");
+		}
+		redirect('admin/emp-master');
 	}
 
 	
@@ -154,9 +169,10 @@ class Masterdata extends CI_Controller {
 
 	public function calOpeningBal()
 	{
-		$this->load->view('admin/common/header');
-		$this->load->view('admin/openingbal/listing',$data);
-		
+		$data['title'] = 'Calculate Opening Balance';
+		$this->load->view('admin/common/header_new', $data);
+		$this->load->view('admin/openingbal/listing', $data);
+		$this->load->view('admin/common/footer_new');
 	}
 
 	

@@ -133,6 +133,24 @@ class MasterdModel extends CI_Model
 		}
 	}
 
+	public function deleteEmpData($id){
+		if($id){
+            // Using soft delete if column exists, otherwise hard delete
+            // For now, let's try soft delete by setting is_deleted=1
+            // Check if column exists first or just try update
+            $this->db->where('id', $id);
+            $this->db->update('emp_master', array('is_deleted' => 1));
+            if($this->db->affected_rows() > 0){
+                return 1;
+            }
+            // If update failed (maybe no is_deleted column), try hard delete
+            $this->db->where('id', $id);
+            $this->db->delete('emp_master');
+            return ($this->db->affected_rows() > 0) ? 1 : 0;
+		}
+        return 0;
+	}
+
 	public function getDeductionRecord($id,$year){
 		// echo "<pre>";print($id);
 		// echo "<pre>";print($year);die();

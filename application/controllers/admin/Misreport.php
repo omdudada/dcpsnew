@@ -145,12 +145,11 @@ class Misreport extends CI_Controller{
 	    }
 	    $data['paycenterData'] = $this->mrModel->getPayCenterData();
 	    $data['employeeData'] = $this->mrModel->getMasterData();
-	    
-    	//echo "<pre>"; print_r($data); exit;
+	    $data['title'] = 'Ledger Report';
 	
-	
-	    $this->load->view('admin/common/header');
+	    $this->load->view('admin/common/header_new', $data);
 	    $this->load->view('admin/misbroadsheetreport/listingnew',$data);
+	    $this->load->view('admin/common/footer_new');
 	}
 	
 	public function deduction_report()
@@ -248,20 +247,11 @@ class Misreport extends CI_Controller{
 	    }
 	    $data['paycenterData'] = $this->mrModel->getPayCenterData();
 	    $data['employeeData'] = $this->mrModel->gerMasterDetails();
-	    
-    	//echo "<pre>"; print_r($data); exit;
+	    $data['title'] = 'Deduction Report';
 	
-	
-	    $this->load->view('admin/common/header');
-	    /*if(isset($urlAry['option']) && $urlAry['option'] == "print"){
-	        //echo "<pre>"; print_r($data); exit;
-	        
-	        $this->load->view('admin/misbroadsheetreport/print_deduction_report',$data);
-	    }
-	    else{
-	        $this->load->view('admin/misbroadsheetreport/deduction_report',$data);
-	    }*/
+	    $this->load->view('admin/common/header_new', $data);
 	    $this->load->view('admin/misbroadsheetreport/deduction_report',$data);
+	    $this->load->view('admin/common/footer_new');
 	}
 	
 	public function get_employee_details(){
@@ -309,8 +299,10 @@ class Misreport extends CI_Controller{
     	//echo "<pre>"; print_r($data); exit;
 	
 	
-	    $this->load->view('admin/common/header');
+	    $data['title'] = 'Broad Sheet Report';
+	    $this->load->view('admin/common/header_new', $data);
 	    $this->load->view('admin/misbroadsheetreport/broad_sheet',$data);
+	    $this->load->view('admin/common/footer_new');
 	}
 	
 	

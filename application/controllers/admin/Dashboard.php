@@ -12,9 +12,14 @@ class Dashboard extends CI_Controller {
 
 	public function index()
 	{
-		$this->load->view('admin/common/header');
-		$this->load->view('admin/dashboard');
+		$data['title'] = 'Dashboard - DCPS Nashik';
 		
+		// Optional: Fetch actual counts from model
+		// $data['total_employees'] = $this->dModel->get_total_employees();
+		
+		$this->load->view('admin/common/header_new', $data);
+		$this->load->view('admin/dashboard', $data);
+		$this->load->view('admin/common/footer_new');
 	}
 	
         

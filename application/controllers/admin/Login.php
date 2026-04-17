@@ -90,10 +90,10 @@ class Login extends CI_Controller {
 	}
 
 	public function loginadmin(){
-		
-		$this->load->view('admin/common/header');
+		$data['title'] = 'Dashboard';
+		$this->load->view('admin/common/header_new', $data);
 		$this->load->view('admin/dashboard');
-		$this->load->view('admin/common/footer');
+		$this->load->view('admin/common/footer_new');
 		//echo 'hi';
 
     }
@@ -116,14 +116,18 @@ class Login extends CI_Controller {
 		        $aftrow = $this->db->affected_rows();
 				if($aftrow){
 					 $data['update_msg'] = 'Password changed Successfully';
-					 $this->load->view('admin/common/header');
+					 $data['title'] = 'Change Password';
+					 $this->load->view('admin/common/header_new', $data);
 					 $this->load->view('admin/changepassword',$data);
+					 $this->load->view('admin/common/footer_new');
 				}
 			}else{
 				// echo "failed";die();
 				$data['update_msg'] = 'Password Not Updated, Please Check!!!';
-				$this->load->view('admin/common/header');
+				$data['title'] = 'Change Password';
+				$this->load->view('admin/common/header_new', $data);
 				$this->load->view('admin/changepassword',$data);
+				$this->load->view('admin/common/footer_new');
 			}
 			//$result = $this->LoginModel->changepassword($postData,$user_id);
 		} else {
@@ -131,8 +135,10 @@ class Login extends CI_Controller {
 			if (!$session_data) {
 				redirect('admin/login');
 			}
-			$this->load->view('admin/common/header');
+			$data['title'] = 'Change Password';
+			$this->load->view('admin/common/header_new', $data);
 			$this->load->view('admin/changepassword');
+			$this->load->view('admin/common/footer_new');
 		}
 	}
 }
