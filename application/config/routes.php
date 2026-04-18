@@ -94,11 +94,12 @@ $route['admin/team-wise-tasks'] = 'admin/report/teamwisetasks';
 $route['admin/team-wise-tasks/team/(:num)'] = 'admin/report/teamwisetasks/$1';
 
 // Dashboard module routes
-$route['admin/dashboard']                       = 'admin/dashboard/index';
-$route['admin/dashboard/getDuplicates']         = 'admin/dashboard/getDuplicates';
-$route['admin/dashboard/getMissingMonths']      = 'admin/dashboard/getMissingMonths';
-$route['admin/dashboard/ledgerSummary']         = 'admin/dashboard/ledgerSummary';
-$route['admin/dashboard/deductionSummary']      = 'admin/dashboard/deductionSummary';
+$route['admin/dashboard']                                       = 'admin/dashboard/index';
+$route['admin/dashboard/getDuplicates']                         = 'admin/dashboard/getDuplicates';
+$route['admin/dashboard/getMissingMonths']                      = 'admin/dashboard/getMissingMonths';
+$route['admin/dashboard/ledgerSummary']                         = 'admin/dashboard/ledgerSummary';
+$route['admin/dashboard/deductionSummary']                      = 'admin/dashboard/deductionSummary';
+$route['admin/dashboard/recordsByMonthYear/(:num)/(:num)']      = 'admin/dashboard/recordsByMonthYear/$1/$2';
 
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
