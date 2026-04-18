@@ -269,14 +269,14 @@ $monthNames = [
                 <div class="lbl">Duplicate Records</div>
             </div>
         </div>
-        <div class="kpi-card orange">
+        <?/*<div class="kpi-card orange">
             <div class="kpi-icon orange">📅</div>
             <div class="kpi-info">
                 <div class="num" id="kpiMissingCount">—</div>
                 <div class="lbl">Missing Month-Entries</div>
                 <button onclick="loadMissingMonths()" style="margin-top:6px;font-size:11px;padding:4px 10px;border:1px solid #e65100;border-radius:4px;background:#fff;color:#e65100;cursor:pointer;">Calculate</button>
             </div>
-        </div>
+        </div>*/ ?>
     </div>
 
     <!-- ===================== MONTH-WISE RECORD COUNT TABLE ===================== -->

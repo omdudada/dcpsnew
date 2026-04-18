@@ -182,10 +182,11 @@ class Dashboard extends CI_Controller
         $year = (int) $year;
 
         if ($month < 1 || $month > 12 || $year < 1900) {
-            show_404();
+            //show_404();
         }
 
         $data['records'] = $this->dModel->getRecordsByMonthYear($month, $year);
+        //echo "<pre>"; print_r($data); exit;
         $data['for_month'] = $month;
         $data['for_year'] = $year;
         $data['title'] = 'Records — ' . date('F', mktime(0, 0, 0, $month, 1)) . ' ' . $year;

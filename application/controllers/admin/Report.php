@@ -235,48 +235,50 @@ class Report extends CI_Controller{
 		
 		for($y = $startYear; $y <= $endYear; $y++){
 
-			// DB year logic
-			$checkYear = ($month >= 4) ? $y : ($y + 1);
-
-			// get all employees who DON'T have entry for this month/year
-			$employees = $this->rModel->getEmployeesMissingForMonthYear($month, $checkYear);
-
-			$eligibleEmployees = [];
-
-			// Extra safety filter: only include employees who joined on/before this month/year
-			// (Model already does this, but keep here to be robust against data-format issues)
-			foreach ($employees as $emp) {
-				if (empty($emp['joining_date'])) {
-					// if joining_date missing, include (can't prove ineligible)
-					$eligibleEmployees[] = $emp;
-					continue;
-				}
-
-				// joining_date format in db dump: dd.mm.yyyy
-				$joinDate = DateTime::createFromFormat('d.m.Y', trim($emp['joining_date']));
-				if (!$joinDate) {
-					// unknown format -> include to avoid false negatives
-					$eligibleEmployees[] = $emp;
-					continue;
-				}
-
-				$joinYear  = (int)$joinDate->format('Y');
-				$joinMonth = (int)$joinDate->format('n');
-
-				if ($joinYear < $checkYear || ($joinYear == $checkYear && $joinMonth <= $month)) {
-					$eligibleEmployees[] = $emp;
-				}
-			}
-
-			if (!empty($eligibleEmployees)) {
-				$missing[] = [
-					'financial_year' => $y . '-' . ($y + 1),
-					'for_year'       => $checkYear,
-					'month_name'     => isset($monthNames[$month]) ? $monthNames[$month] : '',
-					'employees'      => $eligibleEmployees
-				];
-			}
-		}
+            // DB year logic
+            $checkYear = ($month >= 4) ? $y : ($y + 1);
+        
+            // get all employees who DON'T have entry for this month/year
+            $employees = $this->rModel->getEmployeesMissingForMonthYear($month, $checkYear);
+            //echo "<pre>"; print_r($employees); exit;
+        
+            $eligibleEmployees = [];
+            $eligibleEmployees = $employees;
+        
+            /*foreach ($employees as $emp) {
+        
+                if (empty($emp['joining_date'])) {
+                    continue;
+                }
+        
+                // joining_date format: dd.mm.yyyy
+                $joinDate = DateTime::createFromFormat('d.m.Y', $emp['joining_date']);
+                if (!$joinDate) {
+                    continue;
+                }
+        
+                $joinYear  = (int)$joinDate->format('Y');
+                $joinMonth = (int)$joinDate->format('n');
+        
+                // check eligibility
+                if (
+                    $joinYear < $checkYear ||
+                    ($joinYear == $checkYear && $joinMonth <= $month)
+                ) {
+                    //$eligibleEmployees[] = $emp;
+                }
+            }*/
+        
+            // add only if eligible employees exist
+            if (!empty($eligibleEmployees)) {
+                $missing[] = [
+                    'financial_year' => $y . '-' . ($y + 1),
+                    'for_year'       => $checkYear,
+                    'month_name'     => $monthNames[$month],
+                    'employees'      => $eligibleEmployees
+                ];
+            }
+        }
 
 		$data = [];
 		$data['team'] = $team;

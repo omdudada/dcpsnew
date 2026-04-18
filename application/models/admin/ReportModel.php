@@ -136,9 +136,9 @@ class ReportModel extends CI_Model
 // 			$this->db->join('month as m','m.id = md.for_month');
 // 			$this->db->join('for_year as y','y.id = md.for_year');
 			
-			// NOTE: ensure is_deleted applies to BOTH years (operator precedence fix)
-			$this->db->where("((md.for_year = {$year}) OR (md.for_year = {$nxtYear}))");
-			$this->db->where('md.is_deleted', 0);
+// 			$where = 'md.for_year = '.$year.' OR md.for_year='.$nxtYear;
+            $where = 'md.for_year = '.$nxtYear.' OR md.for_year='.$year .'AND md.is_deleted = 0';    
+			$this->db->where($where);
 			// $this->db->where('for_year',$year);
 			// $this->db->where('for_year',$nxtYear);
 			// $this->db->order_by('m.id','asc');
@@ -168,6 +168,7 @@ class ReportModel extends CI_Model
 		// $this->db->where('md.for_month',$lastMonth);
 		// $this->db->order_by('m.id','asc');
 		$query = $this->db->get();
+		print_r($this->db->last_query());die();
 		if ($query) {
 			return $query->result_array();
 		}
@@ -200,6 +201,7 @@ class ReportModel extends CI_Model
 		$this->db->order_by('m.id','asc');
 		// $this->db->limit(10);
 		$query = $this->db->get();
+		echo $this->db->last_query();exit;
 		if ($query) {
 			return $query->result_array();
 		}
@@ -628,6 +630,7 @@ class ReportModel extends CI_Model
 		// $this->db->order_by('m.id','asc');
 		$query = $this->db->get();
 		// print_r($this->db->last_query());die();
+		echo $this->db->last_query(); exit;
 		if ($query) {
 			return $query->result_array();
 		}
@@ -736,9 +739,10 @@ class ReportModel extends CI_Model
             ->get();
     
         if ($query === false) {
-			log_message('error', 'getAllEmployees query failed: '.print_r($this->db->error(), true));
-            return [];
+            echo $this->db->last_query();
+            echo '<pre>'; print_r($this->db->error()); exit;
         }
+    
         return $query->result_array();
     }
 

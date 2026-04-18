@@ -168,7 +168,6 @@ class MisreportModel extends CI_Model
                         em.emp_name, 
                         em.joining_date, 
                         mst.pay_center, 
-                        em.fixed_pay,
                         SUM(mst.`Ideal_contribution_of_employee_for_DCPS`) AS ideal_contribution, 
                         SUM(mst.`emp_DCPS_contribution`) AS emp_DCPS_contribution, 
                         SUM(mst.emp_DCPS_supplimentory_contribution) AS emp_DCPS_supplimentory_contribution, 

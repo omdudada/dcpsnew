@@ -1,79 +1,89 @@
-<div class="page-header">
-    <h1>Edit Employee</h1>
-    <ul class="breadcrumb">
-        <li><a href="<?php echo base_url('admin/dashboard'); ?>">Home</a></li>
-        <li><a href="<?php echo base_url('admin/emp-master'); ?>">Employee Master</a></li>
-        <li>Edit Employee</li>
-    </ul>
+<div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
+	<section class="content-header">
+		<h1>Edit Employee</h1>
+		<!-- <ol class="breadcrumb">
+			<li><a href="<?=base_url('admin/index')?>"><i class="fa fa-dashboard"></i>Dashboard</a></li>
+			<li><a href="<?=base_url($routeUrl)?>">Employee Master</a></li>
+			<li class="active"><?=($this->router->method=="add")?"Add":"Edit";?> Employee</li>
+		</ol> -->
+	</section>
+	<section class="content" style="height: auto !important; min-height: 0px !important;">
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="box">
+					<div class="box-header with-border">
+						<h4>Edit Employee</h4>
+					</div>
+					
+					<?php if($this->session->flashdata('success')):?>
+					<div class="alert alert-success alert-dismissible fade in">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">x</span></button>
+						<strong>Success: </strong><?=$this->session->flashdata('success');?>
+					</div>
+					<?php endif; 
+					if($this->session->flashdata('fail')):?>
+					<div class="alert alert-danger alert-dismissible fade in">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">x</span></button>
+						<strong>Error: </strong><?=$this->session->flashdata('fail');?>
+					</div>
+					<?php endif; ?>
+					<div class="box-body">
+						
+						<form action="<?php echo base_url() ?>admin/masterdata/editEmp/<?php echo $results['id']; ?>" method="post" name="typicaltypes" id="typicaltypes" enctype="multipart/form-data" novalidate="novalidate">
+							<div class="form-row">
+							    <div class="form-group col-md-4">
+									<label for="inputCity">Employee Name</label>
+									<input type="text" name="emp_name" id="emp_name" class="form-control" value="<?php echo $results['emp_name']; ?>" placeholder="Employee Name">
+							    </div>
+							    <div class="form-group col-md-4">
+									<label for="inputCity">Employee ID</label>
+									<input type="text" name="emp_id" id="emp_id" class="form-control" value="<?php echo $results['emp_id']; ?>" placeholder="Employee ID">
+							    </div>
+							    <div class="form-group col-md-4">
+									<label for="inputCity">Joining Date</label>
+									<input type="text" name="wef_date" id="wef_date" class="form-control" value="<?php echo $results['joining_date']; ?>" placeholder="Joining Date">
+							    </div>
+							    <div class="clearfix"></div>
+							    <div class="form-group col-md-4">
+									<label for="inputCity">Pay Center</label>
+									<input type="text" name="pay_center" id="pay_center" class="form-control" value="<?php echo $results['pay_center']; ?>" placeholder="Pay Center">
+							    </div>
+							    <div class="form-group col-md-4">
+									<label for="inputCity">Fixed Pay</label>
+									<input type="text" name="fixed_pay" id="fixed_pay" class="form-control" value="<?php echo $results['fixed_pay']; ?>" placeholder="Fixed Pay">
+							    </div>
+							    <div class="form-group col-md-4">
+									<label for="inputCity">Grade Pay</label>
+									<input type="text" name="grade_pay" id="grade_pay" class="form-control" value="<?php echo $results['grade_pay']; ?>" placeholder="Grade Pay">
+							    </div>
+							    <div class="clearfix"></div>
+							    <div class="form-group col-md-4">
+									<label for="inputCity">Basic</label>
+									<input type="text" name="basic" id="basic" class="form-control" value="<?php echo $results['basic']; ?>" placeholder="Basic">
+							    </div>
+							    <div class="form-group col-md-4">
+									<label for="inputCity">da</label>
+									<input type="text" name="da" id="da" class="form-control" value="<?php echo $results['da']; ?>" placeholder="da">
+							    </div>
+							    <div class="clearfix"></div>
+							</div>
+							<div class="col-sm-12" style="text-align: right;">
+								<input type="hidden" name="id" value="<?php echo $results['id']; ?>" id="id">   
+								<input type="submit" class="btn btn-primary" value="Submit">
+								<!-- <a href="<?=base_url($routeUrl)?>" class="btn btn-primary"><i class="fa fa-arrow-circle-left"></i> Back</a> -->
+							</div>
+						</form>
+					</div>
+				</div>
+			</div> 
+		</div>
+	</section>
 </div>
 
-<div class="box">
-    <div class="box-header">
-        <h3>Edit Employee Details: <?php echo $results['emp_name']; ?></h3>
-    </div>
-    <div class="box-body">
-        <form action="<?php echo base_url('admin/masterdata/editEmp/'.$results['id']) ?>" method="post" id="editEmpForm">
-            <input type="hidden" name="id" value="<?php echo $results['id']; ?>">
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="emp_name" class="required">Employee Name</label>
-                    <input type="text" name="emp_name" id="emp_name" class="form-control" value="<?php echo $results['emp_name']; ?>" placeholder="Employee Name" required>
-                </div>
-                <div class="form-group">
-                    <label for="emp_id" class="required">Employee ID</label>
-                    <input type="text" name="emp_id" id="emp_id" class="form-control" value="<?php echo $results['emp_id']; ?>" placeholder="Employee ID" required>
-                </div>
-                <div class="form-group">
-                    <label for="wef_date" class="required">Joining Date</label>
-                    <input type="text" name="wef_date" id="wef_date" class="form-control" value="<?php echo $results['joining_date']; ?>" placeholder="dd.mm.yyyy" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="pay_center">Pay Center</label>
-                    <input type="text" name="pay_center" id="pay_center" class="form-control" value="<?php echo $results['pay_center']; ?>" placeholder="Pay Center">
-                </div>
-                <div class="form-group">
-                    <label for="fixed_pay">Fixed Pay</label>
-                    <input type="number" step="0.01" name="fixed_pay" id="fixed_pay" class="form-control" value="<?php echo $results['fixed_pay']; ?>" placeholder="Fixed Pay">
-                </div>
-                <div class="form-group">
-                    <label for="grade_pay">Grade Pay</label>
-                    <input type="number" step="0.01" name="grade_pay" id="grade_pay" class="form-control" value="<?php echo $results['grade_pay']; ?>" placeholder="Grade Pay">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="basic">Basic</label>
-                    <input type="number" step="0.01" name="basic" id="basic" class="form-control" value="<?php echo $results['basic']; ?>" placeholder="Basic">
-                </div>
-                <div class="form-group">
-                    <label for="da">DA</label>
-                    <input type="number" step="0.01" name="da" id="da" class="form-control" value="<?php echo $results['da']; ?>" placeholder="DA">
-                </div>
-                <div class="form-group" style="visibility: hidden;">
-                </div>
-            </div>
-
-            <div style="margin-top: 20px; text-align: right;">
-                <a href="<?php echo base_url('admin/emp-master'); ?>" class="btn btn-danger">Cancel</a>
-                <button type="submit" class="btn btn-primary">Update Employee</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-$(document).ready(function(){
-    if ($.fn.datepicker) {
-        $("#wef_date").datepicker({ 
-            format: 'dd.mm.yyyy',
-            orientation: "bottom",
-            autoclose: true
-        });
-    }
-});
-</script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		// $("#wef_date").datepicker({ dateFormat: "dd/mm/yy" });
+		$("#wef_date").datepicker({ format: 'dd.mm.yyyy',orientation: "bottom"  }); 
+		
+	});
+</script>								
