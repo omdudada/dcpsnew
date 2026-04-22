@@ -31,18 +31,30 @@
 <!-- NAVIGATION -->
 <nav class="main-nav">
     <a href="<?php echo base_url('admin/dashboard'); ?>">Home</a>
-    <a href="<?php echo base_url('admin/misreport/ledger_report_new'); ?>">Ledger Report</a>
-    <a href="<?php echo base_url('admin/monthly-record'); ?>">Edit Month Wise Deduction Record</a>
-    <a href="<?php echo base_url('admin/edit-missing-month-year-records'); ?>">Pending Month &amp; Year Records</a>
-    <a href="<?php echo base_url('admin/misreport/deduction_report'); ?>">Deduction Report</a>
-    <a href="<?php echo base_url('admin/dcps-deduction-record'); ?>">Edit Employee Wise Deduction Record</a>
     <a href="<?php echo base_url('admin/add-edit-master-record'); ?>">Add Master</a>
+
+    <div class="dropdown">
+        <a href="#">Deduction Record &#9660;</a>
+        <ul class="dropdown-menu">
+            <li><a href="<?php echo base_url('admin/monthly-record'); ?>">Edit Month Wise Deduction Record</a></li>
+            <li><a href="<?php echo base_url('admin/dcps-deduction-record'); ?>">Edit Employee Wise Deduction Record</a></li>
+            <li><a href="<?php echo base_url('admin/edit-missing-month-year-records'); ?>">Pending Month &amp; Year Records</a></li>
+        </ul>
+    </div>
+
+    <div class="dropdown">
+        <a href="#">Report &#9660;</a>
+        <ul class="dropdown-menu">
+            <li><a href="<?php echo base_url('admin/misreport/deduction_report'); ?>">Deduction Report</a></li>
+            <li><a href="<?php echo base_url('admin/misreport/ledger_report_new'); ?>">Ledger Report</a></li>
+        </ul>
+    </div>
+
     <div class="dropdown">
         <a href="#">Team Tasks &#9660;</a>
         <ul class="dropdown-menu">
-            <?php for($i=1; $i<=12; $i++): ?>
-                <li><a href="<?php echo base_url('admin/team-wise-tasks/team/'.$i); ?>">Team <?php echo $i; ?></a></li>
-            <?php endfor; ?>
+            <li><a href="<?php echo base_url('admin/team-tasks/missing-record'); ?>">Missing Record</a></li>
+            <li><a href="<?php echo base_url('admin/team-tasks/duplicate-record'); ?>">Duplicate Record</a></li>
         </ul>
     </div>
 </nav>

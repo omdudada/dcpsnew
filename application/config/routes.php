@@ -93,6 +93,10 @@ $route['admin/edit-missing-month-year-records'] = 'admin/report/editMissingMonth
 $route['admin/team-wise-tasks'] = 'admin/report/teamwisetasks';
 $route['admin/team-wise-tasks/team/(:num)'] = 'admin/report/teamwisetasks/$1';
 
+// New Team Tasks (data-quality) routes
+$route['admin/team-tasks/missing-record'] = 'admin/report/missingRecord';
+$route['admin/team-tasks/duplicate-record'] = 'admin/report/duplicateRecord';
+
 // Dashboard module routes
 $route['admin/dashboard']                                       = 'admin/dashboard/index';
 $route['admin/dashboard/getDuplicates']                         = 'admin/dashboard/getDuplicates';

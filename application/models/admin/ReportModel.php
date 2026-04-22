@@ -768,5 +768,292 @@ class ReportModel extends CI_Model
 		return [];
 	}
 
+	// =========================================================================
+	// Team Tasks (Data-quality)
+	// =========================================================================
+	private function _applyMissingFilters($teamMonth = 0, $search = '')
+	{
+		$this->db->from('dpt_master_dcps as mst');
+		$this->db->join('dpt_emp_master as em', 'em.emp_id = mst.emp_td', 'left');
+		$this->db->where('mst.is_deleted', 0);
+		$this->db->where('mst.emp_td >', 0);
+
+		if ((int)$teamMonth >= 1 && (int)$teamMonth <= 12) {
+			// show records for team month OR records that have missing month/year (needs assignment)
+			$this->db->group_start()
+				->where('mst.for_month', (int)$teamMonth)
+				->or_group_start()
+					->where('mst.for_month', 0)
+					->or_where('mst.for_month IS NULL', null, false)
+					->where('mst.for_year', 0)
+					->or_where('mst.for_year IS NULL', null, false)
+				->group_end()
+			->group_end();
+		}
+
+		// Missing / blank fields detection (record-level quality issues)
+		$this->db->group_start()
+			// missing month/year
+			->group_start()
+				->where('mst.for_month', 0)
+				->or_where('mst.for_month IS NULL', null, false)
+				->or_where('mst.for_year', 0)
+				->or_where('mst.for_year IS NULL', null, false)
+			->group_end()
+			// missing voucher details
+			->or_group_start()
+				->where('mst.recovered_DCPS_with_voucher_no', '')
+				->or_where('mst.recovered_DCPS_with_voucher_no IS NULL', null, false)
+				->or_where('mst.recovered_DCPS_with_voucher_date', '')
+				->or_where('mst.recovered_DCPS_with_voucher_date IS NULL', null, false)
+			->group_end()
+			// missing / zero salary fields
+			->or_group_start()
+				->where('mst.basic', 0)
+				->or_where('mst.basic IS NULL', null, false)
+				->or_where('mst.da', 0)
+				->or_where('mst.da IS NULL', null, false)
+				->or_where('mst.grade_pay', 0)
+				->or_where('mst.grade_pay IS NULL', null, false)
+				->or_where('mst.total_salary', 0)
+				->or_where('mst.total_salary IS NULL', null, false)
+			->group_end()
+		->group_end();
+
+		if ($search !== '') {
+			$search = trim($search);
+			$this->db->group_start()
+				->like('mst.emp_td', $search)
+				->or_like('em.emp_name', $search)
+				->or_like('mst.emp_name', $search)
+				->or_like('mst.recovered_DCPS_with_voucher_no', $search)
+			->group_end();
+		}
+	}
+
+	public function countMissingRecords($teamMonth = 0, $search = '')
+	{
+		$this->_applyMissingFilters($teamMonth, $search);
+		return (int) $this->db->count_all_results();
+	}
+
+	public function fetchMissingRecords($teamMonth = 0, $search = '', $limit = 50, $offset = 0)
+	{
+		$this->db->select("
+			mst.id,
+			mst.emp_td,
+			COALESCE(em.emp_name, mst.emp_name, 'N/A') as emp_name,
+			mst.pay_center,
+			mst.for_month,
+			mst.for_year,
+			mst.recovered_DCPS_with_voucher_no,
+			mst.recovered_DCPS_with_voucher_date,
+			mst.basic,
+			mst.da,
+			mst.grade_pay,
+			mst.total_salary,
+			mst.salary_start_date,
+			mst.salary_end_date,
+			mst.remark
+		", false);
+
+		$this->_applyMissingFilters($teamMonth, $search);
+		$this->db->order_by('mst.emp_td', 'asc');
+		$this->db->order_by('mst.for_year', 'asc');
+		$this->db->order_by('mst.for_month', 'asc');
+		$this->db->limit((int)$limit, (int)$offset);
+		$q = $this->db->get();
+		return $q ? $q->result_array() : [];
+	}
+
+	public function getMissingCountsByTeam($search = '')
+	{
+		// counts grouped by month (later mapped to team 1..12 via controller/view)
+		$this->db->select('mst.for_month, COUNT(*) as cnt', false);
+		$this->_applyMissingFilters(0, $search);
+		$this->db->group_by('mst.for_month');
+		$q = $this->db->get();
+		$rows = $q ? $q->result_array() : [];
+		$out = [];
+		foreach ($rows as $r) {
+			$out[(int)$r['for_month']] = (int)$r['cnt'];
+		}
+		return $out;
+	}
+
+	private function _escapeLike($str)
+	{
+		// CI's escape_like_str is available on DB driver
+		return $this->db->escape_like_str($str);
+	}
+
+	public function countDuplicateRecords($teamMonth = 0, $search = '')
+	{
+		$teamMonth = (int)$teamMonth;
+		$search = trim((string)$search);
+
+		$whereMonth = '';
+		if ($teamMonth >= 1 && $teamMonth <= 12) {
+			$whereMonth = ' AND mst.for_month = ' . $teamMonth . ' ';
+		}
+
+		$whereSearch = '';
+		if ($search !== '') {
+			$s = $this->_escapeLike($search);
+			$whereSearch = " AND (
+				CAST(mst.emp_td AS CHAR) LIKE '%{$s}%'
+				OR COALESCE(em.emp_name,'') LIKE '%{$s}%'
+				OR COALESCE(mst.recovered_DCPS_with_voucher_no,'') LIKE '%{$s}%'
+			) ";
+		}
+
+		$sql = "
+			SELECT COUNT(*) as total
+			FROM dpt_master_dcps mst
+			LEFT JOIN dpt_emp_master em ON em.emp_id = mst.emp_td
+			INNER JOIN (
+				SELECT emp_td, recovered_DCPS_with_voucher_no, recovered_DCPS_with_voucher_date,
+					   basic, grade_pay, da, total_salary, Ideal_contribution_of_employee_for_DCPS,
+					   COUNT(*) AS cnt
+				FROM dpt_master_dcps
+				WHERE is_deleted = 0 AND emp_td > 0
+				GROUP BY emp_td, recovered_DCPS_with_voucher_no, recovered_DCPS_with_voucher_date,
+						 basic, grade_pay, da, total_salary, Ideal_contribution_of_employee_for_DCPS
+				HAVING COUNT(*) > 1
+			) dup
+				ON dup.emp_td = mst.emp_td
+				AND COALESCE(dup.recovered_DCPS_with_voucher_no,'') = COALESCE(mst.recovered_DCPS_with_voucher_no,'')
+				AND COALESCE(dup.recovered_DCPS_with_voucher_date,'') = COALESCE(mst.recovered_DCPS_with_voucher_date,'')
+				AND COALESCE(dup.basic,0) = COALESCE(mst.basic,0)
+				AND COALESCE(dup.grade_pay,0) = COALESCE(mst.grade_pay,0)
+				AND COALESCE(dup.da,0) = COALESCE(mst.da,0)
+				AND COALESCE(dup.total_salary,0) = COALESCE(mst.total_salary,0)
+				AND COALESCE(dup.Ideal_contribution_of_employee_for_DCPS,0) = COALESCE(mst.Ideal_contribution_of_employee_for_DCPS,0)
+			WHERE mst.is_deleted = 0
+			{$whereMonth}
+			{$whereSearch}
+		";
+		$q = $this->db->query($sql);
+		return $q ? (int)$q->row()->total : 0;
+	}
+
+	public function fetchDuplicateRecords($teamMonth = 0, $search = '', $limit = 50, $offset = 0)
+	{
+		$teamMonth = (int)$teamMonth;
+		$search = trim((string)$search);
+		$limit = (int)$limit;
+		$offset = (int)$offset;
+
+		$whereMonth = '';
+		if ($teamMonth >= 1 && $teamMonth <= 12) {
+			$whereMonth = ' AND mst.for_month = ' . $teamMonth . ' ';
+		}
+
+		$whereSearch = '';
+		if ($search !== '') {
+			$s = $this->_escapeLike($search);
+			$whereSearch = " AND (
+				CAST(mst.emp_td AS CHAR) LIKE '%{$s}%'
+				OR COALESCE(em.emp_name,'') LIKE '%{$s}%'
+				OR COALESCE(mst.recovered_DCPS_with_voucher_no,'') LIKE '%{$s}%'
+			) ";
+		}
+
+		$sql = "
+			SELECT
+				mst.id,
+				mst.emp_td,
+				COALESCE(em.emp_name, mst.emp_name, 'N/A') AS emp_name,
+				mst.pay_center,
+				mst.for_month,
+				mst.for_year,
+				mst.recovered_DCPS_with_voucher_no,
+				mst.recovered_DCPS_with_voucher_date,
+				mst.basic,
+				mst.grade_pay,
+				mst.da,
+				mst.total_salary,
+				mst.Ideal_contribution_of_employee_for_DCPS,
+				dup.cnt AS duplicate_count
+			FROM dpt_master_dcps mst
+			LEFT JOIN dpt_emp_master em ON em.emp_id = mst.emp_td
+			INNER JOIN (
+				SELECT emp_td, recovered_DCPS_with_voucher_no, recovered_DCPS_with_voucher_date,
+					   basic, grade_pay, da, total_salary, Ideal_contribution_of_employee_for_DCPS,
+					   COUNT(*) AS cnt
+				FROM dpt_master_dcps
+				WHERE is_deleted = 0 AND emp_td > 0
+				GROUP BY emp_td, recovered_DCPS_with_voucher_no, recovered_DCPS_with_voucher_date,
+						 basic, grade_pay, da, total_salary, Ideal_contribution_of_employee_for_DCPS
+				HAVING COUNT(*) > 1
+			) dup
+				ON dup.emp_td = mst.emp_td
+				AND COALESCE(dup.recovered_DCPS_with_voucher_no,'') = COALESCE(mst.recovered_DCPS_with_voucher_no,'')
+				AND COALESCE(dup.recovered_DCPS_with_voucher_date,'') = COALESCE(mst.recovered_DCPS_with_voucher_date,'')
+				AND COALESCE(dup.basic,0) = COALESCE(mst.basic,0)
+				AND COALESCE(dup.grade_pay,0) = COALESCE(mst.grade_pay,0)
+				AND COALESCE(dup.da,0) = COALESCE(mst.da,0)
+				AND COALESCE(dup.total_salary,0) = COALESCE(mst.total_salary,0)
+				AND COALESCE(dup.Ideal_contribution_of_employee_for_DCPS,0) = COALESCE(mst.Ideal_contribution_of_employee_for_DCPS,0)
+			WHERE mst.is_deleted = 0
+			{$whereMonth}
+			{$whereSearch}
+			ORDER BY mst.emp_td ASC, mst.for_year ASC, mst.for_month ASC
+			LIMIT {$limit} OFFSET {$offset}
+		";
+
+		$q = $this->db->query($sql);
+		return $q ? $q->result_array() : [];
+	}
+
+	public function getDuplicateCountsByTeam($search = '')
+	{
+		// group by month for faster "per team" summary
+		$search = trim((string)$search);
+		$whereSearch = '';
+		if ($search !== '') {
+			$s = $this->_escapeLike($search);
+			$whereSearch = " AND (
+				CAST(mst.emp_td AS CHAR) LIKE '%{$s}%'
+				OR COALESCE(em.emp_name,'') LIKE '%{$s}%'
+				OR COALESCE(mst.recovered_DCPS_with_voucher_no,'') LIKE '%{$s}%'
+			) ";
+		}
+
+		$sql = "
+			SELECT mst.for_month, COUNT(*) as cnt
+			FROM dpt_master_dcps mst
+			LEFT JOIN dpt_emp_master em ON em.emp_id = mst.emp_td
+			INNER JOIN (
+				SELECT emp_td, recovered_DCPS_with_voucher_no, recovered_DCPS_with_voucher_date,
+					   basic, grade_pay, da, total_salary, Ideal_contribution_of_employee_for_DCPS,
+					   COUNT(*) AS cnt
+				FROM dpt_master_dcps
+				WHERE is_deleted = 0 AND emp_td > 0
+				GROUP BY emp_td, recovered_DCPS_with_voucher_no, recovered_DCPS_with_voucher_date,
+						 basic, grade_pay, da, total_salary, Ideal_contribution_of_employee_for_DCPS
+				HAVING COUNT(*) > 1
+			) dup
+				ON dup.emp_td = mst.emp_td
+				AND COALESCE(dup.recovered_DCPS_with_voucher_no,'') = COALESCE(mst.recovered_DCPS_with_voucher_no,'')
+				AND COALESCE(dup.recovered_DCPS_with_voucher_date,'') = COALESCE(mst.recovered_DCPS_with_voucher_date,'')
+				AND COALESCE(dup.basic,0) = COALESCE(mst.basic,0)
+				AND COALESCE(dup.grade_pay,0) = COALESCE(mst.grade_pay,0)
+				AND COALESCE(dup.da,0) = COALESCE(mst.da,0)
+				AND COALESCE(dup.total_salary,0) = COALESCE(mst.total_salary,0)
+				AND COALESCE(dup.Ideal_contribution_of_employee_for_DCPS,0) = COALESCE(mst.Ideal_contribution_of_employee_for_DCPS,0)
+			WHERE mst.is_deleted = 0
+			{$whereSearch}
+			GROUP BY mst.for_month
+		";
+		$q = $this->db->query($sql);
+		$rows = $q ? $q->result_array() : [];
+		$out = [];
+		foreach ($rows as $r) {
+			$out[(int)$r['for_month']] = (int)$r['cnt'];
+		}
+		return $out;
+	}
+
 }
 ?>

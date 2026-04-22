@@ -289,5 +289,194 @@ class Report extends CI_Controller{
 		$this->load->view('admin/report/team_wise_tasks',$data);
 	}
 
+	// =========================================================================
+	// Team Tasks (Data-quality): Missing Record
+	// =========================================================================
+	public function missingRecord()
+	{
+		$data = [];
+		$data['title'] = 'Team Tasks - Missing Record';
+
+		$team = (int) $this->input->get('team');
+		if ($team < 0 || $team > 12) {
+			$team = 0; // 0 = All
+		}
+		$search = trim((string) $this->input->get('q'));
+		$page = max(1, (int) $this->input->get('page'));
+		$perPage = (int) $this->input->get('per_page');
+		if ($perPage <= 0 || $perPage > 500) {
+			$perPage = 50;
+		}
+		$offset = ($page - 1) * $perPage;
+
+		$teamMonth = $this->_teamToMonth($team);
+
+		// Export (CSV)
+		$export = (int) $this->input->get('export');
+		if ($export === 1) {
+			$rows = $this->rModel->fetchMissingRecords($teamMonth, $search, 100000, 0);
+			$this->_downloadCsv('missing_records.csv', $rows);
+			return;
+		}
+
+		$total = $this->rModel->countMissingRecords($teamMonth, $search);
+		$records = $this->rModel->fetchMissingRecords($teamMonth, $search, $perPage, $offset);
+
+		$data['team'] = $team;
+		$data['teamMonth'] = $teamMonth;
+		$data['search'] = $search;
+		$data['perPage'] = $perPage;
+		$data['page'] = $page;
+		$data['total'] = $total;
+		$data['records'] = $records;
+		$data['missingCountsByTeam'] = $this->rModel->getMissingCountsByTeam($search);
+
+		$data['pagination'] = $this->_buildPaginationLinks(
+			base_url('admin/team-tasks/missing-record'),
+			$total,
+			$perPage,
+			$page,
+			['team' => $team, 'q' => $search, 'per_page' => $perPage]
+		);
+
+		$this->load->view('admin/common/header', $data);
+		$this->load->view('admin/teamtasks/missing_record', $data);
+		$this->load->view('admin/common/footer');
+	}
+
+	// =========================================================================
+	// Team Tasks (Data-quality): Duplicate Record
+	// =========================================================================
+	public function duplicateRecord()
+	{
+		$data = [];
+		$data['title'] = 'Team Tasks - Duplicate Record';
+
+		$team = (int) $this->input->get('team');
+		if ($team < 0 || $team > 12) {
+			$team = 0; // 0 = All
+		}
+		$search = trim((string) $this->input->get('q'));
+		$page = max(1, (int) $this->input->get('page'));
+		$perPage = (int) $this->input->get('per_page');
+		if ($perPage <= 0 || $perPage > 500) {
+			$perPage = 50;
+		}
+		$offset = ($page - 1) * $perPage;
+
+		$teamMonth = $this->_teamToMonth($team);
+
+		// Export (CSV)
+		$export = (int) $this->input->get('export');
+		if ($export === 1) {
+			$rows = $this->rModel->fetchDuplicateRecords($teamMonth, $search, 100000, 0);
+			$this->_downloadCsv('duplicate_records.csv', $rows);
+			return;
+		}
+
+		$total = $this->rModel->countDuplicateRecords($teamMonth, $search);
+		$records = $this->rModel->fetchDuplicateRecords($teamMonth, $search, $perPage, $offset);
+
+		$data['team'] = $team;
+		$data['teamMonth'] = $teamMonth;
+		$data['search'] = $search;
+		$data['perPage'] = $perPage;
+		$data['page'] = $page;
+		$data['total'] = $total;
+		$data['records'] = $records;
+		$data['duplicateCountsByTeam'] = $this->rModel->getDuplicateCountsByTeam($search);
+
+		$data['pagination'] = $this->_buildPaginationLinks(
+			base_url('admin/team-tasks/duplicate-record'),
+			$total,
+			$perPage,
+			$page,
+			['team' => $team, 'q' => $search, 'per_page' => $perPage]
+		);
+
+		$this->load->view('admin/common/header', $data);
+		$this->load->view('admin/teamtasks/duplicate_record', $data);
+		$this->load->view('admin/common/footer');
+	}
+
+	// =========================================================================
+	// Helpers
+	// =========================================================================
+	private function _teamToMonth($team)
+	{
+		$team = (int) $team;
+		if ($team < 1 || $team > 12) {
+			return 0; // 0 = All months
+		}
+		// mapping team -> month (Apr..Mar)
+		$map = [1=>4,2=>5,3=>6,4=>7,5=>8,6=>9,7=>10,8=>11,9=>12,10=>1,11=>2,12=>3];
+		return isset($map[$team]) ? (int)$map[$team] : 0;
+	}
+
+	private function _buildPaginationLinks($baseUrl, $totalRows, $perPage, $currentPage, $query = [])
+	{
+		$totalRows = (int)$totalRows;
+		$perPage = max(1, (int)$perPage);
+		$currentPage = max(1, (int)$currentPage);
+		$totalPages = (int) ceil($totalRows / $perPage);
+		if ($totalPages <= 1) {
+			return '';
+		}
+
+		$buildUrl = function($page) use ($baseUrl, $query) {
+			$q = $query;
+			$q['page'] = $page;
+			$qs = http_build_query($q);
+			return $baseUrl . ($qs ? ('?' . $qs) : '');
+		};
+
+		$start = max(1, $currentPage - 3);
+		$end = min($totalPages, $currentPage + 3);
+
+		$html = '<div class="pagination">';
+		if ($currentPage > 1) {
+			$html .= '<a href="' . htmlspecialchars($buildUrl(1)) . '">First</a>';
+			$html .= '<a href="' . htmlspecialchars($buildUrl($currentPage - 1)) . '">Prev</a>';
+		}
+		for ($p = $start; $p <= $end; $p++) {
+			$class = ($p === $currentPage) ? ' class="active"' : '';
+			$html .= '<a' . $class . ' href="' . htmlspecialchars($buildUrl($p)) . '">' . $p . '</a>';
+		}
+		if ($currentPage < $totalPages) {
+			$html .= '<a href="' . htmlspecialchars($buildUrl($currentPage + 1)) . '">Next</a>';
+			$html .= '<a href="' . htmlspecialchars($buildUrl($totalPages)) . '">Last</a>';
+		}
+		$html .= '</div>';
+		return $html;
+	}
+
+	private function _downloadCsv($filename, $rows)
+	{
+		$filename = $filename ?: 'export.csv';
+		$this->output
+			->set_content_type('text/csv')
+			->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+			->set_header('Pragma: no-cache')
+			->set_header('Expires: 0');
+
+		$out = fopen('php://output', 'w');
+		if (!is_array($rows) || empty($rows)) {
+			fputcsv($out, ['No records']);
+			fclose($out);
+			return;
+		}
+
+		$headers = array_keys($rows[0]);
+		fputcsv($out, $headers);
+		foreach ($rows as $r) {
+			$line = [];
+			foreach ($headers as $h) {
+				$line[] = isset($r[$h]) ? $r[$h] : '';
+			}
+			fputcsv($out, $line);
+		}
+		fclose($out);
+	}
+
 }
  ?>

@@ -1,0 +1,100 @@
+I have a CSV file named **"dpt_master_dcps.csv"** which contains DCPS employee records. This data was entered by multiple teams through a web interface, and due to lack of proper validation, the dataset contains errors such as:
+
+* Duplicate records
+* Missing or blank values
+* Incorrect calculations
+* Inconsistent data across related fields
+
+Your task is to analyze the entire CSV file and perform the following operations:
+
+### 1. Data Cleaning & Validation
+
+* Identify and mark **duplicate records** based on key fields such as:
+
+  * emp_td (Employee ID)
+  * for_month
+  * for_year
+  * voucher number/date fields (if applicable)
+* Detect **missing or blank values** in important fields:
+
+  * emp_td, emp_name
+  * basic, da, grade_pay, total_salary
+  * Ideal_contribution_of_employee_for_DCPS
+  * for_month, for_year
+* Validate calculations:
+
+  * basic + da + grade_pay = total_salary
+  * 10% of total_salary = Ideal_contribution_of_employee_for_DCPS
+  * Employee contribution should match NMC contribution (if applicable)
+
+### 2. Data Consistency Checks
+
+* Verify:
+
+  * salary_start_date and salary_end_date year consistency with for_year
+  * Month and year continuity (detect missing months per employee)
+* Normalize:
+
+  * Trim spaces
+  * Standardize date formats (DD-MM-YYYY or YYYY-MM-DD)
+  * Convert numeric fields correctly
+
+### 3. Error Classification
+
+Classify records into:
+
+* Duplicate Records
+* Missing Data Records
+* Calculation Errors
+* Date/Year Mismatch Records
+* Valid Records
+
+### 4. Output Requirements (Excel File)
+
+Generate a new Excel file with multiple sheets:
+
+1. **Clean_Data**
+
+   * Fully corrected and validated records ready for database update
+
+2. **Duplicate_Records**
+
+   * All duplicate entries with duplicate count
+
+3. **Missing_Data**
+
+   * Records with missing or blank fields
+
+4. **Error_Records**
+
+   * Records with incorrect calculations or mismatches
+
+5. **Summary**
+
+   * Total records
+   * Duplicate count
+   * Missing records count
+   * Error records count
+
+### 5. Data Correction Rules
+
+* Fill missing numeric values with 0 (if safe)
+* Recalculate:
+
+  * total_salary
+  * contribution fields
+* Remove exact duplicates (keep latest or most complete record)
+* Flag uncertain corrections instead of guessing
+
+### 6. Final Output
+
+* Provide downloadable Excel file (.xlsx)
+* Ensure data is clean, structured, and ready for database import
+
+Important:
+
+* Do NOT delete data blindly
+* Preserve original data in separate sheets for audit
+* Clearly mark all corrections and assumptions
+
+The goal is to create a reliable dataset that can be safely used to update the production database.
