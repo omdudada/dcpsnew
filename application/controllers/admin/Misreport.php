@@ -152,6 +152,77 @@ class Misreport extends CI_Controller{
 	    $this->load->view('admin/common/header');
 	    $this->load->view('admin/misbroadsheetreport/listingnew',$data);
 	}
+
+	public function final_ledger_report()
+	{
+	    $postData = $this->input->post();
+	    
+	    $data['urlAry'] = array();
+		$urlAry = $this->uri->uri_to_assoc(4);
+	    
+	    $searchData = array();
+	    if($postData){
+	        $searchData = $postData;
+	        $searchData['emp_id'] = trim($postData['emp_id']);
+	        if($postData['year']){
+	            $searchData['first_year'] = $postData['year']; 
+	            $searchData['second_year'] = ($postData['year']+1); 
+	            $searchData['f_year'] = $searchData['first_year']."-".$searchData['second_year'];
+	        }
+	    }
+	    
+	    if(isset($urlAry['option']) && in_array($urlAry['option'], array("print","excel"), true)){
+		   if(isset($urlAry['year']) && $urlAry['year']){
+	            $searchData['first_year'] = $urlAry['year']; 
+	            $searchData['second_year'] = ($urlAry['year']+1); 
+	            $searchData['f_year'] = $searchData['first_year']."-".$searchData['second_year'];
+	        }
+			$data['urlAry'] = $urlAry;
+		}
+		
+        if(is_array($searchData)){		    
+		    $data['searchData'] = $searchData;
+	        
+	        $dcpsDetails = $this->mrModel->getdcpsDetailsNew($searchData);
+	        
+	        $processedEmpTDs = [];
+            foreach ($dcpsDetails as $dcpsDetail) {
+                $data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_month']] = $dcpsDetail;
+                if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
+                    $data['ownerDetails'][$dcpsDetail['emp_td']] = [
+                        'emp_id' => $dcpsDetail['emp_td'],
+                        'designation_name' => $dcpsDetail['designation_name'],
+                        'emp_name' => $dcpsDetail['emp_name'],
+                        'joining_date' => $dcpsDetail['joining_date'],
+                        'pay_center' => $dcpsDetail['pay_center'],
+                    ];
+                    $processedEmpTDs[] = $dcpsDetail['emp_td'];
+                }
+            }
+
+	        $data['interestRates'] = $this->mrModel->getInterestRates($searchData['first_year'], $searchData['second_year']);
+
+	        // Final ledger calculated rows (Excel-style)
+	        $data['finalLedger'] = $this->mrModel->getFinalLedgerCumulativeRows($searchData);
+	    }
+
+	    $data['paycenterData'] = $this->mrModel->getPayCenterData();
+	    $data['employeeData'] = $this->mrModel->getMasterData();
+
+	    // Excel export: output as .xls (HTML table) for compatibility.
+	    if(isset($urlAry['option']) && $urlAry['option'] === "excel"){
+	        $filename = "final_ledger_report_".date("Ymd_His").".xls";
+	        header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+	        header("Content-Disposition: attachment; filename=".$filename);
+	        header("Pragma: no-cache");
+	        header("Expires: 0");
+	        $this->load->view('admin/misbroadsheetreport/final_ledger_report',$data);
+	        return;
+	    }
+	
+	    $this->load->view('admin/common/header');
+	    $this->load->view('admin/misbroadsheetreport/final_ledger_report',$data);
+	}
 	
 	public function deduction_report()
 	{

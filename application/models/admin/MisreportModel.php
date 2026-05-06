@@ -138,7 +138,7 @@ class MisreportModel extends CI_Model
 		    $sql .=" and  ((mst.`for_month` >= 1 and mst.`for_month` <= 3 && mst.`for_year` = ".$data['second_year'].")) ";
 		}
 		
-		$sql .=" and mst.emp_td = 8967 ";
+		//$sql .=" and mst.emp_td = 8967 ";
 		
 		if(isset($data['emp_id']) && $data['emp_id'] !=""){
 		    $sql.=" group by mst.for_month, mst.emp_td, mst.for_year ";
@@ -469,6 +469,247 @@ class MisreportModel extends CI_Model
 			return $interestRateByMonths;
 		}
 	    
+	}
+
+	/**
+	 * Final Ledger (Excel-style) month-wise cumulative interest calculation.
+	 *
+	 * Key points (matches provided Excel):
+	 * - Maintain running bases (Employee / NMC / Total) month-wise.
+	 * - Opening balance is added only once at FY start and is part of Employee + Total bases.
+	 * - Monthly interest is calculated on the running bases:
+	 *   interest = ROUND((base * rate%) / 12, 0)
+	 * - Interest is NOT added back into the base for subsequent months (no compounding).
+	 */
+	public function getFinalLedgerCumulativeRows($data = array())
+	{
+		if (empty($data)) {
+			return array();
+		}
+
+		$firstYear = isset($data['first_year']) ? (int)$data['first_year'] : (isset($data['year']) ? (int)$data['year'] : 0);
+		if (!$firstYear) {
+			return array();
+		}
+		$secondYear = isset($data['second_year']) ? (int)$data['second_year'] : ($firstYear + 1);
+		$fYear = $firstYear . "-" . $secondYear;
+
+		$monthsOrder = array(4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3);
+
+		$rates = $this->getInterestRates($firstYear, $secondYear);
+		if (!is_array($rates)) {
+			$rates = array();
+		}
+
+		$dcpsRows = $this->getdcpsDetailsNew($data);
+		$byEmpMonth = array();
+		$empIds = array();
+		if (is_array($dcpsRows)) {
+			foreach ($dcpsRows as $r) {
+				$empId = (int)$r['emp_td'];
+				$m = (int)$r['for_month'];
+				$byEmpMonth[$empId][$m] = $r;
+				$empIds[$empId] = true;
+			}
+		}
+		$empIds = array_keys($empIds);
+
+		// Opening balance (सुरवातीची शिल्लक) computed at runtime as previous FY closing.
+		$openingByEmp = array();
+		foreach ($empIds as $empId) {
+			$openingByEmp[$empId] = (float)$this->getFinalLedgerOpeningBalanceRuntime($empId, $firstYear);
+		}
+
+		$out = array();
+		foreach ($empIds as $empId) {
+			$opening = isset($openingByEmp[$empId]) ? (float)$openingByEmp[$empId] : 0.0;
+
+			$empBase = $opening;
+			$nmcBase = 0.0;
+			$totalBase = $opening;
+
+			$totals = array(
+				'emp_regular' => 0.0,
+				'emp_supp' => 0.0,
+				'nmc_regular' => 0.0,
+				'nmc_supp' => 0.0,
+				'loan_installment' => 0.0,
+				'total_deposit' => 0.0,
+				'loan_taken' => 0.0,
+				'emp_interest' => 0.0,
+				'nmc_interest' => 0.0,
+				'total_interest' => 0.0,
+			);
+
+			$rows = array();
+			foreach ($monthsOrder as $m) {
+				$r = isset($byEmpMonth[$empId][$m]) ? $byEmpMonth[$empId][$m] : array();
+
+				$empRegular = !empty($r['emp_DCPS_contribution']) ? (float)$r['emp_DCPS_contribution'] : 0.0;
+				$empSupp = !empty($r['emp_DCPS_supplimentory_contribution']) ? (float)$r['emp_DCPS_supplimentory_contribution'] : 0.0;
+				$nmcRegular = !empty($r['NMC_DCPS_contribution']) ? (float)$r['NMC_DCPS_contribution'] : 0.0;
+				$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (float)$r['NMC_supplimentory_DCPS_contribution'] : 0.0;
+				$loanInstallment = !empty($r['loan_installment_paid_through_salary']) ? (float)$r['loan_installment_paid_through_salary'] : 0.0;
+				$loanTaken = !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
+
+				$totalDeposit = ($empRegular + $empSupp + $loanInstallment) + ($nmcRegular + $nmcSupp);
+
+				$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
+				$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
+				$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
+
+				$rate = isset($rates[$m]) ? (float)$rates[$m] : 0.0;
+				$empInterest = round((($empBase * $rate) / 100) / 12, 0);
+				$nmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
+				$totalInterest = $empInterest + $nmcInterest;
+
+				$rows[] = array(
+					'month' => $m,
+					'year' => ($m >= 4 && $m <= 12) ? $firstYear : $secondYear,
+					'emp_regular' => $empRegular,
+					'emp_supp' => $empSupp,
+					'nmc_regular' => $nmcRegular,
+					'nmc_supp' => $nmcSupp,
+					'loan_installment' => $loanInstallment,
+					'total_deposit' => $totalDeposit,
+					'loan_taken' => $loanTaken,
+					'emp_base' => $empBase,
+					'nmc_base' => $nmcBase,
+					'total_base' => $totalBase,
+					'emp_interest' => $empInterest,
+					'nmc_interest' => $nmcInterest,
+					'total_interest' => $totalInterest,
+					'rate' => $rate,
+				);
+
+				$totals['emp_regular'] += $empRegular;
+				$totals['emp_supp'] += $empSupp;
+				$totals['nmc_regular'] += $nmcRegular;
+				$totals['nmc_supp'] += $nmcSupp;
+				$totals['loan_installment'] += $loanInstallment;
+				$totals['total_deposit'] += $totalDeposit;
+				$totals['loan_taken'] += $loanTaken;
+				$totals['emp_interest'] += $empInterest;
+				$totals['nmc_interest'] += $nmcInterest;
+				$totals['total_interest'] += $totalInterest;
+			}
+
+			$out[$empId] = array(
+				'f_year' => $fYear,
+				'opening_balance' => $opening,
+				'rows' => $rows,
+				'totals' => $totals,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Runtime opening balance = previous FY closing (March end).
+	 *
+	 * This computes FY-by-FY from 2005-06 up to (firstYear-1)-(firstYear),
+	 * carrying forward the closing as next year's opening, matching the Excel pattern.
+	 */
+	public function getFinalLedgerOpeningBalanceRuntime($empId, $firstYear)
+	{
+		$empId = (int)$empId;
+		$firstYear = (int)$firstYear;
+
+		if ($empId <= 0 || $firstYear <= 2005) {
+			return 0.0;
+		}
+
+		static $closingCache = array(); // [empId][fyStart] => closing
+
+		$targetFYStart = $firstYear - 1;
+		if (isset($closingCache[$empId][$targetFYStart])) {
+			return (float)$closingCache[$empId][$targetFYStart];
+		}
+
+		$opening = 0.0;
+		for ($fy = 2005; $fy <= $targetFYStart; $fy++) {
+			if (isset($closingCache[$empId][$fy])) {
+				$opening = (float)$closingCache[$empId][$fy];
+				continue;
+			}
+
+			$closing = $this->_finalLedgerComputeClosingForFY($empId, $fy, $opening);
+			$closingCache[$empId][$fy] = $closing;
+			$opening = $closing;
+		}
+
+		return (float)$opening;
+	}
+
+	/**
+	 * Compute closing for one FY (fyStart-fyStart+1) given opening.
+	 */
+	private function _finalLedgerComputeClosingForFY($empId, $fyStart, $opening)
+	{
+		$empId = (int)$empId;
+		$fyStart = (int)$fyStart;
+		$opening = (float)$opening;
+
+		$data = array(
+			'emp_id' => $empId,
+			'first_year' => $fyStart,
+			'second_year' => $fyStart + 1,
+			'f_year' => $fyStart . "-" . ($fyStart + 1),
+		);
+
+		$monthsOrder = array(4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3);
+		$rates = $this->getInterestRates($data['first_year'], $data['second_year']);
+		if (!is_array($rates)) {
+			$rates = array();
+		}
+
+		$dcpsRows = $this->getdcpsDetailsNew($data);
+		$byMonth = array();
+		if (is_array($dcpsRows)) {
+			foreach ($dcpsRows as $r) {
+				$byMonth[(int)$r['for_month']] = $r;
+			}
+		}
+
+		$empBase = $opening;
+		$nmcBase = 0.0;
+
+		$sumEmp = 0.0;
+		$sumEmpSupp = 0.0;
+		$sumNmc = 0.0;
+		$sumNmcSupp = 0.0;
+		$sumLoanInst = 0.0;
+		$sumLoanTaken = 0.0;
+		$sumInterest = 0.0;
+
+		foreach ($monthsOrder as $m) {
+			$r = isset($byMonth[$m]) ? $byMonth[$m] : array();
+			$empRegular = !empty($r['emp_DCPS_contribution']) ? (float)$r['emp_DCPS_contribution'] : 0.0;
+			$empSupp = !empty($r['emp_DCPS_supplimentory_contribution']) ? (float)$r['emp_DCPS_supplimentory_contribution'] : 0.0;
+			$nmcRegular = !empty($r['NMC_DCPS_contribution']) ? (float)$r['NMC_DCPS_contribution'] : 0.0;
+			$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (float)$r['NMC_supplimentory_DCPS_contribution'] : 0.0;
+			$loanInstallment = !empty($r['loan_installment_paid_through_salary']) ? (float)$r['loan_installment_paid_through_salary'] : 0.0;
+			$loanTaken = !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
+
+			$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
+			$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
+
+			$rate = isset($rates[$m]) ? (float)$rates[$m] : 0.0;
+			$empInterest = round((($empBase * $rate) / 100) / 12, 0);
+			$nmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
+			$sumInterest += ($empInterest + $nmcInterest);
+
+			$sumEmp += $empRegular;
+			$sumEmpSupp += $empSupp;
+			$sumNmc += $nmcRegular;
+			$sumNmcSupp += $nmcSupp;
+			$sumLoanInst += $loanInstallment;
+			$sumLoanTaken += $loanTaken;
+		}
+
+		$closing = ($opening + ($sumEmp + $sumEmpSupp + $sumLoanInst) + ($sumNmc + $sumNmcSupp)) - $sumLoanTaken + $sumInterest;
+		return (float)$closing;
 	}
 
 }
