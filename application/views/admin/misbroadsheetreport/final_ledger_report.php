@@ -239,14 +239,14 @@
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['nmc_interest']); ?></td>
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['total_interest']); ?></td>
                                                     <td><?= $rateLabel; ?></td>
-                                                    <td>0</td>
-                                                    <td>0</td>
+                                                    <td><?= !empty($row['bunch_no']) ? htmlspecialchars((string)$row['bunch_no']) : 0; ?></td>
+                                                    <td><?= !empty($row['file_no']) ? htmlspecialchars((string)$row['file_no']) : 0; ?></td>
                                                 </tr>
                                             <?php } ?>
                                             <tr>
                                                 <th>एकुण <?= $searchData['f_year']; ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['']); ?></th>
-                                                <th style="text-align:right;emp_regular"><?= _n0($totShow['emp_supp']); ?></th>
+                                                <th style="text-align:right;"><?= _n0($totShow['emp_regular']); ?></th>
+                                                <th style="text-align:right;"><?= _n0($totShow['emp_supp']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['nmc_regular']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['nmc_supp']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['loan_installment']); ?></th>

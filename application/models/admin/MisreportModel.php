@@ -503,14 +503,20 @@ class MisreportModel extends CI_Model
 			$rates = array();
 		}
 
-		$dcpsRows = $this->getdcpsDetailsNew($data);
-		$byEmpMonth = array();
+		// IMPORTANT:
+		// Do NOT use grouped/monthly-summed data here, because duplicates (multiple records
+		// for same emp + month) must be shown separately (Deduction Report behavior).
+		$dcpsRows = $this->getdcpsAllDetailsForDeduction($data);
+		$byEmpMonth = array(); // [empId][month] => [row,row,...]
 		$empIds = array();
 		if (is_array($dcpsRows)) {
 			foreach ($dcpsRows as $r) {
 				$empId = (int)$r['emp_td'];
 				$m = (int)$r['for_month'];
-				$byEmpMonth[$empId][$m] = $r;
+				if (!isset($byEmpMonth[$empId][$m])) {
+					$byEmpMonth[$empId][$m] = array();
+				}
+				$byEmpMonth[$empId][$m][] = $r;
 				$empIds[$empId] = true;
 			}
 		}
@@ -545,58 +551,111 @@ class MisreportModel extends CI_Model
 
 			$rows = array();
 			foreach ($monthsOrder as $m) {
-				$r = isset($byEmpMonth[$empId][$m]) ? $byEmpMonth[$empId][$m] : array();
-				
-				//echo "<br/><pre>result=>"; print_r($r); //exit;
+				$monthRecords = isset($byEmpMonth[$empId][$m]) ? $byEmpMonth[$empId][$m] : array();
 
-				$empRegular = empty($r['emp_DCPS_contribution']) && $r['salary_type'] == "Regular" ? (float)$r['ideal_contribution'] : 0.0;
-				$empSupp = empty($r['emp_DCPS_supplimentory_contribution']) && $r['salary_type'] == "Suplimentory" ? (float)$r['ideal_contribution'] : 0.0;
-				$nmcRegular = empty($r['NMC_DCPS_contribution']) && $r['salary_type'] == "Regular" ? (float)$r['ideal_contribution'] : 0.0;
-				$nmcSupp = empty($r['NMC_supplimentory_DCPS_contribution']) && $r['salary_type'] == "Suplimentory"? (float)$r['ideal_contribution'] : 0.0;
-				
-				$loanInstallment = !empty($r['loan_installment_paid_through_salary']) ? (float)$r['loan_installment_paid_through_salary'] : 0.0;
-				$loanTaken = !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
+				// Sort duplicates consistently so bases are predictable.
+				if (!empty($monthRecords) && is_array($monthRecords)) {
+					usort($monthRecords, function ($a, $b) {
+						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
+						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
+						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
+						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
 
-				$totalDeposit = ($empRegular + $empSupp + $loanInstallment) + ($nmcRegular + $nmcSupp);
+						$tsA = $dtA ? $dtA->getTimestamp() : 0;
+						$tsB = $dtB ? $dtB->getTimestamp() : 0;
+						if ($tsA !== $tsB) {
+							return $tsA <=> $tsB;
+						}
+						$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string)$a['recovered_DCPS_with_voucher_no'] : '';
+						$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string)$b['recovered_DCPS_with_voucher_no'] : '';
+						if ($vnA !== $vnB) {
+							return $vnA <=> $vnB;
+						}
+						$fnA = isset($a['file_no']) ? (string)$a['file_no'] : '';
+						$fnB = isset($b['file_no']) ? (string)$b['file_no'] : '';
+						return $fnA <=> $fnB;
+					});
+				}
 
-				$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
-				$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
-				$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
+				// If there are no records, still keep a placeholder month row (all zeros)
+				// to preserve report shape.
+				if (empty($monthRecords)) {
+					$monthRecords = array(array());
+				}
 
 				$rate = isset($rates[$m]) ? (float)$rates[$m] : 0.0;
-				$empInterest = round((($empBase * $rate) / 100) / 12, 0);
-				$nmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
-				$totalInterest = $empInterest + $nmcInterest;
+				$yearForMonth = ($m >= 4 && $m <= 12) ? $firstYear : $secondYear;
 
-				$rows[] = array(
-					'month' => $m,
-					'year' => ($m >= 4 && $m <= 12) ? $firstYear : $secondYear,
-					'emp_regular' => $empRegular,
-					'emp_supp' => $empSupp,
-					'nmc_regular' => $nmcRegular,
-					'nmc_supp' => $nmcSupp,
-					'loan_installment' => $loanInstallment,
-					'total_deposit' => $totalDeposit,
-					'loan_taken' => $loanTaken,
-					'emp_base' => $empBase,
-					'nmc_base' => $nmcBase,
-					'total_base' => $totalBase,
-					'emp_interest' => $empInterest,
-					'nmc_interest' => $nmcInterest,
-					'total_interest' => $totalInterest,
-					'rate' => $rate,
-				);
+				// Process each record as its own displayed row.
+				// Interest is calculated ONCE per month (on the month-end base) and assigned
+				// to the LAST displayed row for that month, to keep totals correct.
+				$monthRowCount = count($monthRecords);
+				foreach ($monthRecords as $idx => $r) {
+					$salaryType = isset($r['salary_type']) ? (string)$r['salary_type'] : '';
+					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
+						? (float)$r['Ideal_contribution_of_employee_for_DCPS']
+						: 0.0;
 
-				$totals['emp_regular'] += $empRegular;
-				$totals['emp_supp'] += $empSupp;
-				$totals['nmc_regular'] += $nmcRegular;
-				$totals['nmc_supp'] += $nmcSupp;
-				$totals['loan_installment'] += $loanInstallment;
-				$totals['total_deposit'] += $totalDeposit;
-				$totals['loan_taken'] += $loanTaken;
-				$totals['emp_interest'] += $empInterest;
-				$totals['nmc_interest'] += $nmcInterest;
-				$totals['total_interest'] += $totalInterest;
+					// Match legacy behavior: when actual recovered contribution fields are empty,
+					// fall back to Ideal contribution for display/calculation.
+					$empRegular = 0.0;
+					$empSupp = 0.0;
+					$nmcRegular = 0.0;
+					$nmcSupp = 0.0;
+					if ($salaryType === 'Regular') {
+						$empRegular = (!empty($r['emp_DCPS_contribution']) ? (float)$r['emp_DCPS_contribution'] : $ideal);
+						$nmcRegular = (!empty($r['NMC_DCPS_contribution']) ? (float)$r['NMC_DCPS_contribution'] : $ideal);
+					} elseif ($salaryType === 'Suplimentory') {
+						$empSupp = (!empty($r['emp_DCPS_supplimentory_contribution']) ? (float)$r['emp_DCPS_supplimentory_contribution'] : $ideal);
+						$nmcSupp = (!empty($r['NMC_supplimentory_DCPS_contribution']) ? (float)$r['NMC_supplimentory_DCPS_contribution'] : $ideal);
+					}
+
+					$loanInstallment = !empty($r['loan_installment_paid_through_salary']) ? (float)$r['loan_installment_paid_through_salary'] : 0.0;
+					$loanTaken = !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
+
+					$totalDeposit = ($empRegular + $empSupp + $loanInstallment) + ($nmcRegular + $nmcSupp);
+
+					$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
+					$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
+					$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
+
+					$isLastInMonth = ($idx === ($monthRowCount - 1));
+					$empInterest = $isLastInMonth ? round((($empBase * $rate) / 100) / 12, 0) : 0.0;
+					$nmcInterest = $isLastInMonth ? round((($nmcBase * $rate) / 100) / 12, 0) : 0.0;
+					$totalInterest = $empInterest + $nmcInterest;
+
+					$rows[] = array(
+						'month' => $m,
+						'year' => $yearForMonth,
+						'emp_regular' => $empRegular,
+						'emp_supp' => $empSupp,
+						'nmc_regular' => $nmcRegular,
+						'nmc_supp' => $nmcSupp,
+						'loan_installment' => $loanInstallment,
+						'total_deposit' => $totalDeposit,
+						'loan_taken' => $loanTaken,
+						'emp_base' => $empBase,
+						'nmc_base' => $nmcBase,
+						'total_base' => $totalBase,
+						'emp_interest' => $empInterest,
+						'nmc_interest' => $nmcInterest,
+						'total_interest' => $totalInterest,
+						'rate' => $isLastInMonth ? $rate : 0.0,
+						'bunch_no' => isset($r['bunch_no']) ? $r['bunch_no'] : 0,
+						'file_no' => isset($r['file_no']) ? $r['file_no'] : 0,
+					);
+
+					$totals['emp_regular'] += $empRegular;
+					$totals['emp_supp'] += $empSupp;
+					$totals['nmc_regular'] += $nmcRegular;
+					$totals['nmc_supp'] += $nmcSupp;
+					$totals['loan_installment'] += $loanInstallment;
+					$totals['total_deposit'] += $totalDeposit;
+					$totals['loan_taken'] += $loanTaken;
+					$totals['emp_interest'] += $empInterest;
+					$totals['nmc_interest'] += $nmcInterest;
+					$totals['total_interest'] += $totalInterest;
+				}
 			}
 
 			$out[$empId] = array(
@@ -669,11 +728,16 @@ class MisreportModel extends CI_Model
 			$rates = array();
 		}
 
-		$dcpsRows = $this->getdcpsDetailsNew($data);
-		$byMonth = array();
+		// Use ungrouped rows so duplicates contribute to closing properly.
+		$dcpsRows = $this->getdcpsAllDetailsForDeduction($data);
+		$byMonth = array(); // [month] => list of rows
 		if (is_array($dcpsRows)) {
 			foreach ($dcpsRows as $r) {
-				$byMonth[(int)$r['for_month']] = $r;
+				$m = (int)$r['for_month'];
+				if (!isset($byMonth[$m])) {
+					$byMonth[$m] = array();
+				}
+				$byMonth[$m][] = $r;
 			}
 		}
 
@@ -689,13 +753,31 @@ class MisreportModel extends CI_Model
 		$sumInterest = 0.0;
 
 		foreach ($monthsOrder as $m) {
-			$r = isset($byMonth[$m]) ? $byMonth[$m] : array();
-			$empRegular = !empty($r['emp_DCPS_contribution']) ? (float)$r['emp_DCPS_contribution'] : 0.0;
-			$empSupp = !empty($r['emp_DCPS_supplimentory_contribution']) ? (float)$r['emp_DCPS_supplimentory_contribution'] : 0.0;
-			$nmcRegular = !empty($r['NMC_DCPS_contribution']) ? (float)$r['NMC_DCPS_contribution'] : 0.0;
-			$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (float)$r['NMC_supplimentory_DCPS_contribution'] : 0.0;
-			$loanInstallment = !empty($r['loan_installment_paid_through_salary']) ? (float)$r['loan_installment_paid_through_salary'] : 0.0;
-			$loanTaken = !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
+			$monthRecords = isset($byMonth[$m]) ? $byMonth[$m] : array();
+			$empRegular = 0.0;
+			$empSupp = 0.0;
+			$nmcRegular = 0.0;
+			$nmcSupp = 0.0;
+			$loanInstallment = 0.0;
+			$loanTaken = 0.0;
+
+			if (!empty($monthRecords)) {
+				foreach ($monthRecords as $r) {
+					$salaryType = isset($r['salary_type']) ? (string)$r['salary_type'] : '';
+					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
+						? (float)$r['Ideal_contribution_of_employee_for_DCPS']
+						: 0.0;
+					if ($salaryType === 'Regular') {
+						$empRegular += !empty($r['emp_DCPS_contribution']) ? (float)$r['emp_DCPS_contribution'] : $ideal;
+						$nmcRegular += !empty($r['NMC_DCPS_contribution']) ? (float)$r['NMC_DCPS_contribution'] : $ideal;
+					} elseif ($salaryType === 'Suplimentory') {
+						$empSupp += !empty($r['emp_DCPS_supplimentory_contribution']) ? (float)$r['emp_DCPS_supplimentory_contribution'] : $ideal;
+						$nmcSupp += !empty($r['NMC_supplimentory_DCPS_contribution']) ? (float)$r['NMC_supplimentory_DCPS_contribution'] : $ideal;
+					}
+					$loanInstallment += !empty($r['loan_installment_paid_through_salary']) ? (float)$r['loan_installment_paid_through_salary'] : 0.0;
+					$loanTaken += !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
+				}
+			}
 
 			$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
 			$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
