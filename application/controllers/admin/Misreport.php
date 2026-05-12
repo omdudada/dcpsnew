@@ -152,7 +152,7 @@ class Misreport extends CI_Controller{
 	    $this->load->view('admin/common/header');
 	    $this->load->view('admin/misbroadsheetreport/listingnew',$data);
 	}
-
+	
 	public function final_ledger_report()
 	{
 	    $postData = $this->input->post();
@@ -184,6 +184,10 @@ class Misreport extends CI_Controller{
 		    $data['searchData'] = $searchData;
 	        
 	        $dcpsDetails = $this->mrModel->getdcpsDetailsNew($searchData);
+			
+			if(!empty($dcpsDetails)){
+				//echo "<pre>"; print_r($dcpsDetails); exit;
+			}
 	        
 	        $processedEmpTDs = [];
             foreach ($dcpsDetails as $dcpsDetail) {
@@ -203,11 +207,15 @@ class Misreport extends CI_Controller{
 	        $data['interestRates'] = $this->mrModel->getInterestRates($searchData['first_year'], $searchData['second_year']);
 
 	        // Final ledger calculated rows (Excel-style)
-	        $data['finalLedger'] = $this->mrModel->getFinalLedgerCumulativeRows($searchData);
+	        $data['finalLedger'] = $this->mrModel->getFinalLedgerCumulativeRows($searchData); 
+	        //echo "<pre>"; print_r($data['finalLedger']); exit;
+	        //exit;
 	    }
 
 	    $data['paycenterData'] = $this->mrModel->getPayCenterData();
-	    $data['employeeData'] = $this->mrModel->getMasterData();
+	    $data['employeeData'] = $this->mrModel->gerMasterDetails();
+	    
+	    //echo "<pre>"; print_r($data['employeeData']); exit;
 
 	    // Excel export: output as .xls (HTML table) for compatibility.
 	    if(isset($urlAry['option']) && $urlAry['option'] === "excel"){
@@ -221,6 +229,7 @@ class Misreport extends CI_Controller{
 	    }
 	
 	    $this->load->view('admin/common/header');
+	    //echo "<pre>"; print_r($data); exit;
 	    $this->load->view('admin/misbroadsheetreport/final_ledger_report',$data);
 	}
 	

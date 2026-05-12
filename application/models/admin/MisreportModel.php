@@ -113,7 +113,7 @@ class MisreportModel extends CI_Model
 	}
 	
 	public function getdcpsDetailsNewOriginal($data){ 
-	   $sql = "SELECT mst.`emp_td`, em.emp_name, em.joining_date, em.pay_center, em.fixed_pay,
+	   $sql = "SELECT mst.`emp_td`, em.emp_name, em.joining_date, em.pay_center, em.fixed_pay, em.salary_type,
 		sum(`mst.Ideal_contribution_of_employee_for_DCPS`) as ideal_contribution, 
 		sum(`mst.emp_DCPS_contribution`) as emp_DCPS_contribution, 
 		sum(mst.emp_DCPS_supplimentory_contribution) as emp_DCPS_supplimentory_contribution, 
@@ -138,7 +138,7 @@ class MisreportModel extends CI_Model
 		    $sql .=" and  ((mst.`for_month` >= 1 and mst.`for_month` <= 3 && mst.`for_year` = ".$data['second_year'].")) ";
 		}
 		
-		//$sql .=" and mst.emp_td = 8967 ";
+		$sql .=" and mst.emp_td = 8967 ";
 		
 		if(isset($data['emp_id']) && $data['emp_id'] !=""){
 		    $sql.=" group by mst.for_month, mst.emp_td, mst.for_year ";
@@ -166,6 +166,7 @@ class MisreportModel extends CI_Model
                         mst.`emp_td`, 
                         dd.designation_name, 
                         em.emp_name, 
+                        mst.salary_type,
                         em.joining_date, 
                         mst.pay_center, 
                         SUM(mst.`Ideal_contribution_of_employee_for_DCPS`) AS ideal_contribution, 
@@ -470,7 +471,8 @@ class MisreportModel extends CI_Model
 		}
 	    
 	}
-
+	
+	
 	/**
 	 * Final Ledger (Excel-style) month-wise cumulative interest calculation.
 	 *
@@ -544,11 +546,14 @@ class MisreportModel extends CI_Model
 			$rows = array();
 			foreach ($monthsOrder as $m) {
 				$r = isset($byEmpMonth[$empId][$m]) ? $byEmpMonth[$empId][$m] : array();
+				
+				//echo "<br/><pre>result=>"; print_r($r); //exit;
 
-				$empRegular = !empty($r['emp_DCPS_contribution']) ? (float)$r['emp_DCPS_contribution'] : 0.0;
-				$empSupp = !empty($r['emp_DCPS_supplimentory_contribution']) ? (float)$r['emp_DCPS_supplimentory_contribution'] : 0.0;
-				$nmcRegular = !empty($r['NMC_DCPS_contribution']) ? (float)$r['NMC_DCPS_contribution'] : 0.0;
-				$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (float)$r['NMC_supplimentory_DCPS_contribution'] : 0.0;
+				$empRegular = empty($r['emp_DCPS_contribution']) && $r['salary_type'] == "Regular" ? (float)$r['ideal_contribution'] : 0.0;
+				$empSupp = empty($r['emp_DCPS_supplimentory_contribution']) && $r['salary_type'] == "Suplimentory" ? (float)$r['ideal_contribution'] : 0.0;
+				$nmcRegular = empty($r['NMC_DCPS_contribution']) && $r['salary_type'] == "Regular" ? (float)$r['ideal_contribution'] : 0.0;
+				$nmcSupp = empty($r['NMC_supplimentory_DCPS_contribution']) && $r['salary_type'] == "Suplimentory"? (float)$r['ideal_contribution'] : 0.0;
+				
 				$loanInstallment = !empty($r['loan_installment_paid_through_salary']) ? (float)$r['loan_installment_paid_through_salary'] : 0.0;
 				$loanTaken = !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
 
@@ -711,6 +716,7 @@ class MisreportModel extends CI_Model
 		$closing = ($opening + ($sumEmp + $sumEmpSupp + $sumLoanInst) + ($sumNmc + $sumNmcSupp)) - $sumLoanTaken + $sumInterest;
 		return (float)$closing;
 	}
+
 
 }
 ?>
