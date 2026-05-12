@@ -391,6 +391,98 @@ class MisreportModel extends CI_Model
             }*/
         
             // **Order By condition added here**
+            $sql .= " ORDER BY mst.pay_center ASC, CAST(mst.emp_td AS UNSIGNED) ASC";
+        
+            // Execute the query
+            $query = $this->db->query($sql);
+        
+            // Debugging (optional, remove for production)
+            //echo "<br/>" . $sql;   exit;
+        
+            // Return results
+            if ($query) {
+                return $query->result_array();
+            }
+        }
+        return 0;
+    }
+    
+    
+    public function getdcpsAllDetailsForLedger($data) { 
+        //echo "<pre>"; print_r($data); exit;
+        if(!empty($data)){
+            $sql = "SELECT 
+                        mst.*, 
+                        dd.designation_name, 
+                        em.emp_name, 
+                        em.joining_date
+                    FROM 
+                        `dpt_master_dcps` AS mst 
+                    LEFT JOIN 
+                        dpt_emp_master AS em 
+                    ON 
+                        em.emp_id = mst.emp_td 
+                    LEFT JOIN 
+                        dpt_designation AS dd 
+                    ON 
+                        dd.id = mst.designation_id 	
+                    WHERE 
+                        mst.is_deleted in (0) and mst.emp_td > 0 " ;
+        
+            // Add conditions dynamically based on input
+            if (isset($data['pay_center']) && $data['pay_center'] != "") {
+                $sql .= " AND mst.`pay_center` = " . $data['pay_center'];
+            }
+        
+            if (isset($data['emp_id']) && $data['emp_id'] != "") {
+                $sql .= " AND mst.`emp_td` = " . (int)$data['emp_id'];
+            }
+            
+            if (isset($data['voucher_date']) && $data['voucher_date'] != "") {
+                $sql .= " AND mst.`recovered_DCPS_with_voucher_date` = " . $this->db->escape($data['voucher_date']);
+            }
+    
+            if (isset($data['voucher_no']) && $data['voucher_no'] != "") {
+                $sql .= " AND mst.`recovered_DCPS_with_voucher_no` = " . $this->db->escape($data['voucher_no']);
+            }
+            
+        
+            if (isset($data['from_month']) && $data['from_month'] != "" && isset($data['to_month']) && $data['to_month'] != "") {
+                $sql .= " AND mst.`for_month` >= " . (int)$data['from_month'];
+                $sql .= " AND mst.`for_month` <= " . (int)$data['to_month'];
+            }
+            else{
+                if (isset($data['from_month']) && $data['from_month'] != "") {
+                    $sql .= " AND mst.`for_month` = " . (int)$data['from_month'];
+                }
+                elseif (isset($data['to_month']) && $data['to_month'] != "") {
+                    $sql .= " AND mst.`for_month` = " . (int)$data['to_month'];
+                }
+            }
+        
+            if (isset($data['first_year']) && $data['first_year'] != "" && isset($data['second_year']) && $data['second_year'] != "") {
+                $sql .= " AND (
+                    (mst.`for_month` >= 4 AND mst.`for_month` <= 12 AND mst.`for_year` = " . (int)$data['first_year'] . ") 
+                    OR 
+                    (mst.`for_month` >= 1 AND mst.`for_month` <= 3 AND mst.`for_year` = " . (int)$data['second_year'] . ")
+                )";
+            } elseif (isset($data['first_year']) && $data['first_year'] != "") {
+                $sql .= " AND mst.`for_month` >= 4 AND mst.`for_month` <= 12 AND mst.`for_year` = " . (int)$data['first_year'];
+            } elseif (isset($data['second_year']) && $data['second_year'] != "") {
+                $sql .= " AND mst.`for_month` >= 1 AND mst.`for_month` <= 3 AND mst.`for_year` = " . (int)$data['second_year'];
+            }
+        
+            // Additional hardcoded filter
+            //$sql .= " AND mst.emp_td = 8967 and for_month=6 and for_year=2008";
+        
+            // Group by condition
+            /*if (isset($data['emp_id']) && $data['emp_id'] != "") {
+                $sql .= " GROUP BY mst.for_month, mst.emp_td, mst.for_year";
+            } else {
+                $sql .= " GROUP BY mst.emp_td, mst.for_month, mst.for_year";
+            }*/
+        
+            // **Order By condition added here**
             // Case 2: year + from_month + to_month -> sort by voucher date (descending), then voucher no and file no ascending
             if (isset($data['first_year']) && $data['first_year'] != "" && isset($data['from_month']) && $data['from_month'] != "" && isset($data['to_month']) && $data['to_month'] != "") {
                 $sql .= " ORDER BY mst.recovered_DCPS_with_voucher_date DESC, mst.recovered_DCPS_with_voucher_no ASC, mst.file_no ASC";
@@ -506,7 +598,7 @@ class MisreportModel extends CI_Model
 		// IMPORTANT:
 		// Do NOT use grouped/monthly-summed data here, because duplicates (multiple records
 		// for same emp + month) must be shown separately (Deduction Report behavior).
-		$dcpsRows = $this->getdcpsAllDetailsForDeduction($data);
+		$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
 		$byEmpMonth = array(); // [empId][month] => [row,row,...]
 		$empIds = array();
 		if (is_array($dcpsRows)) {
@@ -586,11 +678,11 @@ class MisreportModel extends CI_Model
 				$rate = isset($rates[$m]) ? (float)$rates[$m] : 0.0;
 				$yearForMonth = ($m >= 4 && $m <= 12) ? $firstYear : $secondYear;
 
-				// Process each record as its own displayed row.
-				// Interest is calculated ONCE per month (on the month-end base) and assigned
-				// to the LAST displayed row for that month, to keep totals correct.
-				$monthRowCount = count($monthRecords);
-				foreach ($monthRecords as $idx => $r) {
+				// Build rows for this month: contributions updated sequentially on bases,
+				// then ONE monthly interest on month-end base is split across duplicate rows
+				// so each row shows interest while totals stay mathematically correct.
+				$pendingRows = array();
+				foreach ($monthRecords as $r) {
 					$salaryType = isset($r['salary_type']) ? (string)$r['salary_type'] : '';
 					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
 						? (float)$r['Ideal_contribution_of_employee_for_DCPS']
@@ -619,12 +711,7 @@ class MisreportModel extends CI_Model
 					$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
 					$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
 
-					$isLastInMonth = ($idx === ($monthRowCount - 1));
-					$empInterest = $isLastInMonth ? round((($empBase * $rate) / 100) / 12, 0) : 0.0;
-					$nmcInterest = $isLastInMonth ? round((($nmcBase * $rate) / 100) / 12, 0) : 0.0;
-					$totalInterest = $empInterest + $nmcInterest;
-
-					$rows[] = array(
+					$pendingRows[] = array(
 						'month' => $m,
 						'year' => $yearForMonth,
 						'emp_regular' => $empRegular,
@@ -637,10 +724,6 @@ class MisreportModel extends CI_Model
 						'emp_base' => $empBase,
 						'nmc_base' => $nmcBase,
 						'total_base' => $totalBase,
-						'emp_interest' => $empInterest,
-						'nmc_interest' => $nmcInterest,
-						'total_interest' => $totalInterest,
-						'rate' => $isLastInMonth ? $rate : 0.0,
 						'bunch_no' => isset($r['bunch_no']) ? $r['bunch_no'] : 0,
 						'file_no' => isset($r['file_no']) ? $r['file_no'] : 0,
 					);
@@ -652,10 +735,29 @@ class MisreportModel extends CI_Model
 					$totals['loan_installment'] += $loanInstallment;
 					$totals['total_deposit'] += $totalDeposit;
 					$totals['loan_taken'] += $loanTaken;
-					$totals['emp_interest'] += $empInterest;
-					$totals['nmc_interest'] += $nmcInterest;
-					$totals['total_interest'] += $totalInterest;
 				}
+
+				$monthEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
+				$monthNmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
+				$rowCount = count($pendingRows);
+				$empIntParts = $this->_splitIntegerAcrossRows($monthEmpInterest, $rowCount);
+				$nmcIntParts = $this->_splitIntegerAcrossRows($monthNmcInterest, $rowCount);
+
+				foreach ($pendingRows as $i => $prow) {
+					$ei = isset($empIntParts[$i]) ? $empIntParts[$i] : 0;
+					$ni = isset($nmcIntParts[$i]) ? $nmcIntParts[$i] : 0;
+					$prow['emp_interest'] = $monthEmpInterest;
+					$prow['nmc_interest'] = $monthNmcInterest;
+					$prow['total_interest'] = $monthEmpInterest + $monthNmcInterest;
+					$prow['rate'] = $rate;
+					$rows[] = $prow;
+					
+					$totals['emp_interest'] += $monthEmpInterest;
+    				$totals['nmc_interest'] += $monthNmcInterest;
+    				$totals['total_interest'] += ($monthEmpInterest + $monthNmcInterest);
+				}
+
+				
 			}
 
 			$out[$empId] = array(
@@ -707,6 +809,29 @@ class MisreportModel extends CI_Model
 	}
 
 	/**
+	 * Split an integer total across N displayed rows; returned integers sum exactly to $total.
+	 * Used so duplicate month-rows each show a share of that month's interest.
+	 */
+	private function _splitIntegerAcrossRows($total, $n)
+	{
+		$total = (int) round((float) $total);
+		$n = (int) $n;
+		if ($n <= 0) {
+			return array();
+		}
+		if ($n === 1) {
+			return array($total);
+		}
+		$base = intdiv($total, $n);
+		$rem = $total - ($base * $n);
+		$out = array();
+		for ($i = 0; $i < $n; $i++) {
+			$out[] = $base + ($i < $rem ? 1 : 0);
+		}
+		return $out;
+	}
+
+	/**
 	 * Compute closing for one FY (fyStart-fyStart+1) given opening.
 	 */
 	private function _finalLedgerComputeClosingForFY($empId, $fyStart, $opening)
@@ -729,7 +854,7 @@ class MisreportModel extends CI_Model
 		}
 
 		// Use ungrouped rows so duplicates contribute to closing properly.
-		$dcpsRows = $this->getdcpsAllDetailsForDeduction($data);
+		$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
 		$byMonth = array(); // [month] => list of rows
 		if (is_array($dcpsRows)) {
 			foreach ($dcpsRows as $r) {

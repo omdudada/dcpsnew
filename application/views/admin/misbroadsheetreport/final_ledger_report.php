@@ -15,10 +15,82 @@
         text-align:center;
     }
 
+    /* Bottom section: certificate (left) + summary table (right), print-friendly */
+    .final-ledger-bottom-wrap {
+        width: 100%;
+        margin-top: 16px;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    .final-ledger-bottom-wrap td {
+        vertical-align: top;
+        border: 1px solid #000;
+        padding: 10px;
+    }
+    .final-ledger-cert-box {
+        width: 38%;
+        font-size: 13px;
+        line-height: 1.45;
+        text-align: justify;
+    }
+    .final-ledger-cert-box strong {
+        display: block;
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+    .final-ledger-summary-wrap {
+        width: 62%;
+    }
+    .final-ledger-summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 28px;
+    }
+    .final-ledger-summary-table th,
+    .final-ledger-summary-table td {
+        border: 1px solid #000;
+        padding: 6px 8px;
+    }
+    .final-ledger-summary-table .fls-num {
+        width: 36px;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .final-ledger-summary-table .fls-desc {
+        text-align: center;
+        vertical-align: middle;
+    }
+    .final-ledger-summary-table .fls-amt {
+        width: 110px;
+        text-align: right;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    .final-ledger-sign-row {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+    }
+    .final-ledger-sign-row td {
+        border: none;
+        padding: 24px 12px 8px;
+        vertical-align: bottom;
+        font-size: 13px;
+        width: 50%;
+    }
+    .final-ledger-sign-line {
+        border-top: 1px solid #000;
+        margin-top: 36px;
+        padding-top: 6px;
+        text-align: center;
+    }
+
     @media print {
         .no-print { display:none; }
         table { width:100%; border-collapse: collapse; }
         th, td { border:1px solid #000 !important; padding:4px; text-align:center; }
+        .final-ledger-sign-row td { border: none !important; }
     }
 </style>
 
@@ -33,6 +105,7 @@
     $isExcel = (isset($urlAry['option']) && $urlAry['option'] === 'excel');
 
     function _n0($v){ return number_format((float)$v, 0, '.', ''); }
+    function _nf($v){ return number_format((float)$v, 2, '.', ''); }
 ?>
 
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
@@ -132,10 +205,10 @@
                                     <table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
                                         <thead>
                                             <tr>
-                                                <th style="text-align:center;" colspan="18">नाशिक महानगरपालिका,नाशिक</th>
+                                                <th style="text-align:center;" colspan="17">नाशिक महानगरपालिका,नाशिक</th>
                                             </tr>
                                             <tr>
-                                                <th style="text-align:center;" colspan="18">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
+                                                <th style="text-align:center;" colspan="17">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी क्रमांक</th>
@@ -155,6 +228,8 @@
                                             </tr>
                                             <tr>
                                                 <th rowspan="2">महिना</th>
+                                                <th rowspan="2">गठ्ठा क्रमांक</th>
+                                                <th rowspan="2">फाईल क्रमांक</th>
                                                 <th colspan="2">कर्मचारी वर्गणी</th>
                                                 <th colspan="2">मनपा वर्गणी</th>
                                                 <th rowspan="2">कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा हप्ता (जमा)</th>
@@ -167,8 +242,7 @@
                                                 <th rowspan="2">मनपा वर्गणी - मिळणाऱ्या व्याजाची रक्कम</th>
                                                 <th rowspan="2">मिळणाऱ्या व्याजाची एकूण रक्कम</th>
                                                 <th rowspan="2">व्याज दर</th>
-                                                <th rowspan="2">Bunch No</th>
-                                                <th rowspan="2">File No</th>
+                                                
                                             </tr>
                                             <tr>
                                                 <th>नियमित वेतन</th>
@@ -190,6 +264,9 @@
                                                     'loan_installment' => 0.0,
                                                     'total_deposit' => 0.0,
                                                     'loan_taken' => 0.0,
+                                                    'emp_base' => 0.0,
+                                                    'nmc_base' => 0.0,
+                                                    'total_base' => 0.0,
                                                     'emp_interest' => 0.0,
                                                     'nmc_interest' => 0.0,
                                                     'total_interest' => 0.0,
@@ -198,7 +275,10 @@
                                                 $lastRowShown = null;
                                             ?>
 
-                                            <?php foreach($ledger['rows'] as $row){
+                                            <?php 
+                                            //echo "<pre>"; print_r($ledger); exit;
+                                            foreach($ledger['rows'] as $row){
+                                                
                                                 $m = (int)$row['month'];
                                                 if ($fromMonth !== null && $toMonth !== null) {
                                                     if ($m < $fromMonth || $m > $toMonth) { continue; }
@@ -215,6 +295,9 @@
                                                 $totShow['loan_installment'] += (float)$row['loan_installment'];
                                                 $totShow['total_deposit'] += (float)$row['total_deposit'];
                                                 $totShow['loan_taken'] += (float)$row['loan_taken'];
+                                                $totShow['emp_base'] += (float)$row['emp_base'];
+                                                $totShow['nmc_base'] += (float)$row['nmc_base'];
+                                                $totShow['total_base'] += (float)$row['total_base'];
                                                 $totShow['emp_interest'] += (float)$row['emp_interest'];
                                                 $totShow['nmc_interest'] += (float)$row['nmc_interest'];
                                                 $totShow['total_interest'] += (float)$row['total_interest'];
@@ -225,6 +308,8 @@
                                             ?>
                                                 <tr>
                                                     <td><?= $monthText; ?></td>
+                                                    <td><?= !empty($row['bunch_no']) ? htmlspecialchars((string)$row['bunch_no']) : 0; ?></td>
+                                                    <td><?= !empty($row['file_no']) ? htmlspecialchars((string)$row['file_no']) : 0; ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_regular']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_supp']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['nmc_regular']); ?></td>
@@ -239,12 +324,12 @@
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['nmc_interest']); ?></td>
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['total_interest']); ?></td>
                                                     <td><?= $rateLabel; ?></td>
-                                                    <td><?= !empty($row['bunch_no']) ? htmlspecialchars((string)$row['bunch_no']) : 0; ?></td>
-                                                    <td><?= !empty($row['file_no']) ? htmlspecialchars((string)$row['file_no']) : 0; ?></td>
                                                 </tr>
                                             <?php } ?>
                                             <tr>
                                                 <th>एकुण <?= $searchData['f_year']; ?></th>
+                                                <th></th>
+                                                <th></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['emp_regular']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['emp_supp']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['nmc_regular']); ?></th>
@@ -252,53 +337,106 @@
                                                 <th style="text-align:right;"><?= _n0($totShow['loan_installment']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['total_deposit']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['loan_taken']); ?></th>
-                                                <th style="text-align:right;"><?= _n0(!empty($lastRowShown) ? $lastRowShown['emp_base'] : 0); ?></th>
-                                                <th style="text-align:right;"><?= _n0(!empty($lastRowShown) ? $lastRowShown['nmc_base'] : 0); ?></th>
-                                                <th style="text-align:right;"><?= _n0(!empty($lastRowShown) ? $lastRowShown['total_base'] : 0); ?></th>
+                                                <th style="text-align:right;"><?= _n0($totShow['emp_base']); ?></th>
+                                                <th style="text-align:right;"><?= _n0($totShow['nmc_base']); ?></th>
+                                                <th style="text-align:right;"><?= _n0($totShow['total_base']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['emp_interest']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['nmc_interest']); ?></th>
                                                 <th style="text-align:right;"><?= _n0($totShow['total_interest']); ?></th>
-                                                <th colspan="3"></th>
-                                            </tr>
-
-                                            <!-- Bottom summary block (as in Excel) -->
-                                            <tr><td colspan="18" style="height:8px; background:#fff;"></td></tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>1</td><td colspan="4">सुरुवातीची शिल्लक</td><td style="text-align:right;"><?= _n0($opening); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>2</td><td colspan="4">एकुण कर्मचारी वर्गणी</td><td style="text-align:right;"><?= _n0($tot['emp_regular']+$tot['emp_supp']); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>3</td><td colspan="4">कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा एकुण हप्ता (जमा)</td><td style="text-align:right;"><?= _n0($tot['loan_installment']); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>4</td><td colspan="4">एकुण कर्मचारी वर्गणी व कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा हप्ता : जमा (2+3)</td>
-                                                <td style="text-align:right;"><?= _n0(($tot['emp_regular']+$tot['emp_supp']) + $tot['loan_installment']); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>5</td><td colspan="4">मनपा वर्गणी</td><td style="text-align:right;"><?= _n0($tot['nmc_regular']+$tot['nmc_supp']); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>6</td><td colspan="4">एकुण जमा (सुरवातीची शिलकेसह) (1+4+5)</td>
-                                                <td style="text-align:right;"><?= _n0($opening + (($tot['emp_regular']+$tot['emp_supp']) + $tot['loan_installment']) + ($tot['nmc_regular']+$tot['nmc_supp'])); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>7</td><td colspan="4">काढलेल्या कर्जाची रक्कम (-)</td><td style="text-align:right;"><?= _n0($tot['loan_taken']); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>8</td><td colspan="4">कर्मचारी वर्गणी - मिळणाऱ्या व्याजाची रक्कम</td><td style="text-align:right;"><?= _n0($tot['emp_interest']); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>9</td><td colspan="4">मनपा वर्गणी - मिळणाऱ्या व्याजाची रक्कम</td><td style="text-align:right;"><?= _n0($tot['nmc_interest']); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>10</td><td colspan="4">एकुण मिळणाऱ्या व्याजाची रक्कम (8+9)</td><td style="text-align:right;"><?= _n0($tot['total_interest']); ?></td><td colspan="7"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5"></td><td>11</td><td colspan="4">मार्च अखेर शिल्लक (6-7+10)</td><td style="text-align:right; font-weight:700;"><?= _n0($closing); ?></td><td colspan="7"></td>
+                                                <th></th>
                                             </tr>
                                         </tbody>
+                                    </table>
+
+                                    <?php
+                                        $fyMarchYear = isset($searchData['second_year']) ? (int) $searchData['second_year'] : 0;
+                                        $sumEmpContrib = $tot['emp_regular'] + $tot['emp_supp'];
+                                        $sumNmcContrib = $tot['nmc_regular'] + $tot['nmc_supp'];
+                                        $sumRow4 = $sumEmpContrib + $tot['loan_installment'];
+                                        $sumRow6 = $opening + $sumRow4 + $sumNmcContrib;
+                                    ?>
+                                    <table class="final-ledger-bottom-wrap" cellspacing="0">
+                                        <tr>
+                                            <td class="final-ledger-cert-box">
+                                                <strong>प्रमाणपत्र</strong>
+                                                <p style="margin:0;">उपरोक्त कर्मचाऱ्याच्या परिभाषित अंशदान निवृत्तीवेतन योजनेच्या वर्गण्या फॉर्म नं. २, वेतनपत्रिका, वेतन बिल व संबंधित दस्तऐवजांच्या आधारे तपासून बरोबर असल्याची खात्री करण्यात आली आहे.</p>
+                                            </td>
+                                            <td class="final-ledger-summary-wrap">
+                                                <table class="final-ledger-summary-table" cellspacing="0">
+                                                    <tr>
+                                                        <td class="fls-num">1</td>
+                                                        <td class="fls-desc">सुरुवातीची शिल्लक</td>
+                                                        <td class="fls-amt"><?= _nf($opening); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">2</td>
+                                                        <td class="fls-desc">एकूण कर्मचारी वर्गणी</td>
+                                                        <td class="fls-amt"><?= _nf($sumEmpContrib); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">3</td>
+                                                        <td class="fls-desc">कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा एकूण हप्ता (जमा)</td>
+                                                        <td class="fls-amt"><?= _nf($tot['loan_installment']); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">4</td>
+                                                        <td class="fls-desc">एकूण कर्मचारी वर्गणी व कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा हप्ता : जमा (2+3)</td>
+                                                        <td class="fls-amt"><?= _nf($sumRow4); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">5</td>
+                                                        <td class="fls-desc">मनपा वर्गणी</td>
+                                                        <td class="fls-amt"><?= _nf($sumNmcContrib); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">6</td>
+                                                        <td class="fls-desc">एकूण जमा (सुरुवातीची शिल्लकसह) (1+4+5)</td>
+                                                        <td class="fls-amt"><?= _nf($sumRow6); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">7</td>
+                                                        <td class="fls-desc">काढलेल्या कर्जाची रक्कम (-)</td>
+                                                        <td class="fls-amt"><?= _nf($tot['loan_taken']); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">8</td>
+                                                        <td class="fls-desc">कर्मचारी वर्गणी - मिळणाऱ्या व्याजाची रक्कम</td>
+                                                        <td class="fls-amt"><?= _nf($tot['emp_interest']); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">9</td>
+                                                        <td class="fls-desc">मनपा वर्गणी - मिळणाऱ्या व्याजाची रक्कम</td>
+                                                        <td class="fls-amt"><?= _nf($tot['nmc_interest']); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">10</td>
+                                                        <td class="fls-desc">एकूण मिळणाऱ्या व्याजाची रक्कम (8+9)</td>
+                                                        <td class="fls-amt"><?= _nf($tot['total_interest']); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">11</td>
+                                                        <td class="fls-desc">मार्च <?= $fyMarchYear ? htmlspecialchars((string) $fyMarchYear) : ''; ?> अखेर शिल्लक (6-7+10)</td>
+                                                        <td class="fls-amt" style="font-weight:700;"><?= _nf($closing); ?></td>
+                                                    </tr>
+                                                </table>
+                                                <table class="final-ledger-sign-row" cellspacing="0">
+                                                    <tr>
+                                                        <td>
+                                                            <div class="final-ledger-sign-line">
+                                                                क. लिपीक<br>
+                                                                <span style="font-weight:600;">के. ए. रेवर</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="final-ledger-sign-line">
+                                                                उपमुख्यलेखाधिकारी, सो.<br>
+                                                                <span style="font-weight:600;">एस. एम. पाटील</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
                                     </table>
                                 </div>
                             <?php } ?>
