@@ -207,7 +207,7 @@
 							    </div>
                                 <div class="col-sm-1">
 									<label class=""></label>
-									<input type="submit" class="btn btn-primary" id="search" value="Search" style="margin: 12px 0px 0px 0px">
+									<input type="submit" class="btn btn-primary" id="search" value="Search" style="margin: 25px 0px 0px 10px">
 								</div>
 							</div>
                         </form>
@@ -416,7 +416,14 @@
                                         <tr>
                                             <td class="final-ledger-cert-box">
                                                 <strong>प्रमाणपत्र</strong>
-                                                <p style="margin:0;">उपरोक्त कर्मचाऱ्याच्या परिभाषित अंशदान निवृत्तीवेतन योजनेच्या वर्गण्या फॉर्म नं. २, वेतनपत्रिका, वेतन बिल व संबंधित दस्तऐवजांच्या आधारे तपासून बरोबर असल्याची खात्री करण्यात आली आहे.</p>
+                                                <p style="margin:0;">
+                                                    १. कर्मचारी अंशदान वर्गणी कपात नमुना - २, आणि / किंवा<br>
+                                                    २. वेतन देयक, आणि / किंवा<br>
+                                                    ३. वेतन पत्रिका<br>
+                                                    ४. पगार बिल ओ.सी. (Payment OC) इत्यादी<br>
+                                                
+                                                    अन्वये सदर कर्मचाऱ्यांच्या नवीन परिभाषित अंशदान निवृत्तीवेतन योजनेबाबतच्या प्रति माह अंशदान वर्गणी कपाती विभागामार्फत प्रमाणित करण्यात येत असून, त्यानुसार सदर लेखांकन अचूक व बरोबर आहे.
+                                                </p><br/>
                                                 <div class="final-ledger-cert-signs">
                                                     <div class="final-ledger-sign-line">
                                                         बिल लिपिक<br>

@@ -781,6 +781,7 @@ class MisreportModel extends CI_Model
 	 */
 	public function getFinalLedgerOpeningBalanceRuntime($empId, $firstYear)
 	{
+	    //echo "empId=>".$empId.", firstYear=>".$firstYear; exit;
 		$empId = (int)$empId;
 		$firstYear = (int)$firstYear;
 
@@ -801,7 +802,10 @@ class MisreportModel extends CI_Model
 				$opening = (float)$closingCache[$empId][$fy];
 				continue;
 			}
-
+            if($fy == 2007){
+                //echo "empId=>".$empId.", firstYear=>".$fy.", Opening=>".$opening; exit;
+            }
+            //echo "<br/>empId=>".$empId.", firstYear=>".$fy.", Opening=>".$opening;
 			$closing = $this->_finalLedgerComputeClosingForFY($empId, $fy, $opening);
 			$closingCache[$empId][$fy] = $closing;
 			$opening = $closing;
@@ -857,6 +861,7 @@ class MisreportModel extends CI_Model
 
 		// Use ungrouped rows so duplicates contribute to closing properly.
 		$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
+		//echo "<br/><pre>"; print_R($dcpsRows); //exit;
 		$byMonth = array(); // [month] => list of rows
 		if (is_array($dcpsRows)) {
 			foreach ($dcpsRows as $r) {
@@ -867,6 +872,7 @@ class MisreportModel extends CI_Model
 				$byMonth[$m][] = $r;
 			}
 		}
+		//echo "<br/><pre>By Month=>"; print_r($byMonth);
 
 		$empBase = $opening;
 		$nmcBase = 0.0;
@@ -887,6 +893,8 @@ class MisreportModel extends CI_Model
 			$nmcSupp = 0.0;
 			$loanInstallment = 0.0;
 			$loanTaken = 0.0;
+			
+			//echo "<br/><pre>"; print_r($monthRecords); 
 
 			if (!empty($monthRecords)) {
 				foreach ($monthRecords as $r) {
@@ -903,15 +911,20 @@ class MisreportModel extends CI_Model
 					}
 					$loanInstallment += !empty($r['loan_installment_paid_through_salary']) ? (float)$r['loan_installment_paid_through_salary'] : 0.0;
 					$loanTaken += !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
+					$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
+			        $nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
+			        
+			        $rate = isset($rates[$m]) ? (float)$rates[$m] : 0.0;
+        			$empInterest = round((($empBase * $rate) / 100) / 12, 0);
+        			$nmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
 				}
 			}
 
-			$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
-			$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
+			
+			
+			//echo "<pre>EmpBase=>".$empBase;
 
-			$rate = isset($rates[$m]) ? (float)$rates[$m] : 0.0;
-			$empInterest = round((($empBase * $rate) / 100) / 12, 0);
-			$nmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
+			
 			$sumInterest += ($empInterest + $nmcInterest);
 
 			$sumEmp += $empRegular;
@@ -927,5 +940,6 @@ class MisreportModel extends CI_Model
 	}
 
 
+       
 }
 ?>

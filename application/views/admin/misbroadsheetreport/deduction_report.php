@@ -349,7 +349,7 @@ if (isset($urlAry['option']) && $urlAry['option'] == "print") {
     							    </div>
     							    <div class="col-sm-1">
     									<label for="inputState" class=""></label>
-    									<input type="submit" class="btn btn-primary" id="search" value="Search" style="margin: 12px 0px 0px 0px">
+    									<input type="submit" class="btn btn-primary" id="search" value="Search" style="margin: 25px 0px 0px 10px">
     								</div>
     							<?php 
                         		    }
