@@ -726,6 +726,8 @@ class MisreportModel extends CI_Model
 						'total_base' => $totalBase,
 						'bunch_no' => isset($r['bunch_no']) ? $r['bunch_no'] : 0,
 						'file_no' => isset($r['file_no']) ? $r['file_no'] : 0,
+						'recovered_DCPS_with_voucher_no' => isset($r['recovered_DCPS_with_voucher_no']) ? $r['recovered_DCPS_with_voucher_no'] : '',
+						'recovered_DCPS_with_voucher_date' => isset($r['recovered_DCPS_with_voucher_date']) ? $r['recovered_DCPS_with_voucher_date'] : '',
 					);
 
 					$totals['emp_regular'] += $empRegular;

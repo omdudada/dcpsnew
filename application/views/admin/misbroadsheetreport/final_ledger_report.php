@@ -15,6 +15,11 @@
         text-align:center;
     }
 
+    table td.clsCenter, table th.clsCenter {
+        text-align: center;
+        vertical-align: middle;
+    }
+
     /* Bottom section: certificate (left) + summary table (right), print-friendly */
     .final-ledger-bottom-wrap {
         width: 100%;
@@ -83,6 +88,22 @@
         border-top: 1px solid #000;
         margin-top: 36px;
         padding-top: 6px;
+        text-align: center;
+    }
+    .final-ledger-cert-signs {
+        margin-top: 20px;
+        padding-top: 8px;
+    }
+    .final-ledger-cert-signs .final-ledger-sign-line {
+        margin-top: 28px;
+        font-size: 12px;
+        line-height: 1.35;
+    }
+    .final-ledger-cert-signs .final-ledger-sign-line:first-child {
+        margin-top: 16px;
+    }
+    .final-ledger-month-cell {
+        vertical-align: middle;
         text-align: center;
     }
 
@@ -205,10 +226,10 @@
                                     <table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
                                         <thead>
                                             <tr>
-                                                <th style="text-align:center;" colspan="17">नाशिक महानगरपालिका,नाशिक</th>
+                                                <th style="text-align:center;" colspan="19">नाशिक महानगरपालिका,नाशिक</th>
                                             </tr>
                                             <tr>
-                                                <th style="text-align:center;" colspan="17">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
+                                                <th style="text-align:center;" colspan="19">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी क्रमांक</th>
@@ -216,7 +237,7 @@
                                                 <th>कर्मचारी नाव</th>
                                                 <td colspan="6"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                                                 <th colspan="3">सुरवातीची शिल्लक</th>
-                                                <td colspan="6" style="text-align:right;"><?= _n0($opening); ?></td>
+                                                <td colspan="7" style="text-align:right;"><?= _n0($opening); ?></td>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी नियुक्ती दिनांक</th>
@@ -224,12 +245,15 @@
                                                 <th>पे सेंटर</th>
                                                 <td><?= !empty($ownerDetail['pay_center']) ? $ownerDetail['pay_center'] : ''; ?></td>
                                                 <th>हुद्दा</th>
-                                                <td colspan="13"><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
+                                                <td colspan="14"><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
                                             </tr>
                                             <tr>
                                                 <th rowspan="2">महिना</th>
                                                 <th rowspan="2">गठ्ठा क्रमांक</th>
                                                 <th rowspan="2">फाईल क्रमांक</th>
+                                                <th rowspan="2">प्रमाणक क्रमांक</th>
+                                                <th rowspan="2">प्रमाणक दिनांक</th>
+                                                
                                                 <th colspan="2">कर्मचारी वर्गणी</th>
                                                 <th colspan="2">मनपा वर्गणी</th>
                                                 <th rowspan="2">कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा हप्ता (जमा)</th>
@@ -273,43 +297,78 @@
                                                 );
 
                                                 $lastRowShown = null;
-                                            ?>
 
-                                            <?php 
-                                            //echo "<pre>"; print_r($ledger); exit;
-                                            foreach($ledger['rows'] as $row){
-                                                
-                                                $m = (int)$row['month'];
-                                                if ($fromMonth !== null && $toMonth !== null) {
-                                                    if ($m < $fromMonth || $m > $toMonth) { continue; }
-                                                } elseif ($fromMonth !== null) {
-                                                    if ($m !== $fromMonth) { continue; }
-                                                } elseif ($toMonth !== null) {
-                                                    if ($m !== $toMonth) { continue; }
+                                                $fltRows = array();
+                                                foreach ($ledger['rows'] as $row) {
+                                                    $m = (int) $row['month'];
+                                                    if ($fromMonth !== null && $toMonth !== null) {
+                                                        if ($m < $fromMonth || $m > $toMonth) {
+                                                            continue;
+                                                        }
+                                                    } elseif ($fromMonth !== null) {
+                                                        if ($m !== $fromMonth) {
+                                                            continue;
+                                                        }
+                                                    } elseif ($toMonth !== null) {
+                                                        if ($m !== $toMonth) {
+                                                            continue;
+                                                        }
+                                                    }
+                                                    $fltRows[] = $row;
                                                 }
 
-                                                $totShow['emp_regular'] += (float)$row['emp_regular'];
-                                                $totShow['emp_supp'] += (float)$row['emp_supp'];
-                                                $totShow['nmc_regular'] += (float)$row['nmc_regular'];
-                                                $totShow['nmc_supp'] += (float)$row['nmc_supp'];
-                                                $totShow['loan_installment'] += (float)$row['loan_installment'];
-                                                $totShow['total_deposit'] += (float)$row['total_deposit'];
-                                                $totShow['loan_taken'] += (float)$row['loan_taken'];
-                                                $totShow['emp_base'] += (float)$row['emp_base'];
-                                                $totShow['nmc_base'] += (float)$row['nmc_base'];
-                                                $totShow['total_base'] += (float)$row['total_base'];
-                                                $totShow['emp_interest'] += (float)$row['emp_interest'];
-                                                $totShow['nmc_interest'] += (float)$row['nmc_interest'];
-                                                $totShow['total_interest'] += (float)$row['total_interest'];
+                                                $monthCounts = array();
+                                                foreach ($fltRows as $row) {
+                                                    $mk = (int) $row['month'] . '|' . (int) $row['year'];
+                                                    $monthCounts[$mk] = isset($monthCounts[$mk]) ? $monthCounts[$mk] + 1 : 1;
+                                                }
+                                                $monthSeen = array();
+                                                $monthRowspan = array();
+                                                foreach ($fltRows as $i => $row) {
+                                                    $mk = (int) $row['month'] . '|' . (int) $row['year'];
+                                                    if (!isset($monthSeen[$mk])) {
+                                                        $monthSeen[$mk] = true;
+                                                        $monthRowspan[$i] = $monthCounts[$mk];
+                                                    } else {
+                                                        $monthRowspan[$i] = 0;
+                                                    }
+                                                }
+                                            ?>
+
+                                            <?php foreach ($fltRows as $i => $row) {
+                                                $m = (int) $row['month'];
+                                                $totShow['emp_regular'] += (float) $row['emp_regular'];
+                                                $totShow['emp_supp'] += (float) $row['emp_supp'];
+                                                $totShow['nmc_regular'] += (float) $row['nmc_regular'];
+                                                $totShow['nmc_supp'] += (float) $row['nmc_supp'];
+                                                $totShow['loan_installment'] += (float) $row['loan_installment'];
+                                                $totShow['total_deposit'] += (float) $row['total_deposit'];
+                                                $totShow['loan_taken'] += (float) $row['loan_taken'];
+                                                $totShow['emp_base'] += (float) $row['emp_base'];
+                                                $totShow['nmc_base'] += (float) $row['nmc_base'];
+                                                $totShow['total_base'] += (float) $row['total_base'];
+                                                $totShow['emp_interest'] += (float) $row['emp_interest'];
+                                                $totShow['nmc_interest'] += (float) $row['nmc_interest'];
+                                                $totShow['total_interest'] += (float) $row['total_interest'];
 
                                                 $lastRowShown = $row;
-                                                $monthText = $months[$m]." ".$row['year'];
-                                                $rateLabel = $row['rate'] ? ("व्याज दर ".number_format((float)$row['rate'],2)."%") : "";
+                                                $monthText = $months[$m] . ' ' . $row['year'];
+                                                $rateLabel = !empty($row['rate']) ? ('व्याज दर ' . number_format((float) $row['rate'], 2) . '%') : '';
+
+                                                $bunchDisp = (isset($row['bunch_no']) && $row['bunch_no'] !== '' && $row['bunch_no'] !== null) ? htmlspecialchars((string) $row['bunch_no']) : '';
+                                                $fileDisp = (isset($row['file_no']) && $row['file_no'] !== '' && $row['file_no'] !== null) ? htmlspecialchars((string) $row['file_no']) : '';
+                                                $voucherNo = isset($row['recovered_DCPS_with_voucher_no']) ? trim((string) $row['recovered_DCPS_with_voucher_no']) : '';
+                                                $voucherDt = isset($row['recovered_DCPS_with_voucher_date']) ? trim((string) $row['recovered_DCPS_with_voucher_date']) : '';
+                                                $rsMonth = isset($monthRowspan[$i]) ? (int) $monthRowspan[$i] : 1;
                                             ?>
                                                 <tr>
-                                                    <td><?= $monthText; ?></td>
-                                                    <td><?= !empty($row['bunch_no']) ? htmlspecialchars((string)$row['bunch_no']) : 0; ?></td>
-                                                    <td><?= !empty($row['file_no']) ? htmlspecialchars((string)$row['file_no']) : 0; ?></td>
+                                                    <?php if ($rsMonth > 0) { ?>
+                                                        <td class="final-ledger-month-cell" rowspan="<?= $rsMonth; ?>"><?= htmlspecialchars($monthText); ?></td>
+                                                    <?php } ?>
+                                                    <td class="clsCenter"><?= $bunchDisp; ?></td>
+                                                    <td class="clsCenter"><?= $fileDisp; ?></td>
+                                                    <td class="clsCenter"><?= $voucherNo !== '' ? htmlspecialchars($voucherNo) : ''; ?></td>
+                                                    <td class="clsCenter"><?= $voucherDt !== '' ? htmlspecialchars($voucherDt) : ''; ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_regular']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_supp']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['nmc_regular']); ?></td>
@@ -323,27 +382,25 @@
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['emp_interest']); ?></td>
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['nmc_interest']); ?></td>
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['total_interest']); ?></td>
-                                                    <td><?= $rateLabel; ?></td>
+                                                    <td><?= htmlspecialchars($rateLabel); ?></td>
                                                 </tr>
                                             <?php } ?>
                                             <tr>
-                                                <th>एकुण <?= $searchData['f_year']; ?></th>
-                                                <th></th>
-                                                <th></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['emp_regular']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['emp_supp']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['nmc_regular']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['nmc_supp']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['loan_installment']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['total_deposit']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['loan_taken']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['emp_base']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['nmc_base']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['total_base']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['emp_interest']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['nmc_interest']); ?></th>
-                                                <th style="text-align:right;"><?= _n0($totShow['total_interest']); ?></th>
-                                                <th></th>
+                                                <td colspan="5" style="text-align:center;"><strong>एकुण <?= htmlspecialchars((string) $searchData['f_year']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['emp_regular']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['emp_supp']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['nmc_regular']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['nmc_supp']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['loan_installment']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['total_deposit']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['loan_taken']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['emp_base']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['nmc_base']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['total_base']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['emp_interest']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['nmc_interest']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0($totShow['total_interest']); ?></strong></td>
+                                                <td></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -360,6 +417,20 @@
                                             <td class="final-ledger-cert-box">
                                                 <strong>प्रमाणपत्र</strong>
                                                 <p style="margin:0;">उपरोक्त कर्मचाऱ्याच्या परिभाषित अंशदान निवृत्तीवेतन योजनेच्या वर्गण्या फॉर्म नं. २, वेतनपत्रिका, वेतन बिल व संबंधित दस्तऐवजांच्या आधारे तपासून बरोबर असल्याची खात्री करण्यात आली आहे.</p>
+                                                <div class="final-ledger-cert-signs">
+                                                    <div class="final-ledger-sign-line">
+                                                        बिल लिपिक<br>
+                                                        <span style="font-weight:600;">&nbsp;</span>
+                                                    </div><br/>
+                                                    <div class="final-ledger-sign-line">
+                                                        वरिष्ठ  लिपिक / सहाय्यक अधीक्षक / अधीक्षक<br>
+                                                        <span style="font-weight:600;">&nbsp;</span>
+                                                    </div></br/>
+                                                    <div class="final-ledger-sign-line">
+                                                        कार्यालय प्रमुख/ विभाग प्रमुख / आहारण व संवितरण अधिकारी<br>
+                                                        <span style="font-weight:600;">&nbsp;</span>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td class="final-ledger-summary-wrap">
                                                 <table class="final-ledger-summary-table" cellspacing="0">
@@ -423,15 +494,12 @@
                                                     <tr>
                                                         <td>
                                                             <div class="final-ledger-sign-line">
-                                                                क. लिपीक<br>
-                                                                <span style="font-weight:600;">के. ए. रेवर</span>
+                                                                क. लिपीक
                                                             </div>
                                                         </td>
                                                         <td>
                                                             <div class="final-ledger-sign-line">
-                                                                उपमुख्यलेखाधिकारी, सो.<br>
-                                                                <span style="font-weight:600;">एस. एम. पाटील</span>
-                                                            </div>
+                                                                उपमुख्यलेखाधिकारी, सो.                                                            </div>
                                                         </td>
                                                     </tr>
                                                 </table>
