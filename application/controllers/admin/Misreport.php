@@ -205,6 +205,7 @@ class Misreport extends CI_Controller{
             }
 
 	        $data['interestRates'] = $this->mrModel->getInterestRates($searchData['first_year'], $searchData['second_year']);
+	        //echo "<pre>"; print_r($data['interestRates']); exit;
 
 	        // Final ledger calculated rows (Excel-style)
 	        $data['finalLedger'] = $this->mrModel->getFinalLedgerCumulativeRows($searchData); 

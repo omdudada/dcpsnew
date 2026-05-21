@@ -1,3 +1,4 @@
+<?php //echo 1; exit; ?>
 <style type="text/css">
     .no-print { }
     <?php if(isset($urlAry['option']) && in_array($urlAry['option'], array('print','excel'), true)){ ?>
@@ -299,6 +300,7 @@
                                                 $lastRowShown = null;
 
                                                 $fltRows = array();
+                                                //echo "<pre>"; print_r($ledger); exit;
                                                 foreach ($ledger['rows'] as $row) {
                                                     $m = (int) $row['month'];
                                                     if ($fromMonth !== null && $toMonth !== null) {

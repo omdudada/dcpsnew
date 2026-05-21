@@ -625,7 +625,7 @@ class MisreportModel extends CI_Model
 			$opening = isset($openingByEmp[$empId]) ? (float)$openingByEmp[$empId] : 0.0;
 
 			$empBase = $opening;
-			$nmcBase = 0.0;
+			$nmcBase = $opening;
 			$totalBase = $opening;
 
 			$totals = array(
@@ -706,8 +706,11 @@ class MisreportModel extends CI_Model
 					$loanTaken = !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
 
 					$totalDeposit = ($empRegular + $empSupp + $loanInstallment) + ($nmcRegular + $nmcSupp);
+					
+					//echo "Before empbase=>".$empBase;
 
 					$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
+					//echo "<br/>After empBase=>".$empBase.", empRegular=>".$empRegular.", empSupp=>".$empSupp.", loanInstallment=>".$loanInstallment;
 					$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
 					$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
 
@@ -802,11 +805,13 @@ class MisreportModel extends CI_Model
 				$opening = (float)$closingCache[$empId][$fy];
 				continue;
 			}
-            if($fy == 2007){
-                //echo "empId=>".$empId.", firstYear=>".$fy.", Opening=>".$opening; exit;
+            if($fy < 2008){
+                //continue;
             }
-            //echo "<br/>empId=>".$empId.", firstYear=>".$fy.", Opening=>".$opening;
 			$closing = $this->_finalLedgerComputeClosingForFY($empId, $fy, $opening);
+			
+			//echo "<br/>empId=>".$empId.", firstYear=>".$fy.", Opening=>".$opening.", closing=>".$closing;
+			
 			$closingCache[$empId][$fy] = $closing;
 			$opening = $closing;
 		}
@@ -845,6 +850,7 @@ class MisreportModel extends CI_Model
 		$empId = (int)$empId;
 		$fyStart = (int)$fyStart;
 		$opening = (float)$opening;
+		//echo "<br/>fystart=>".$fyStart;
 
 		$data = array(
 			'emp_id' => $empId,
@@ -861,6 +867,7 @@ class MisreportModel extends CI_Model
 
 		// Use ungrouped rows so duplicates contribute to closing properly.
 		$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
+		//echo "<br>".$opening; 
 		//echo "<br/><pre>"; print_R($dcpsRows); //exit;
 		$byMonth = array(); // [month] => list of rows
 		if (is_array($dcpsRows)) {
@@ -875,7 +882,7 @@ class MisreportModel extends CI_Model
 		//echo "<br/><pre>By Month=>"; print_r($byMonth);
 
 		$empBase = $opening;
-		$nmcBase = 0.0;
+		$nmcBase = $opening;
 
 		$sumEmp = 0.0;
 		$sumEmpSupp = 0.0;
@@ -895,7 +902,7 @@ class MisreportModel extends CI_Model
 			$loanTaken = 0.0;
 			
 			//echo "<br/><pre>"; print_r($monthRecords); 
-
+            $rate = isset($rates[$m]) ? (float)$rates[$m] : 0.0;
 			if (!empty($monthRecords)) {
 				foreach ($monthRecords as $r) {
 					$salaryType = isset($r['salary_type']) ? (string)$r['salary_type'] : '';
@@ -911,21 +918,23 @@ class MisreportModel extends CI_Model
 					}
 					$loanInstallment += !empty($r['loan_installment_paid_through_salary']) ? (float)$r['loan_installment_paid_through_salary'] : 0.0;
 					$loanTaken += !empty($r['DCPS_loan_taken_by_an_employee']) ? (float)$r['DCPS_loan_taken_by_an_employee'] : 0.0;
+					
 					$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
-			        $nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
-			        
-			        $rate = isset($rates[$m]) ? (float)$rates[$m] : 0.0;
+        	        $nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
+        	        
+        	        
         			$empInterest = round((($empBase * $rate) / 100) / 12, 0);
         			$nmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
+			        
 				}
 			}
 
 			
-			
+			$sumInterest += ($empInterest + $nmcInterest);		
 			//echo "<pre>EmpBase=>".$empBase;
 
 			
-			$sumInterest += ($empInterest + $nmcInterest);
+			
 
 			$sumEmp += $empRegular;
 			$sumEmpSupp += $empSupp;
@@ -935,11 +944,12 @@ class MisreportModel extends CI_Model
 			$sumLoanTaken += $loanTaken;
 		}
 
-		$closing = ($opening + ($sumEmp + $sumEmpSupp + $sumLoanInst) + ($sumNmc + $sumNmcSupp)) - $sumLoanTaken + $sumInterest;
+		$closing = ($opening + ($sumEmp + $sumEmpSupp + $sumLoanInst) + ($sumNmc + $sumNmcSupp)+$sumInterest) - $sumLoanTaken;
 		return (float)$closing;
 	}
 
 
+    
        
 }
 ?>
