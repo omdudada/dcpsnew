@@ -614,26 +614,16 @@ class MisreportModel extends CI_Model
 		}
 		$empIds = array_keys($empIds);
 
-		// Opening balance (सुरवातीची शिल्लक) computed at runtime as previous FY closing.
+		// Opening balance (सुरवातीची शिल्लक) fetched from database (dpt_yearly_interest table).
+		// This is the previous year's closing balance, properly stored and maintained.
 		$openingByEmp = array();
 		foreach ($empIds as $empId) {
-			$openingByEmp[$empId] = (float)$this->getFinalLedgerOpeningBalanceRuntime($empId, $firstYear);
+			$openingByEmp[$empId] = (float)$this->getFinalLedgerOpeningBalanceFromDB($empId, $firstYear);
 		}
 
 		$out = array();
 		foreach ($empIds as $empId) {
 			$opening = isset($openingByEmp[$empId]) ? (float)$openingByEmp[$empId] : 0.0;
-
-			// ===== DEBUG: cumulative rows - emp start =====
-			$_dbg_model_log = APPPATH . 'logs/final_ledger_model_debug.txt';
-			file_put_contents($_dbg_model_log,
-				"\n" . str_repeat('*', 80) . "\n" .
-				"[MODEL-CUMUL] getFinalLedgerCumulativeRows  FY: {$fYear}  EmpId: {$empId}" .
-				"  Current Year Opening (from previous FY closing): {$opening}\n" .
-				str_repeat('*', 80) . "\n",
-				FILE_APPEND
-			);
-			// ===== END DEBUG =====
 
 			$empBase = $opening;
 			$nmcBase = $opening;
@@ -759,41 +749,6 @@ class MisreportModel extends CI_Model
 				$empIntParts = $this->_splitIntegerAcrossRows($monthEmpInterest, $rowCount);
 				$nmcIntParts = $this->_splitIntegerAcrossRows($monthNmcInterest, $rowCount);
 
-				// ===== DEBUG: per-month in getCumulativeRows =====
-				$_dbg_month_names_cr = array(1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
-					7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December');
-				$_dbg_month_label_cr = isset($_dbg_month_names_cr[$m]) ? $_dbg_month_names_cr[$m] : $m;
-				// Gather month-level totals from pendingRows for the log
-				$_dbg_empReg=0; $_dbg_empSup=0; $_dbg_nmcReg=0; $_dbg_nmcSup=0;
-				$_dbg_loanInst=0; $_dbg_loanTaken=0;
-				foreach ($pendingRows as $_pr) {
-					$_dbg_empReg    += (float)$_pr['emp_regular'];
-					$_dbg_empSup    += (float)$_pr['emp_supp'];
-					$_dbg_nmcReg    += (float)$_pr['nmc_regular'];
-					$_dbg_nmcSup    += (float)$_pr['nmc_supp'];
-					$_dbg_loanInst  += (float)$_pr['loan_installment'];
-					$_dbg_loanTaken += (float)$_pr['loan_taken'];
-				}
-				$_dbg_monthly_closing_cr = $empBase + $nmcBase;
-				file_put_contents($_dbg_model_log,
-					"[MODEL-CUMUL] FY: {$fYear}  EmpId: {$empId}  Month: {$_dbg_month_label_cr} ({$m})" .
-					"  Opening(FY): {$opening}" .
-					"  Emp Regular: {$_dbg_empReg}" .
-					"  Emp Supp: {$_dbg_empSup}" .
-					"  NMC Regular: {$_dbg_nmcReg}" .
-					"  NMC Supp: {$_dbg_nmcSup}" .
-					"  Loan Installment: {$_dbg_loanInst}" .
-					"  Loan Taken: {$_dbg_loanTaken}" .
-					"  Rate: {$rate}" .
-					"  Emp Base (month-end): {$empBase}" .
-					"  NMC Base (month-end): {$nmcBase}" .
-					"  Emp Interest: {$monthEmpInterest}" .
-					"  NMC Interest: {$monthNmcInterest}" .
-					"  Monthly Closing (EmpBase+NmcBase): {$_dbg_monthly_closing_cr}\n",
-					FILE_APPEND
-				);
-				// ===== END DEBUG =====
-
 				foreach ($pendingRows as $i => $prow) {
 					$ei = isset($empIntParts[$i]) ? $empIntParts[$i] : 0;
 					$ni = isset($nmcIntParts[$i]) ? $nmcIntParts[$i] : 0;
@@ -817,22 +772,6 @@ class MisreportModel extends CI_Model
 				'rows' => $rows,
 				'totals' => $totals,
 			);
-
-			// ===== DEBUG: cumulative rows - emp final closing =====
-			$_dbg_closing_cr = ($opening + ($totals['emp_regular']+$totals['emp_supp']+$totals['loan_installment']) + ($totals['nmc_regular']+$totals['nmc_supp'])) - $totals['loan_taken'] + $totals['total_interest'];
-			file_put_contents($_dbg_model_log,
-				"[MODEL-CUMUL] FY: {$fYear}  EmpId: {$empId}" .
-				"  Opening: {$opening}" .
-				"  Total Emp Regular: {$totals['emp_regular']}  Total Emp Supp: {$totals['emp_supp']}" .
-				"  Total NMC Regular: {$totals['nmc_regular']}  Total NMC Supp: {$totals['nmc_supp']}" .
-				"  Total Loan Inst: {$totals['loan_installment']}  Total Loan Taken: {$totals['loan_taken']}" .
-				"  Total Emp Interest: {$totals['emp_interest']}  Total NMC Interest: {$totals['nmc_interest']}" .
-				"  Total Interest: {$totals['total_interest']}" .
-				"  >>> FINAL CLOSING (view formula): {$_dbg_closing_cr}\n" .
-				str_repeat('*', 80) . "\n",
-				FILE_APPEND
-			);
-			// ===== END DEBUG =====
 		}
 
 		return $out;
@@ -840,6 +779,9 @@ class MisreportModel extends CI_Model
 
 	/**
 	 * Runtime opening balance = previous FY closing (March end).
+	 * 
+	 * DEPRECATED: This function is kept for backward compatibility and debugging only.
+	 * Use getFinalLedgerOpeningBalanceFromDB() instead, which reads from dpt_yearly_interest.
 	 *
 	 * This computes FY-by-FY from 2005-06 up to (firstYear-1)-(firstYear),
 	 * carrying forward the closing as next year's opening, matching the Excel pattern.
@@ -907,23 +849,45 @@ class MisreportModel extends CI_Model
 	/**
 	 * Compute closing for one FY (fyStart-fyStart+1) given opening.
 	 */
+	/**
+	 * Get opening balance from database for a specific financial year.
+	 * 
+	 * The opening balance of FY (N) is the closing balance of FY (N-1),
+	 * which is stored in dpt_yearly_interest.opening_balance.
+	 *
+	 * @param int $empId Employee ID
+	 * @param int $firstYear Financial year start (e.g., 2007 for 2007-2008)
+	 * @return float Opening balance from database
+	 */
+	public function getFinalLedgerOpeningBalanceFromDB($empId, $firstYear)
+	{
+		$empId = (int)$empId;
+		$firstYear = (int)$firstYear;
+		
+		if ($empId <= 0 || $firstYear <= 2005) {
+			return 0.0;
+		}
+		
+		$fYear = $firstYear . '-' . ($firstYear + 1);
+		
+		$record = $this->db->get_where('dpt_yearly_interest', array(
+			'employee_id' => $empId,
+			'f_year' => $fYear
+		))->row_array();
+		
+		if ($record && isset($record['opening_balance'])) {
+			return (float)$record['opening_balance'];
+		}
+		
+		return 0.0;
+	}
+
 	private function _finalLedgerComputeClosingForFY($empId, $fyStart, $opening)
 	{
 		$empId = (int)$empId;
 		$fyStart = (int)$fyStart;
 		$opening = (float)$opening;
 		//echo "<br/>fystart=>".$fyStart;
-
-		// ===== DEBUG: model FY start =====
-		$_dbg_model_log = APPPATH . 'logs/final_ledger_model_debug.txt';
-		$_dbg_fy_label  = $fyStart . '-' . ($fyStart + 1);
-		file_put_contents($_dbg_model_log,
-			"\n" . str_repeat('=', 80) . "\n" .
-			"[MODEL] FY: {$_dbg_fy_label}  EmpId: {$empId}  Previous Year Closing / Current Year Opening: {$opening}\n" .
-			str_repeat('-', 80) . "\n",
-			FILE_APPEND
-		);
-		// ===== END DEBUG =====
 
 		$data = array(
 			'emp_id' => $empId,
@@ -1002,30 +966,6 @@ class MisreportModel extends CI_Model
 				}
 			}
 
-			// ===== DEBUG: per-month log inside _finalLedgerComputeClosingForFY =====
-			$_dbg_month_names = array(1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
-				7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December');
-			$_dbg_month_label  = isset($_dbg_month_names[$m]) ? $_dbg_month_names[$m] : $m;
-			$_dbg_monthly_closing = ($empBase + $nmcBase); // emp+nmc bases at month end (before interest)
-			file_put_contents($_dbg_model_log,
-				"[MODEL-COMPUTE] FY: {$_dbg_fy_label}  Month: {$_dbg_month_label} ({$m})" .
-				"  Opening(FY): {$opening}" .
-				"  Emp Regular: {$empRegular}" .
-				"  Emp Supp: {$empSupp}" .
-				"  NMC Regular: {$nmcRegular}" .
-				"  NMC Supp: {$nmcSupp}" .
-				"  Loan Installment: {$loanInstallment}" .
-				"  Loan Taken: {$loanTaken}" .
-				"  Rate: {$rate}" .
-				"  Emp Base: {$empBase}" .
-				"  NMC Base: {$nmcBase}" .
-				"  Emp Interest: {$empInterest}" .
-				"  NMC Interest: {$nmcInterest}" .
-				"  Monthly Closing (EmpBase+NmcBase): {$_dbg_monthly_closing}\n",
-				FILE_APPEND
-			);
-			// ===== END DEBUG =====
-
 			
 			$sumInterest += ($empInterest + $nmcInterest);		
 			//echo "<pre>EmpBase=>".$empBase;
@@ -1042,18 +982,6 @@ class MisreportModel extends CI_Model
 		}
 
 		$closing = ($opening + ($sumEmp + $sumEmpSupp + $sumLoanInst) + ($sumNmc + $sumNmcSupp)+$sumInterest) - $sumLoanTaken;
-
-		// ===== DEBUG: FY closing summary =====
-		file_put_contents($_dbg_model_log,
-			"[MODEL-COMPUTE] FY: {$_dbg_fy_label}  EmpId: {$empId}" .
-			"  Sum Emp: {$sumEmp}  Sum EmpSupp: {$sumEmpSupp}  Sum NMC: {$sumNmc}  Sum NMCSupp: {$sumNmcSupp}" .
-			"  Sum LoanInst: {$sumLoanInst}  Sum LoanTaken: {$sumLoanTaken}  Sum Interest: {$sumInterest}" .
-			"  Opening: {$opening}  >>> FINAL CLOSING: {$closing}\n" .
-			str_repeat('-', 80) . "\n",
-			FILE_APPEND
-		);
-		// ===== END DEBUG =====
-
 		return (float)$closing;
 	}
 
