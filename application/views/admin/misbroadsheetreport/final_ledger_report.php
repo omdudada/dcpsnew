@@ -126,8 +126,8 @@
     $isPrint = (isset($urlAry['option']) && $urlAry['option'] === 'print');
     $isExcel = (isset($urlAry['option']) && $urlAry['option'] === 'excel');
 
-    function _n0($v){ return number_format((float)$v, 0, '.', ''); }
-    function _nf($v){ return number_format((float)$v, 2, '.', ''); }
+    function _n0($v){ return number_format((int)$v, 0, '.', ''); }
+    function _nf($v){ return number_format((int)$v, 2, '.', ''); }
 ?>
 
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
@@ -219,9 +219,20 @@
                                 if(empty($finalLedger[$empId])){ continue; }
                                 $ledger = $finalLedger[$empId];
                                 //echo "<Pre>"; print_r($ledger); exit;
-                                $opening = (float)$ledger['opening_balance'];
+                                $opening = (int)$ledger['opening_balance'];
                                 $tot = $ledger['totals'];
                                 $closing = ($opening + ($tot['emp_regular']+$tot['emp_supp']+$tot['loan_installment']) + ($tot['nmc_regular']+$tot['nmc_supp'])) - $tot['loan_taken'] + $tot['total_interest'];
+
+                                // ===== DEBUG VIEW: per-employee header =====
+                                /*$_dbg_view_log = APPPATH . 'logs/final_ledger_view_debug.txt';
+                                file_put_contents($_dbg_view_log,
+                                    "\n" . str_repeat('#', 80) . "\n" .
+                                    "[VIEW] FY: " . htmlspecialchars((string)$searchData['f_year']) . "  EmpId: {$empId}  Emp Name: " . (!empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : 'N/A') . "\n" .
+                                    "[VIEW] Previous Year Closing / Current Year Opening: {$opening}\n" .
+                                    str_repeat('-', 80) . "\n",
+                                    FILE_APPEND
+                                );*/
+                                // ===== END DEBUG =====
                             ?>
                                 <div class="searchTable new-page" style="margin-top:15px;">
                                     <table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
@@ -282,19 +293,19 @@
                                                 $toMonth = ($this->input->post('to_month') !== null && $this->input->post('to_month') !== '') ? (int)$this->input->post('to_month') : null;
 
                                                 $totShow = array(
-                                                    'emp_regular' => 0.0,
-                                                    'emp_supp' => 0.0,
-                                                    'nmc_regular' => 0.0,
-                                                    'nmc_supp' => 0.0,
-                                                    'loan_installment' => 0.0,
-                                                    'total_deposit' => 0.0,
-                                                    'loan_taken' => 0.0,
-                                                    'emp_base' => 0.0,
-                                                    'nmc_base' => 0.0,
-                                                    'total_base' => 0.0,
-                                                    'emp_interest' => 0.0,
-                                                    'nmc_interest' => 0.0,
-                                                    'total_interest' => 0.0,
+                                                    'emp_regular' => 0,
+                                                    'emp_supp' => 0,
+                                                    'nmc_regular' => 0,
+                                                    'nmc_supp' => 0,
+                                                    'loan_installment' => 0,
+                                                    'total_deposit' => 0,
+                                                    'loan_taken' => 0,
+                                                    'emp_base' => 0,
+                                                    'nmc_base' => 0,
+                                                    'total_base' => 0,
+                                                    'emp_interest' => 0,
+                                                    'nmc_interest' => 0,
+                                                    'total_interest' => 0,
                                                 );
 
                                                 $lastRowShown = null;
@@ -339,23 +350,49 @@
 
                                             <?php foreach ($fltRows as $i => $row) {
                                                 $m = (int) $row['month'];
-                                                $totShow['emp_regular'] += (float) $row['emp_regular'];
-                                                $totShow['emp_supp'] += (float) $row['emp_supp'];
-                                                $totShow['nmc_regular'] += (float) $row['nmc_regular'];
-                                                $totShow['nmc_supp'] += (float) $row['nmc_supp'];
-                                                $totShow['loan_installment'] += (float) $row['loan_installment'];
-                                                $totShow['total_deposit'] += (float) $row['total_deposit'];
-                                                $totShow['loan_taken'] += (float) $row['loan_taken'];
-                                                $totShow['emp_base'] += (float) $row['emp_base'];
-                                                $totShow['nmc_base'] += (float) $row['nmc_base'];
-                                                $totShow['total_base'] += (float) $row['total_base'];
-                                                $totShow['emp_interest'] += (float) $row['emp_interest'];
-                                                $totShow['nmc_interest'] += (float) $row['nmc_interest'];
-                                                $totShow['total_interest'] += (float) $row['total_interest'];
+                                                $totShow['emp_regular'] += (int) $row['emp_regular'];
+                                                $totShow['emp_supp'] += (int) $row['emp_supp'];
+                                                $totShow['nmc_regular'] += (int) $row['nmc_regular'];
+                                                $totShow['nmc_supp'] += (int) $row['nmc_supp'];
+                                                $totShow['loan_installment'] += (int) $row['loan_installment'];
+                                                $totShow['total_deposit'] += (int) $row['total_deposit'];
+                                                $totShow['loan_taken'] += (int) $row['loan_taken'];
+                                                $totShow['emp_base'] += (int) $row['emp_base'];
+                                                $totShow['nmc_base'] += (int) $row['nmc_base'];
+                                                $totShow['total_base'] += (int) $row['total_base'];
+                                                $totShow['emp_interest'] += (int) $row['emp_interest'];
+                                                $totShow['nmc_interest'] += (int) $row['nmc_interest'];
+                                                $totShow['total_interest'] += (int) $row['total_interest'];
 
                                                 $lastRowShown = $row;
                                                 $monthText = $months[$m] . ' ' . $row['year'];
-                                                $rateLabel = !empty($row['rate']) ? ('व्याज दर ' . number_format((float) $row['rate'], 2) . '%') : '';
+                                                $rateLabel = !empty($row['rate']) ? ('व्याज दर ' . number_format((int) $row['rate'], 2) . '%') : '';
+
+                                                // ===== DEBUG VIEW: per-row =====
+                                                $_dbg_view_month_names = array(1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
+                                                    7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December');
+                                                /*$_dbg_view_month_label = isset($_dbg_view_month_names[$m]) ? $_dbg_view_month_names[$m] : $m;
+                                                file_put_contents($_dbg_view_log,
+                                                    "[VIEW-ROW] FY: " . htmlspecialchars((string)$searchData['f_year']) .
+                                                    "  EmpId: {$empId}  Month: {$_dbg_view_month_label} ({$m})  Year: {$row['year']}" .
+                                                    "  Opening(FY): {$opening}" .
+                                                    "  Emp Regular: {$row['emp_regular']}" .
+                                                    "  Emp Supp: {$row['emp_supp']}" .
+                                                    "  NMC Regular: {$row['nmc_regular']}" .
+                                                    "  NMC Supp: {$row['nmc_supp']}" .
+                                                    "  Loan Installment: {$row['loan_installment']}" .
+                                                    "  Loan Taken: {$row['loan_taken']}" .
+                                                    "  Emp Base: {$row['emp_base']}" .
+                                                    "  NMC Base: {$row['nmc_base']}" .
+                                                    "  Total Base: {$row['total_base']}" .
+                                                    "  Emp Interest: {$row['emp_interest']}" .
+                                                    "  NMC Interest: {$row['nmc_interest']}" .
+                                                    "  Total Interest: {$row['total_interest']}" .
+                                                    "  Rate: " . (!empty($row['rate']) ? $row['rate'] : '0') .
+                                                    "  Monthly Closing (EmpBase+NmcBase): " . ((int)$row['emp_base'] + (int)$row['nmc_base']) . "\n",
+                                                    FILE_APPEND
+                                                );*/
+                                                // ===== END DEBUG =====
 
                                                 $bunchDisp = (isset($row['bunch_no']) && $row['bunch_no'] !== '' && $row['bunch_no'] !== null) ? htmlspecialchars((string) $row['bunch_no']) : '';
                                                 $fileDisp = (isset($row['file_no']) && $row['file_no'] !== '' && $row['file_no'] !== null) ? htmlspecialchars((string) $row['file_no']) : '';
@@ -402,6 +439,36 @@
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_interest']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['nmc_interest']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['total_interest']); ?></strong></td>
+
+                                                <?php
+                                                // ===== DEBUG VIEW: totals row + final closing =====
+                                                /*file_put_contents($_dbg_view_log,
+                                                    "[VIEW-TOTALS] FY: " . htmlspecialchars((string)$searchData['f_year']) . "  EmpId: {$empId}" .
+                                                    "  Total Emp Regular: {$totShow['emp_regular']}" .
+                                                    "  Total Emp Supp: {$totShow['emp_supp']}" .
+                                                    "  Total NMC Regular: {$totShow['nmc_regular']}" .
+                                                    "  Total NMC Supp: {$totShow['nmc_supp']}" .
+                                                    "  Total Loan Inst: {$totShow['loan_installment']}" .
+                                                    "  Total Loan Taken: {$totShow['loan_taken']}" .
+                                                    "  Total Emp Interest: {$totShow['emp_interest']}" .
+                                                    "  Total NMC Interest: {$totShow['nmc_interest']}" .
+                                                    "  Total Interest: {$totShow['total_interest']}" . "\n",
+                                                    FILE_APPEND
+                                                );
+                                                file_put_contents($_dbg_view_log,
+                                                    "[VIEW-CLOSING] FY: " . htmlspecialchars((string)$searchData['f_year']) . "  EmpId: {$empId}" .
+                                                    "  Opening: {$opening}" .
+                                                    "  Total Emp Contrib: " . ($tot['emp_regular']+$tot['emp_supp']) .
+                                                    "  Total NMC Contrib: " . ($tot['nmc_regular']+$tot['nmc_supp']) .
+                                                    "  Total Loan Inst: {$tot['loan_installment']}" .
+                                                    "  Total Loan Taken: {$tot['loan_taken']}" .
+                                                    "  Total Interest: {$tot['total_interest']}" .
+                                                    "  >>> FINAL CLOSING (view): {$closing}\n" .
+                                                    str_repeat('#', 80) . "\n",
+                                                    FILE_APPEND
+                                                );*/
+                                                // ===== END DEBUG =====
+                                                ?>
                                                 <td></td>
                                             </tr>
                                         </tbody>
