@@ -295,7 +295,7 @@
 							?>
                             <h3 class="box-title">Deduction Report</h3>
                 			<?php if(!empty($this->input->post('year'))){ ?>
-                				<a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfDeductionReport();">PDF प्रिंट</a>
+                				<a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfDeductionReport();">Print</a>
                 			<?php } ?>
 							<?php
 							}

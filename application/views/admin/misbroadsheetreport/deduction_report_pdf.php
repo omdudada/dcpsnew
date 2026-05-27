@@ -32,7 +32,6 @@ $months = [
         }
 
         th {
-            background-color: #f2f2f2;
             font-weight: bold;
         }
 
@@ -123,18 +122,18 @@ $months = [
                 <table cellspacing="0" width="100%">
                     <thead class="bg-primary123">
                         <tr>
-                            <th style="text-align:center;" colspan="18">
+                            <th style="text-align:center;" colspan="17">
                                 <strong>Form R-3</strong>
                                 <div style="font-size:10px;">(As referred to in Para no. 18 & 23 of Government Resolution - Finance Departmeny, No. CPS 1007/18/SER-4, dated 7 July, 2007)</div>
                             </th>
                         </tr>
                         <tr>
-                            <th style="text-align:center;" colspan="18">
+                            <th style="text-align:center;" colspan="17">
                                 नाशिक महानगरपालिका,नाशिक			
                             </th>
                         </tr>
                         <tr>
-                            <th style="text-align:center;" colspan="18">
+                            <th style="text-align:center;" colspan="17">
                                 परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरण
                                 (<?= $searchData['f_year']; ?>)
                             </th>
@@ -143,7 +142,7 @@ $months = [
                             <th colspan="3">कर्मचारी क्रमांक</th>
                             <td colspan="2"><?= !empty($ownerDetail['emp_id']) ? $ownerDetail['emp_id'] : ''; ?></td>
                             <th colspan="4">कर्मचारी नाव</th>
-                            <td colspan="9"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
+                            <td colspan="8"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                         </tr>
                         <tr>
                             <th colspan="3">कर्मचारी नियुक्ती दिनांक</th>
@@ -152,7 +151,7 @@ $months = [
                             <td colspan ="2"><?= !empty($ownerDetail['pay_center']) ? $ownerDetail['pay_center'] : ''; ?></td>
                             <th colspan="1">हुद्दा</th>
                             <td><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
-                            <td colspan="6"></td>
+                            <td colspan="5"></td>
                         </tr>
                         <tr>
                             <th>महिना</th>
@@ -172,7 +171,6 @@ $months = [
                             <th>वेतन प्रकार</th>
                             <th>शेरा </th>
                             <th>तपशील </th>
-                            <th>कृती</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -277,7 +275,6 @@ $months = [
                                             </td>
                                             <td class="clsLeft"><?= isset($row['remark']) ? $row['remark']: '' ?></td>
                                             <td class="clsLeft"><?=isset($row['reason'])?$row['reason']:"";?></td>
-                                            <td>-</td>
                                         </tr>
                                         <?php
                                         }
@@ -302,7 +299,6 @@ $months = [
                                         <td>0</td>
                                         <td>0</td>
                                         <td>0</td>
-                                        <td>-</td>
                                     </tr>
                                     <?php
                                     }
@@ -397,7 +393,6 @@ $months = [
                                             </td>
                                             <td class="clsLeft"><?= isset($row['remark']) ? $row['remark']: '' ?></td>
                                             <td class="clsLeft"><?=isset($row['reason'])?$row['reason']:"";?></td>
-                                            <td>-</td>
                                         </tr>
                                         <?php
                                         }
@@ -422,7 +417,6 @@ $months = [
                                         <td>0</td>
                                         <td>0</td>
                                         <td>0</td>
-                                        <td>-</td>
                                     </tr>
                                     <?php
                                     }
@@ -439,7 +433,7 @@ $months = [
                             <td class="clsRight"><strong><?= $totalIdealContribution; ?></strong></td>
                             <td class="clsRight"><strong><?= $totalEmpSupContri; ?></strong></td>
                             <td class="clsRight"><strong><?= $totalDifference; ?></strong></td>
-                            <td colspan="6"></td>
+                            <td colspan="5"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -456,24 +450,20 @@ $months = [
                                 ४. पगार बिल ओ.सी. (Payment OC) इत्यादी<br>
                             
                                 अन्वये सदर कर्मचाऱ्यांच्या नवीन परिभाषित अंशदान निवृत्तीवेतन योजनेबाबतच्या प्रति माह अंशदान वर्गणी कपाती विभागामार्फत प्रमाणित करण्यात येत असून, त्यानुसार सदर लेखांकन अचूक व बरोबर आहे. सदर बाबतीत भविष्यात काही आक्षेप आल्यास किंवा काही बदल असल्यास त्याची सर्वस्वी जबाबदारी कार्यकारी विभागाची राहील.
-                            </p><br/>
+                            </p><br/><br/>
                             <div class="final-ledger-cert-signs">
                                 <div class="final-ledger-sign-line">
-                                    कर्मचारी स्वाक्षरी / अंगठा <br>
-                                    <span style="font-weight:600;">&nbsp;</span>
-                                </div><br/>
+                                    कर्मचारी स्वाक्षरी / अंगठा 
+                                </div><br/><br/>
                                 <div class="final-ledger-sign-line">
-                                    बिल लिपिक / कनिष्ठ लिपिक<br>
-                                    <span style="font-weight:600;">&nbsp;</span>
-                                </div><br/>
+                                    बिल लिपिक / कनिष्ठ लिपिक
+                                </div><br/><br/>
                                 <div class="final-ledger-sign-line">
-                                    वरिष्ठ  लिपिक / सहाय्यक अधीक्षक / अधीक्षक<br>
-                                    <span style="font-weight:600;">&nbsp;</span>
-                                </div></br>
+                                    वरिष्ठ  लिपिक / सहाय्यक अधीक्षक / अधीक्षक
+                                </div><br/><br/>
                                 <div class="final-ledger-sign-line">
-                                    कार्यालय प्रमुख / विभाग प्रमुख / आहारण व संवितरण अधिकारी<br>
-                                    <span style="font-weight:600;">&nbsp;</span>
-                                </div>
+                                    कार्यालय प्रमुख / विभाग प्रमुख / आहारण व संवितरण अधिकारी
+                                </div><br/><br/>
                             </div>
                         </td>
                     </tr>
