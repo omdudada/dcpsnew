@@ -332,7 +332,7 @@ class Misreport extends CI_Controller{
 	        }
 	    }
 	    
-	    if(isset($urlAry['option']) && in_array($urlAry['option'], ["print", "csv"])){
+if(isset($urlAry['option']) && in_array($urlAry['option'], ["print", "csv", "excel"])){
 		   if($urlAry['year']){
 	            $searchData['first_year'] = $urlAry['year']; 
 	            $searchData['second_year'] = ($urlAry['year']+1); 
