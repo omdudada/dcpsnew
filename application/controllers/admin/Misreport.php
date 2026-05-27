@@ -332,7 +332,7 @@ class Misreport extends CI_Controller{
 	        }
 	    }
 	    
-	    if(isset($urlAry['option']) && $urlAry['option'] == "print"){
+	    if(isset($urlAry['option']) && in_array($urlAry['option'], ["print", "csv"])){
 		   if($urlAry['year']){
 	            $searchData['first_year'] = $urlAry['year']; 
 	            $searchData['second_year'] = ($urlAry['year']+1); 
@@ -413,6 +413,17 @@ class Misreport extends CI_Controller{
     	//echo "<pre>"; print_r($data); exit;
 	
 	
+	    if(isset($urlAry['option']) && $urlAry['option'] == "excel"){
+	        $filename = "deduction_report_".date("Ymd_His").".xls";
+	        header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+	        header("Content-Disposition: attachment; filename=".$filename);
+	        header("Pragma: no-cache");
+	        header("Expires: 0");
+	        
+	        $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $data);
+	        exit;
+	    }
+
 	    $this->load->view('admin/common/header');
 	    /*if(isset($urlAry['option']) && $urlAry['option'] == "print"){
 	        //echo "<pre>"; print_r($data); exit;

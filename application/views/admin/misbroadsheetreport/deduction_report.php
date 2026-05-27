@@ -296,6 +296,7 @@
                             <h3 class="box-title">Deduction Report</h3>
                 			<?php if(!empty($this->input->post('year'))){ ?>
                 				<a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfDeductionReport();">Print</a>
+                				<a class="btn btn-success" style="float:right;" href="javascript:void(0);" onclick="exportExcelDeductionReport();">Export Excel</a>
                 			<?php } ?>
 							<?php
 							}
@@ -894,6 +895,20 @@
 		var oldAction = frm.action;
 		var oldTarget = frm.target;
 		frm.action = "<?=base_url();?>admin/misreport/generate_deduction_report_mpdf";
+		frm.target = "_blank";
+		frm.submit();
+		setTimeout(function(){
+			frm.action = oldAction;
+			frm.target = oldTarget;
+		}, 500);
+	}
+
+	function exportExcelDeductionReport() {
+		var frm = document.getElementById('typicaltypes');
+		if(!frm) return;
+		var oldAction = frm.action;
+		var oldTarget = frm.target;
+		frm.action = "<?=base_url();?>admin/misreport/deduction_report/option/excel";
 		frm.target = "_blank";
 		frm.submit();
 		setTimeout(function(){
