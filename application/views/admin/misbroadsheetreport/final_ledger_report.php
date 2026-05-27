@@ -488,14 +488,18 @@
                                                 <p style="margin:0;">
                                                     १. कर्मचारी अंशदान वर्गणी कपात नमुना - २, आणि / किंवा<br>
                                                     २. वेतन देयक, आणि / किंवा<br>
-                                                    ३. वेतन पत्रिका<br>
+                                                    ३. वेतन पत्रिका, आणि / किंवा<br>
                                                     ४. पगार बिल ओ.सी. (Payment OC) इत्यादी<br>
                                                 
-                                                    अन्वये सदर कर्मचाऱ्यांच्या नवीन परिभाषित अंशदान निवृत्तीवेतन योजनेबाबतच्या प्रति माह अंशदान वर्गणी कपाती विभागामार्फत प्रमाणित करण्यात येत असून, त्यानुसार सदर लेखांकन अचूक व बरोबर आहे.
+                                                    अन्वये सदर कर्मचाऱ्यांच्या नवीन परिभाषित अंशदान निवृत्तीवेतन योजनेबाबतच्या प्रति माह अंशदान वर्गणी कपाती विभागामार्फत प्रमाणित करण्यात येत असून, त्यानुसार सदर लेखांकन अचूक व बरोबर आहे.                                                     सदर बाबतीत भविष्यात काही आक्षेप आल्यास किंवा काही बदल असल्यास त्याची सर्वस्वी जबाबदारी कार्यकारी विभागाची राहील.
                                                 </p><br/>
                                                 <div class="final-ledger-cert-signs">
                                                     <div class="final-ledger-sign-line">
-                                                        बिल लिपिक<br>
+                                                        कर्मचारी स्वाक्षरी / अंगठा <br>
+                                                        <span style="font-weight:600;">&nbsp;</span>
+                                                    </div><br/>
+                                                    <div class="final-ledger-sign-line">
+                                                        बिल लिपिक / कनिष्ठ लिपिक<br>
                                                         <span style="font-weight:600;">&nbsp;</span>
                                                     </div><br/>
                                                     <div class="final-ledger-sign-line">
@@ -503,7 +507,7 @@
                                                         <span style="font-weight:600;">&nbsp;</span>
                                                     </div></br/>
                                                     <div class="final-ledger-sign-line">
-                                                        कार्यालय प्रमुख/ विभाग प्रमुख / आहारण व संवितरण अधिकारी<br>
+                                                        कार्यालय प्रमुख / विभाग प्रमुख / आहारण व संवितरण अधिकारी<br>
                                                         <span style="font-weight:600;">&nbsp;</span>
                                                     </div>
                                                 </div>
@@ -568,14 +572,20 @@
                                                 </table>
                                                 <table class="final-ledger-sign-row" cellspacing="0">
                                                     <tr>
-                                                        <td>
+                                                        <td style="width: 33%">
                                                             <div class="final-ledger-sign-line">
-                                                                क. लिपीक
+                                                                कनिष्ठ लिपिक / कनिष्ठ लेखापाल
                                                             </div>
                                                         </td>
-                                                        <td>
+
+                                                        <td style="width: 33%">
                                                             <div class="final-ledger-sign-line">
-                                                                उपमुख्यलेखाधिकारी, सो.                                                            </div>
+                                                            उपलेखापाल / वरीष्ठ लेखापाल
+                                                            </div>
+                                                        </td>
+                                                        <td style="width: 33%">
+                                                            <div class="final-ledger-sign-line">
+                                                                उप मुख्य लेखा व वित्त अधिकारी                                            </div>
                                                         </td>
                                                     </tr>
                                                 </table>

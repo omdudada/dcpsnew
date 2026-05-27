@@ -425,6 +425,92 @@ class Misreport extends CI_Controller{
 	    $this->load->view('admin/misbroadsheetreport/deduction_report',$data);
 	}
 	
+	public function generate_deduction_report_mpdf()
+	{
+	    $postData = $this->input->post();
+	    $data['urlAry'] = array();
+	    $urlAry = $this->uri->uri_to_assoc(4);
+	    
+	    $searchData = array();
+	    if($postData){
+	        $searchData = $postData;
+	        $searchData['pay_center'] = $postData['pay_center'];
+	        $searchData['emp_id'] = $postData['emp_id'];
+	        if($postData['year']){
+	            $searchData['first_year'] = $postData['year']; 
+	            $searchData['second_year'] = ($postData['year']+1); 
+	            $searchData['f_year'] = $searchData['first_year']."-".$searchData['second_year'];
+	        }
+	    }
+	    
+	    if(is_array($searchData) && !empty($searchData)){		    
+	        $data['searchData'] = $searchData;
+	        
+	        $dcpsDetails = $this->mrModel->getdcpsAllDetailsForDeduction($searchData);
+	        
+	        $processedEmpTDs = [];
+	        if(!empty($dcpsDetails)){
+	            foreach ($dcpsDetails as $dcpsDetail) {
+	                $data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_year']][$dcpsDetail['for_month']][] = $dcpsDetail;
+	                if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
+	                    $data['ownerDetails'][$dcpsDetail['emp_td']] = [
+	                        'emp_id' => $dcpsDetail['emp_td'],
+	                        'designation_name' => $dcpsDetail['designation_name'],
+	                        'emp_name' => $dcpsDetail['emp_name'],
+	                        'joining_date' => $dcpsDetail['joining_date'],
+	                        'pay_center' => $dcpsDetail['pay_center'],
+	                        'fixed_pay' => $dcpsDetail['fixed_pay'],
+	                    ];
+	                    $processedEmpTDs[] = $dcpsDetail['emp_td'];
+	                }
+	            }
+	        }
+
+	        if(isset($searchData['first_year']) && isset($searchData['second_year'])){
+	            $data['interestRates'] = $this->mrModel->getInterestRates($searchData['first_year'], $searchData['second_year']);
+	            $searchData['f_year'] = $searchData['first_year'];
+	        } else {
+	            $currentYear = date('Y');
+	            $financialYear = $currentYear - 1;
+	            $data['interestRates'] = $this->mrModel->getInterestRates($financialYear, $currentYear);
+	            $searchData['f_year'] = $financialYear;
+	        }
+	        
+	        $interestDetails = $this->mrModel->getYearlyInterestNew($searchData);
+	        
+	        foreach ($interestDetails as $interestDetail) {
+	            $data['interestDetail'][$interestDetail['employee_id']] = $interestDetail;
+	        }
+	    } else {
+	        show_404();
+	    }
+
+	    $config = [
+	        'mode' => 'utf-8',
+	        'format' => 'A4',
+	        'margin_left' => 15,
+	        'margin_right' => 15,
+	        'margin_top' => 15,
+	        'margin_bottom' => 15,
+	        'margin_header' => 0,
+	        'margin_footer' => 0,
+	        'autoScriptToLang' => true,
+	        'autoLangToFont' => true,
+	    ];
+
+	    $this->load->library('m_pdf', $config);
+
+	    $this->m_pdf->pdf->SetTitle('Deduction Report');
+	    $this->m_pdf->pdf->SetAuthor('NMC');
+	    $this->m_pdf->pdf->SetCreator('Pension System');
+
+	    $html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $data, TRUE);
+
+	    $this->m_pdf->pdf->WriteHTML($html);
+
+	    $this->m_pdf->pdf->Output('Deduction_Report.pdf', 'I');
+	}
+	
 	public function get_employee_details(){
 	    $payCenter = $this->input->post('pay_center');
 	    $employees = $this->mrModel->gerMasterDetails("", $payCenter);
