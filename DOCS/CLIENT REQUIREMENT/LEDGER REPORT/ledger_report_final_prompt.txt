@@ -1,0 +1,150 @@
+Prompt: Final Ledger Report with Cumulative Interest
+Create a new report by taking reference from the existing ledger_report_new and implement the following:
+
+🔹 1. Create New Report
+
+
+Create a new controller action named:
+final_ledger_report
+
+
+Duplicate logic, structure, and UI from ledger_report_new
+
+
+
+🔹 2. Cumulative Interest Calculation
+
+
+Add cumulative interest calculation as per the provided Excel sheet
+
+
+Logic should:
+
+
+Calculate interest month-wise
+
+
+Carry forward previous balance + interest
+
+
+Maintain running cumulative total
+
+
+
+
+Ensure calculation matches exactly with Excel logic
+
+
+
+🔹 3. Database / Query Changes
+
+
+Modify existing query or create new model function
+
+
+Include:
+
+
+Opening balance
+
+
+Monthly contribution
+
+
+Interest calculation
+
+
+Closing balance (with cumulative interest)
+
+
+
+
+
+🔹 4. View (UI) Changes
+
+
+Design table layout exactly as per Excel sheet
+
+
+Include columns such as:
+
+
+Month
+
+
+Opening Balance
+
+
+Contribution (Employee + NMC)
+
+
+Interest
+
+
+Cumulative Balance
+
+
+
+
+Match formatting, alignment, and totals as per Excel
+
+
+
+🔹 5. Data Accuracy
+
+
+Ensure:
+
+
+Month-wise continuity (no missing months)
+
+
+Correct financial year handling
+
+
+Accurate rounding (as per Excel rules)
+
+
+
+
+
+🔹 6. Additional Features
+
+
+Add Total row at bottom
+
+
+Add Export to Excel option
+
+
+Highlight calculated fields (optional)
+
+
+
+🔹 7. File Structure
+
+
+Controller: add new function final_ledger_report
+
+
+Model: create/update function for cumulative calculation
+
+
+View: create new file for final report layout
+
+
+
+🔹 8. Expected Output
+
+
+Report should match Excel sheet exactly in:
+
+
+Structure
+
+
+Calculations
+
+
+Totals
+

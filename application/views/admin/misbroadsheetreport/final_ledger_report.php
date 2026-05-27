@@ -142,7 +142,7 @@
                     <div class="box-header with-border no-print">
                         <h3 class="box-title">Final Ledger Report</h3>
                         <?php if(!empty($this->input->post('year'))){ ?>
-                            <a class="btn btn-primary" style="float:right; margin-left:8px;" href="<?=base_url();?>admin/misreport/final_ledger_report/year/<?=$this->input->post('year');?>/option/print">Print</a>
+                            <a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfReport();">Print</a>
                             <a class="btn btn-success" style="float:right;" href="<?=base_url();?>admin/misreport/final_ledger_report/year/<?=$this->input->post('year');?>/option/excel">Export Excel</a>
                         <?php } ?>
 					</div>
@@ -619,5 +619,18 @@
             $('#to_month').val('<?= $this->input->post('to_month'); ?>').trigger('change');
         <?php } ?>
     });
-</script>
 
+    function printPdfReport() {
+        var frm = document.getElementById('finalLedgerForm');
+        if(!frm) return;
+        var oldAction = frm.action;
+        var oldTarget = frm.target;
+        frm.action = "<?=base_url();?>admin/misreport/generate_final_ledger_report_mpdf";
+        frm.target = "_blank";
+        frm.submit();
+        setTimeout(function(){
+            frm.action = oldAction;
+            frm.target = oldTarget;
+        }, 500);
+    }
+</script>

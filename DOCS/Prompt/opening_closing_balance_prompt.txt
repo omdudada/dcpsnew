@@ -1,0 +1,56 @@
+Task:
+
+Currently the opening balance shown in the Final Ledger Report (सुरुवातीची शिल्लक) is being calculated dynamically using runtime functions.
+This runtime calculation is giving incorrect values in some cases.
+
+We already have a database table named:
+
+`dpt_yearly_interest`
+
+This table stores yearly closing values and also contains the column:
+
+`opening_balance`
+
+Requirement:
+
+1. The closing balance of the current financial year should automatically become the opening balance of the next financial year.
+2. Do NOT use runtime opening balance calculation anymore in the ledger report.
+3. The opening balance displayed in the report should come directly from:
+   `dpt_yearly_interest.opening_balance`
+4. The value should be shown in front of:
+   `सुरुवातीची शिल्लक`
+5. Create a reusable helper function for yearly opening/closing balance update logic.
+6. Whenever any deduction record is edited from this URL:
+   `https://dcps.nmc.gov.in/admin/edit-dcps-deduction-record/245395`
+   this helper function should automatically execute and:
+
+   * recalculate yearly closing balance
+   * update next year's opening balance
+   * refresh affected financial years from the modified year onward
+7. The helper function should:
+
+   * calculate year-wise closing balance sequentially
+   * use previous year's closing as next year's opening
+   * update all subsequent financial years correctly
+   * support recalculation from FY 2005 onward
+8. Replace all existing runtime opening balance logic in:
+
+   * model functions
+   * ledger report calculation
+   * view display logic
+9. Add proper logging/file write debugging so each recalculation step can be verified manually.
+
+Expected Flow:
+
+* FY 2007-08 Closing = 22424
+* Then FY 2008-09 Opening Balance should automatically become = 22424
+* After any record correction/edit, all future year balances should auto-refresh.
+
+Deliverables:
+
+1. Helper function code
+2. Integration in edit deduction record flow
+3. Database update query logic
+4. Removal/replacement of runtime opening balance logic
+5. Debug log/file write code
+6. Updated ledger report display logic
