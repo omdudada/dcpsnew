@@ -850,7 +850,7 @@
 			return $out;
 		}
 		
-		public function getFinalLedgerCumulativeRows_old($data = array())
+		public function getProvisionalLedgerCumulativeRows($data = array())
 		{
 			if (empty($data)) {
 				return array();
@@ -869,15 +869,10 @@
 			if (!is_array($rates)) {
 				$rates = array();
 			}
-			//echo "<pre>Data=>"; print_r($data); exit;
 			
-			
-			// IMPORTANT:
-			// Do NOT use grouped/monthly-summed data here, because duplicates (multiple records
-			// for same emp + month) must be shown separately (Deduction Report behavior).
 			$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
-			//echo "<pre>"; print_r($dcpsRows); exit;
-			$byEmpMonth = array(); // [empId][month] => [row,row,...]
+			
+			$byEmpMonth = array();
 			$empIds = array();
 			if (is_array($dcpsRows)) {
 				foreach ($dcpsRows as $r) {
@@ -892,58 +887,59 @@
 			}
 			$empIds = array_keys($empIds);
 			
-			// Opening balance (सुरवातीची शिल्लक) computed at runtime as previous FY closing.
 			$openingByEmp = array();
 			foreach ($empIds as $empId) {
-				$openingByEmp[$empId] = (int)$this->getFinalLedgerOpeningBalanceRuntime($empId, $firstYear);
-				//echo "<pre>"; print_r($openingByEmp); exit;
+				$openingByEmp[$empId] = (int)$this->getProvisionalLedgerOpeningBalanceRuntime($empId, $firstYear);
 			}
+			
+			$_dbg_model_log = APPPATH . 'logs/final_ledger_model_debug.txt';
+			$_dbg_month_names = array(
+			1  => 'January',  2  => 'February', 3  => 'March',
+			4  => 'April',    5  => 'May',       6  => 'June',
+			7  => 'July',     8  => 'August',    9  => 'September',
+			10 => 'October',  11 => 'November',  12 => 'December'
+			);
 			
 			$out = array();
 			foreach ($empIds as $empId) {
 				$opening = isset($openingByEmp[$empId]) ? (int)$openingByEmp[$empId] : 0;
 				
-				// ===== DEBUG: cumulative rows - emp start =====
-				$_dbg_model_log = APPPATH . 'logs/final_ledger_model_debug.txt';
 				/*file_put_contents($_dbg_model_log,
 				"\n" . str_repeat('*', 80) . "\n" .
-				"[MODEL-CUMUL] getFinalLedgerCumulativeRows  FY: {$fYear}  EmpId: {$empId}" .
+				"[MODEL-CUMUL] getProvisionalLedgerCumulativeRows  FY: {$fYear}  EmpId: {$empId}" .
 				"  Current Year Opening (from previous FY closing): {$opening}\n" .
 				str_repeat('*', 80) . "\n",
 				FILE_APPEND
 				);*/
-				// ===== END DEBUG =====
 				
-				$empBase = $opening;
-				$nmcBase = $opening;
-				$totalBase = $opening;
+				$empBase  = (int)$opening;
+				$nmcBase  = (int)$opening;
+				$totalBase = (int)$opening;
 				
 				$totals = array(
-				'emp_regular' => 0,
-				'emp_supp' => 0,
-				'nmc_regular' => 0,
-				'nmc_supp' => 0,
+				'emp_regular'      => 0,
+				'emp_supp'         => 0,
+				'nmc_regular'      => 0,
+				'nmc_supp'         => 0,
 				'loan_installment' => 0,
-				'total_deposit' => 0,
-				'loan_taken' => 0,
-				'emp_interest' => 0,
-				'nmc_interest' => 0,
-				'total_interest' => 0,
+				'total_deposit'    => 0,
+				'loan_taken'       => 0,
+				'emp_interest'     => 0,
+				'nmc_interest'     => 0,
+				'total_interest'   => 0,
 				);
 				
 				$rows = array();
+				
 				foreach ($monthsOrder as $m) {
 					$monthRecords = isset($byEmpMonth[$empId][$m]) ? $byEmpMonth[$empId][$m] : array();
 					
-					
-					// Sort duplicates consistently so bases are predictable.
 					if (!empty($monthRecords) && is_array($monthRecords)) {
 						usort($monthRecords, function ($a, $b) {
 							$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
 							$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
 							$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
 							$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
-							
 							$tsA = $dtA ? $dtA->getTimestamp() : 0;
 							$tsB = $dtB ? $dtB->getTimestamp() : 0;
 							if ($tsA !== $tsB) {
@@ -960,147 +956,142 @@
 						});
 					}
 					
-					// If there are no records, still keep a placeholder month row (all zeros)
-					// to preserve report shape.
 					if (empty($monthRecords)) {
 						$monthRecords = array(array());
 					}
 					
-					$rate = round((isset($rates[$m]) ? (int)$rates[$m] : 0), 0);
+					$rate        = isset($rates[$m]) ? (int)$rates[$m] : 0;
 					$yearForMonth = ($m >= 4 && $m <= 12) ? $firstYear : $secondYear;
 					
-					// Build rows for this month: contributions updated sequentially on bases,
-					// then ONE monthly interest on month-end base is split across duplicate rows
-					// so each row shows interest while totals stay mathematically correct.
-					$pendingRows = array();
+					// ── Month-level interest accumulators ────────────────────────────
+					$monthEmpInterest = 0;
+					$monthNmcInterest = 0;
+					
 					foreach ($monthRecords as $r) {
 						$salaryType = isset($r['salary_type']) ? (string)$r['salary_type'] : '';
-						$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
-						? (int)$r['Ideal_contribution_of_employee_for_DCPS']
-						: 0;
+						$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
+						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
+						? (int)$r['Ideal_contribution_of_employee_for_DCPS'] : 0;
 						
-						// Match legacy behavior: when actual recovered contribution fields are empty,
-						// fall back to Ideal contribution for display/calculation.
-						$empRegular = 0;
-						$empSupp = 0;
-						$nmcRegular = 0;
-						$nmcSupp = 0;
+						$empRegular      = 0;
+						$empSupp         = 0;
+						$nmcRegular      = 0;
+						$nmcSupp         = 0;
+						$loanInstallment = 0;
+						$loanTaken       = 0;
+						
 						if ($salaryType === 'Regular') {
-							$empRegular = (!empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : $ideal);
-							$nmcRegular = (!empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : $ideal);
+							$empRegular = !empty($r['emp_DCPS_contribution'])
+							? (int)$r['emp_DCPS_contribution'] : 0;
+							$nmcRegular = !empty($r['NMC_DCPS_contribution'])
+							? (int)$r['NMC_DCPS_contribution'] : 0;
 							} elseif ($salaryType === 'Suplimentory') {
-							$empSupp = (!empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : $ideal);
-							$nmcSupp = (!empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : $ideal);
+							$empSupp = !empty($r['emp_supplimentory_contribution'])
+							? (int)$r['emp_supplimentory_contribution'] : 0;
+							$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
+							? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+							
 						}
 						
-						$loanInstallment = !empty($r['loan_installment_paid_through_salary']) ? (int)$r['loan_installment_paid_through_salary'] : 0;
-						$loanTaken = !empty($r['DCPS_loan_taken_by_an_employee']) ? (int)$r['DCPS_loan_taken_by_an_employee'] : 0;
+						$loanInstallment = !empty($r['loan_installment_paid_through_salary'])
+						? (int)$r['loan_installment_paid_through_salary'] : 0;
+						$loanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
+						? (int)$r['DCPS_loan_taken_by_an_employee'] : 0;
 						
 						$totalDeposit = ($empRegular + $empSupp + $loanInstallment) + ($nmcRegular + $nmcSupp);
 						
-						//echo "Before empbase=>".$empBase;
-						
-						$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
-						//echo "<br/>After empBase=>".$empBase.", empRegular=>".$empRegular.", empSupp=>".$empSupp.", loanInstallment=>".$loanInstallment;
-						$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
+						// ── Update bases PER RECORD ──────────────────────────────────
+						$empBase   = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
+						$nmcBase   = ($nmcBase + $nmcRegular + $nmcSupp);
 						$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
 						
-						$pendingRows[] = array(
-						'month' => $m,
-						'year' => $yearForMonth,
-						'emp_regular' => $empRegular,
-						'emp_supp' => $empSupp,
-						'nmc_regular' => $nmcRegular,
-						'nmc_supp' => $nmcSupp,
-						'loan_installment' => $loanInstallment,
-						'total_deposit' => $totalDeposit,
-						'loan_taken' => $loanTaken,
-						'emp_base' => $empBase,
-						'nmc_base' => $nmcBase,
-						'total_base' => $totalBase,
-						'bunch_no' => isset($r['bunch_no']) ? $r['bunch_no'] : 0,
-						'file_no' => isset($r['file_no']) ? $r['file_no'] : 0,
-						'recovered_DCPS_with_voucher_no' => isset($r['recovered_DCPS_with_voucher_no']) ? $r['recovered_DCPS_with_voucher_no'] : '',
+						// ── Interest calculated on updated base AFTER EACH RECORD ────
+						$rowEmpInterest = round((($empBase * $rate) / 100 / 12), 0);
+						$rowNmcInterest = round((($nmcBase * $rate) / 100 / 12), 0);
+						
+						// ── Accumulate into month totals ─────────────────────────────
+						$monthEmpInterest += $rowEmpInterest;
+						$monthNmcInterest += $rowNmcInterest;
+						
+						// ── Per-record debug log ─────────────────────────────────────
+						$_dbg_month_label = isset($_dbg_month_names[$m]) ? $_dbg_month_names[$m] : $m;
+						/*file_put_contents($_dbg_model_log,
+						"[MODEL-CUMUL-ROW] FY: {$fYear}  EmpId: {$empId}  Month: {$_dbg_month_label} ({$m})" .
+						"  SalaryType: {$salaryType}" .
+						"  Emp Regular: {$empRegular}  Emp Supp: {$empSupp}" .
+						"  NMC Regular: {$nmcRegular}  NMC Supp: {$nmcSupp}" .
+						"  LoanInst: {$loanInstallment}  LoanTaken: {$loanTaken}" .
+						"  Rate: {$rate}" .
+						"  EmpBase After Row: {$empBase}  NMCBase After Row: {$nmcBase}" .
+						"  Row EmpInterest: {$rowEmpInterest}  Row NMCInterest: {$rowNmcInterest}\n",
+						FILE_APPEND
+						);*/
+						
+						$rows[] = array(
+						'month'                            => $m,
+						'year'                             => $yearForMonth,
+						'emp_regular'                      => $empRegular,
+						'emp_supp'                         => $empSupp,
+						'nmc_regular'                      => $nmcRegular,
+						'nmc_supp'                         => $nmcSupp,
+						'loan_installment'                 => $loanInstallment,
+						'total_deposit'                    => $totalDeposit,
+						'loan_taken'                       => $loanTaken,
+						'emp_base'                         => $empBase,
+						'nmc_base'                         => $nmcBase,
+						'total_base'                       => $totalBase,
+						'emp_interest'                     => $rowEmpInterest,
+						'nmc_interest'                     => $rowNmcInterest,
+						'total_interest'                   => ($rowEmpInterest + $rowNmcInterest),
+						'rate'                             => $rate,
+						'bunch_no'                         => isset($r['bunch_no']) ? $r['bunch_no'] : 0,
+						'file_no'                          => isset($r['file_no']) ? $r['file_no'] : 0,
+						'recovered_DCPS_with_voucher_no'   => isset($r['recovered_DCPS_with_voucher_no']) ? $r['recovered_DCPS_with_voucher_no'] : '',
 						'recovered_DCPS_with_voucher_date' => isset($r['recovered_DCPS_with_voucher_date']) ? $r['recovered_DCPS_with_voucher_date'] : '',
 						);
 						
-						$totals['emp_regular'] += $empRegular;
-						$totals['emp_supp'] += $empSupp;
-						$totals['nmc_regular'] += $nmcRegular;
-						$totals['nmc_supp'] += $nmcSupp;
+						$totals['emp_regular']      += $empRegular;
+						$totals['emp_supp']         += $empSupp;
+						$totals['nmc_regular']      += $nmcRegular;
+						$totals['nmc_supp']         += $nmcSupp;
 						$totals['loan_installment'] += $loanInstallment;
-						$totals['total_deposit'] += $totalDeposit;
-						$totals['loan_taken'] += $loanTaken;
+						$totals['total_deposit']    += $totalDeposit;
+						$totals['loan_taken']       += $loanTaken;
+						$totals['emp_interest']     += $rowEmpInterest;
+						$totals['nmc_interest']     += $rowNmcInterest;
+						$totals['total_interest']   += ($rowEmpInterest + $rowNmcInterest);
 					}
 					
-					$monthEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
-					$monthNmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
-					echo "<br/>monthEmpInterest=>".$monthEmpInterest;
-					$rowCount = count($pendingRows);
-					$empIntParts = $this->_splitIntegerAcrossRows($monthEmpInterest, $rowCount);
-					$nmcIntParts = $this->_splitIntegerAcrossRows($monthNmcInterest, $rowCount);
-					
-					// ===== DEBUG: per-month in getCumulativeRows =====
-					$_dbg_month_names_cr = array(1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
-					7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December');
-					$_dbg_month_label_cr = isset($_dbg_month_names_cr[$m]) ? $_dbg_month_names_cr[$m] : $m;
-					// Gather month-level totals from pendingRows for the log
-					$_dbg_empReg=0; $_dbg_empSup=0; $_dbg_nmcReg=0; $_dbg_nmcSup=0;
-					$_dbg_loanInst=0; $_dbg_loanTaken=0;
-					foreach ($pendingRows as $_pr) {
-						$_dbg_empReg    += (int)$_pr['emp_regular'];
-						$_dbg_empSup    += (int)$_pr['emp_supp'];
-						$_dbg_nmcReg    += (int)$_pr['nmc_regular'];
-						$_dbg_nmcSup    += (int)$_pr['nmc_supp'];
-						$_dbg_loanInst  += (int)$_pr['loan_installment'];
-						$_dbg_loanTaken += (int)$_pr['loan_taken'];
-					}
-					$_dbg_monthly_closing_cr = $empBase + $nmcBase;
+					// ── Month-level debug log ────────────────────────────────────────
+					$_dbg_month_label     = isset($_dbg_month_names[$m]) ? $_dbg_month_names[$m] : $m;
+					$_dbg_monthly_closing = $empBase + $nmcBase;
 					/*file_put_contents($_dbg_model_log,
-					"[MODEL-CUMUL] FY: {$fYear}  EmpId: {$empId}  Month: {$_dbg_month_label_cr} ({$m})" .
+					"[MODEL-CUMUL] FY: {$fYear}  EmpId: {$empId}  Month: {$_dbg_month_label} ({$m})" .
 					"  Opening(FY): {$opening}" .
-					"  Emp Regular: {$_dbg_empReg}" .
-					"  Emp Supp: {$_dbg_empSup}" .
-					"  NMC Regular: {$_dbg_nmcReg}" .
-					"  NMC Supp: {$_dbg_nmcSup}" .
-					"  Loan Installment: {$_dbg_loanInst}" .
-					"  Loan Taken: {$_dbg_loanTaken}" .
 					"  Rate: {$rate}" .
 					"  Emp Base (month-end): {$empBase}" .
 					"  NMC Base (month-end): {$nmcBase}" .
-					"  Emp Interest: {$monthEmpInterest}" .
-					"  NMC Interest: {$monthNmcInterest}" .
-					"  Monthly Closing (EmpBase+NmcBase): {$_dbg_monthly_closing_cr}\n",
+					"  Month Emp Interest (sum of rows): {$monthEmpInterest}" .
+					"  Month NMC Interest (sum of rows): {$monthNmcInterest}" .
+					"  Monthly Closing (EmpBase+NmcBase): {$_dbg_monthly_closing}\n",
 					FILE_APPEND
 					);*/
-					// ===== END DEBUG =====
-					
-					foreach ($pendingRows as $i => $prow) {
-						$ei = isset($empIntParts[$i]) ? $empIntParts[$i] : 0;
-						$ni = isset($nmcIntParts[$i]) ? $nmcIntParts[$i] : 0;
-						$prow['emp_interest'] = $monthEmpInterest;
-						$prow['nmc_interest'] = $monthNmcInterest;
-						$prow['total_interest'] = $monthEmpInterest + $monthNmcInterest;
-						$prow['rate'] = $rate;
-						$rows[] = $prow;
-						
-						$totals['emp_interest'] += $monthEmpInterest;
-						$totals['nmc_interest'] += $monthNmcInterest;
-						$totals['total_interest'] += ($monthEmpInterest + $monthNmcInterest);
-					}
-					
-					
 				}
 				
 				$out[$empId] = array(
-				'f_year' => $fYear,
+				'f_year'          => $fYear,
 				'opening_balance' => $opening,
-				'rows' => $rows,
-				'totals' => $totals,
+				'rows'            => $rows,
+				'totals'          => $totals,
 				);
 				
-				// ===== DEBUG: cumulative rows - emp final closing =====
-				$_dbg_closing_cr = ($opening + ($totals['emp_regular']+$totals['emp_supp']+$totals['loan_installment']) + ($totals['nmc_regular']+$totals['nmc_supp'])) - $totals['loan_taken'] + $totals['total_interest'];
+				// ── Final closing debug log ──────────────────────────────────────────
+				$_dbg_closing_cr = ($opening
+				+ ($totals['emp_regular'] + $totals['emp_supp'] + $totals['loan_installment'])
+				+ ($totals['nmc_regular'] + $totals['nmc_supp']))
+				- $totals['loan_taken']
+				+ $totals['total_interest'];
+				
 				/*file_put_contents($_dbg_model_log,
 				"[MODEL-CUMUL] FY: {$fYear}  EmpId: {$empId}" .
 				"  Opening: {$opening}" .
@@ -1113,9 +1104,7 @@
 				str_repeat('*', 80) . "\n",
 				FILE_APPEND
 				);*/
-				// ===== END DEBUG =====
 			}
-			echo "<pre>"; print_r($out); exit;
 			
 			return $out;
 		}
@@ -1153,6 +1142,44 @@
 					//continue;
 				}
 				$closing = $this->_finalLedgerComputeClosingForFY($empId, $fy, $opening);
+				
+				//echo "<br/>empId=>".$empId.", firstYear=>".$fy.", Opening=>".$opening.", closing=>".$closing;
+				
+				$closingCache[$empId][$fy] = $closing;
+				$opening = $closing;
+			}
+			
+			return (int)$opening;
+		}
+
+
+		public function getProvisionalLedgerOpeningBalanceRuntime($empId, $firstYear)
+		{
+			//echo "empId=>".$empId.", firstYear=>".$firstYear; exit;
+			$empId = (int)$empId;
+			$firstYear = (int)$firstYear;
+			
+			if ($empId <= 0 || $firstYear <= 2005) {
+				return 0;
+			}
+			
+			static $closingCache = array(); // [empId][fyStart] => closing
+			
+			$targetFYStart = $firstYear - 1;
+			if (isset($closingCache[$empId][$targetFYStart])) {				
+				return (int)$closingCache[$empId][$targetFYStart];
+			}
+			
+			$opening = 0;
+			for ($fy = 2005; $fy <= $targetFYStart; $fy++) {
+				if (isset($closingCache[$empId][$fy])) {
+					$opening = (int)$closingCache[$empId][$fy];
+					continue;
+				}
+				if($fy < 2008){
+					//continue;
+				}
+				$closing = $this->_provisionalLedgerComputeClosingForFY($empId, $fy, $opening);
 				
 				//echo "<br/>empId=>".$empId.", firstYear=>".$fy.", Opening=>".$opening.", closing=>".$closing;
 				
@@ -1419,15 +1446,13 @@
 			
 			return (int)$closing;
 		} 
-		
-		private function _finalLedgerComputeClosingForFYOld($empId, $fyStart, $opening)
+
+		private function _provisionalLedgerComputeClosingForFY($empId, $fyStart, $opening)
 		{
-			$empId = (int)$empId;
+			$empId   = (int)$empId;
 			$fyStart = (int)$fyStart;
 			$opening = (int)$opening;
-			//echo "<br/>fystart=>".$fyStart;
 			
-			// ===== DEBUG: model FY start =====
 			$_dbg_model_log = APPPATH . 'logs/final_ledger_model_debug.txt';
 			$_dbg_fy_label  = $fyStart . '-' . ($fyStart + 1);
 			/*file_put_contents($_dbg_model_log,
@@ -1436,13 +1461,12 @@
 			str_repeat('-', 80) . "\n",
 			FILE_APPEND
 			);*/
-			// ===== END DEBUG =====
 			
 			$data = array(
-			'emp_id' => $empId,
-			'first_year' => $fyStart,
+			'emp_id'      => $empId,
+			'first_year'  => $fyStart,
 			'second_year' => $fyStart + 1,
-			'f_year' => $fyStart . "-" . ($fyStart + 1),
+			'f_year'      => $fyStart . "-" . ($fyStart + 1),
 			);
 			
 			$monthsOrder = array(4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3);
@@ -1450,14 +1474,10 @@
 			if (!is_array($rates)) {
 				$rates = array();
 			}
-			//echo "<pre>"; print_r($data); //exit;
-			// Use ungrouped rows so duplicates contribute to closing properly.
+			
 			$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
-			//echo "<br>".$opening; 
-			if($data['second_year'] == 2008){
-				//echo "<br/><pre>"; print_R($dcpsRows); exit;
-			}
-			$byMonth = array(); // [month] => list of rows
+			
+			$byMonth = array();
 			if (is_array($dcpsRows)) {
 				foreach ($dcpsRows as $r) {
 					$m = (int)$r['for_month'];
@@ -1467,110 +1487,191 @@
 					$byMonth[$m][] = $r;
 				}
 			}
-			//echo "<br/><pre>By Month=>"; print_r($byMonth);
 			
-			$empBase = $opening;
-			$nmcBase = $opening;
+			$empBase  = $opening;
+			$nmcBase  = $opening;
 			
-			$sumEmp = 0;
-			$sumEmpSupp = 0;
-			$sumNmc = 0;
-			$sumNmcSupp = 0;
-			$sumLoanInst = 0;
+			$sumEmp       = 0;
+			$sumEmpSupp   = 0;
+			$sumNmc       = 0;
+			$sumNmcSupp   = 0;
+			$sumLoanInst  = 0;
 			$sumLoanTaken = 0;
-			$sumInterest = 0;
+			$sumInterest  = 0;
+			
+			// Variables must be defined before the debug block that references them
+			$empInterest = 0;
+			$nmcInterest = 0;
+			$totalInterest = 0;
 			
 			foreach ($monthsOrder as $m) {
-				$monthRecords = isset($byMonth[$m]) ? $byMonth[$m] : array();
-				$empRegular = 0;
-				$empSupp = 0;
-				$nmcRegular = 0;
-				$nmcSupp = 0;
+				$monthRecords    = isset($byMonth[$m]) ? $byMonth[$m] : array();
+				$empRegular      = 0;
+				$empSupp         = 0;
+				$nmcRegular      = 0;
+				$nmcSupp         = 0;
 				$loanInstallment = 0;
-				$loanTaken = 0;
+				$loanTaken       = 0;
+				$empInterest     = 0;
+				$nmcInterest     = 0;
 				
-				//echo "<br/><pre>"; print_r($monthRecords); 
-				$rate = isset($rates[$m]) ? (int)$rates[$m] : 0;
+				$rate = round((isset($rates[$m]) ? (int)$rates[$m] : 0), 0);
+				
+				
+				// ── Sort records by voucher date, then voucher no, then file no ──────
+				if (!empty($monthRecords) && is_array($monthRecords)) {
+					usort($monthRecords, function ($a, $b) {
+						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
+						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
+						$dtA   = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
+						$dtB   = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
+						$tsA   = $dtA ? $dtA->getTimestamp() : 0;
+						$tsB   = $dtB ? $dtB->getTimestamp() : 0;
+						if ($tsA !== $tsB) {
+							return $tsA <=> $tsB;
+						}
+						$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string)$a['recovered_DCPS_with_voucher_no'] : '';
+						$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string)$b['recovered_DCPS_with_voucher_no'] : '';
+						if ($vnA !== $vnB) {
+							return $vnA <=> $vnB;
+						}
+						$fnA = isset($a['file_no']) ? (string)$a['file_no'] : '';
+						$fnB = isset($b['file_no']) ? (string)$b['file_no'] : '';
+						return $fnA <=> $fnB;
+					});
+				}
+				
 				if (!empty($monthRecords)) {
 					foreach ($monthRecords as $r) {
 						$salaryType = isset($r['salary_type']) ? (string)$r['salary_type'] : '';
-						$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
-						? (int)$r['Ideal_contribution_of_employee_for_DCPS']
-						: 0;
+						$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
+						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
+						? (int)$r['Ideal_contribution_of_employee_for_DCPS'] : 0;
+						
+						$rowEmp          = 0;
+						$rowEmpSupp      = 0;
+						$rowNmc          = 0;
+						$rowNmcSupp      = 0;
+						$rowLoanInst     = 0;
+						$rowLoanTaken    = 0;
+						
 						if ($salaryType === 'Regular') {
-							$empRegular += !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : $ideal;
-							$nmcRegular += !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : $ideal;
+							$empRegular = !empty($r['emp_DCPS_contribution'])
+							? (int)$r['emp_DCPS_contribution'] : 0;
+							$nmcRegular = !empty($r['NMC_DCPS_contribution'])
+							? (int)$r['NMC_DCPS_contribution'] : 0;
 							} elseif ($salaryType === 'Suplimentory') {
-							$empSupp += !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : $ideal;
-							$nmcSupp += !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : $ideal;
+							$empSupp = !empty($r['emp_supplimentory_contribution'])
+							? (int)$r['emp_supplimentory_contribution'] : 0;
+							$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
+							? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+							
 						}
-						$loanInstallment += !empty($r['loan_installment_paid_through_salary']) ? (int)$r['loan_installment_paid_through_salary'] : 0;
-						$loanTaken += !empty($r['DCPS_loan_taken_by_an_employee']) ? (int)$r['DCPS_loan_taken_by_an_employee'] : 0;
-						
-						$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
-						$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
 						
 						
-						$empInterest = round((($empBase * $rate) / 100) / 12, 0);
-						$nmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
 						
+						$rowLoanInst  = !empty($r['loan_installment_paid_through_salary'])
+						? (int)$r['loan_installment_paid_through_salary'] : 0;
+						$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
+						? (int)$r['DCPS_loan_taken_by_an_employee'] : 0;
+						
+						// ── Update bases PER RECORD ──────────────────────────────────────
+						$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
+						$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
+						
+						// ── Interest calculated on updated base after EACH record ────────
+						$rowEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
+						$rowNmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
+						
+						// Accumulate per-record interest into month totals
+						$empInterest += $rowEmpInterest;
+						$nmcInterest += $rowNmcInterest;
+						
+						// Accumulate month-level totals for summing
+						$empRegular      += $rowEmp;
+						$empSupp         += $rowEmpSupp;
+						$nmcRegular      += $rowNmc;
+						$nmcSupp         += $rowNmcSupp;
+						$loanInstallment += $rowLoanInst;
+						$loanTaken       += $rowLoanTaken;
+						
+						// ── Per-record debug log ─────────────────────────────────────────
+						$_dbg_month_names = array(
+						1=>'January',  2=>'February', 3=>'March',    4=>'April',
+						5=>'May',      6=>'June',     7=>'July',     8=>'August',
+						9=>'September',10=>'October', 11=>'November',12=>'December'
+						);
+						/*$_dbg_month_label = isset($_dbg_month_names[$m]) ? $_dbg_month_names[$m] : $m;
+						file_put_contents($_dbg_model_log,
+						"[MODEL-ROW] FY: {$_dbg_fy_label}  Month: {$_dbg_month_label} ({$m})" .
+						"  SalaryType: {$salaryType}" .
+						"  Row Emp: {$rowEmp}  Row EmpSupp: {$rowEmpSupp}" .
+						"  Row NMC: {$rowNmc}  Row NMCSupp: {$rowNmcSupp}" .
+						"  Row LoanInst: {$rowLoanInst}  Row LoanTaken: {$rowLoanTaken}" .
+						"  Rate: {$rate}" .
+						"  EmpBase After Row: {$empBase}  NMCBase After Row: {$nmcBase}" .
+						"  Row EmpInterest: {$rowEmpInterest}  Row NMCInterest: {$rowNmcInterest}\n",
+						FILE_APPEND
+						);*/
 					}
+					} else {
+					// No records this month — still compute interest on carry-forward base
+					$empInterest = round((($empBase * $rate) / 100), 0) / 12;
+					$nmcInterest = round((($nmcBase * $rate) / 100), 0) / 12;
 				}
 				
-				// ===== DEBUG: per-month log inside _finalLedgerComputeClosingForFY =====
-				$_dbg_month_names = array(1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
-				7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December');
-				/*$_dbg_month_label  = isset($_dbg_month_names[$m]) ? $_dbg_month_names[$m] : $m;
-				$_dbg_monthly_closing = ($empBase + $nmcBase); // emp+nmc bases at month end (before interest)
+				// ── Month-level debug log ────────────────────────────────────────────────
+				$_dbg_month_names = array(
+				1=>'January',  2=>'February', 3=>'March',    4=>'April',
+				5=>'May',      6=>'June',     7=>'July',     8=>'August',
+				9=>'September',10=>'October', 11=>'November',12=>'December'
+				);
+				/*$_dbg_month_label     = isset($_dbg_month_names[$m]) ? $_dbg_month_names[$m] : $m;
+				$_dbg_monthly_closing = ($empBase + $nmcBase);
 				file_put_contents($_dbg_model_log,
 				"[MODEL-COMPUTE] FY: {$_dbg_fy_label}  Month: {$_dbg_month_label} ({$m})" .
 				"  Opening(FY): {$opening}" .
-				"  Emp Regular: {$empRegular}" .
-				"  Emp Supp: {$empSupp}" .
-				"  NMC Regular: {$nmcRegular}" .
-				"  NMC Supp: {$nmcSupp}" .
-				"  Loan Installment: {$loanInstallment}" .
-				"  Loan Taken: {$loanTaken}" .
+				"  Emp Regular: {$empRegular}  Emp Supp: {$empSupp}" .
+				"  NMC Regular: {$nmcRegular}  NMC Supp: {$nmcSupp}" .
+				"  Loan Installment: {$loanInstallment}  Loan Taken: {$loanTaken}" .
 				"  Rate: {$rate}" .
-				"  Emp Base: {$empBase}" .
-				"  NMC Base: {$nmcBase}" .
-				"  Emp Interest: {$empInterest}" .
-				"  NMC Interest: {$nmcInterest}" .
+				"  Emp Base: {$empBase}  NMC Base: {$nmcBase}" .
+				"  Emp Interest (month total): {$empInterest}  NMC Interest (month total): {$nmcInterest}" .
 				"  Monthly Closing (EmpBase+NmcBase): {$_dbg_monthly_closing}\n",
 				FILE_APPEND
 				);*/
-				// ===== END DEBUG =====
 				
-				
-				$sumInterest += ($empInterest + $nmcInterest);		
-				//echo "<pre>EmpBase=>".$empBase;
-				
-				
-				
-				
-				$sumEmp += $empRegular;
-				$sumEmpSupp += $empSupp;
-				$sumNmc += $nmcRegular;
-				$sumNmcSupp += $nmcSupp;
-				$sumLoanInst += $loanInstallment;
+				$sumInterest  += ($empInterest + $nmcInterest);
+				$sumEmp       += $empRegular;
+				$sumEmpSupp   += $empSupp;
+				$sumNmc       += $nmcRegular;
+				$sumNmcSupp   += $nmcSupp;
+				$sumLoanInst  += $loanInstallment;
 				$sumLoanTaken += $loanTaken;
 			}
 			
-			$closing = ($opening + ($sumEmp + $sumEmpSupp + $sumLoanInst) + ($sumNmc + $sumNmcSupp)+$sumInterest) - $sumLoanTaken;
+			$closing = ($opening
+			+ ($sumEmp + $sumEmpSupp + $sumLoanInst)
+			+ ($sumNmc + $sumNmcSupp)) - $sumLoanTaken 
+			+ ($sumInterest);
 			
-			// ===== DEBUG: FY closing summary =====
 			/*file_put_contents($_dbg_model_log,
 			"[MODEL-COMPUTE] FY: {$_dbg_fy_label}  EmpId: {$empId}" .
-			"  Sum Emp: {$sumEmp}  Sum EmpSupp: {$sumEmpSupp}  Sum NMC: {$sumNmc}  Sum NMCSupp: {$sumNmcSupp}" .
-			"  Sum LoanInst: {$sumLoanInst}  Sum LoanTaken: {$sumLoanTaken}  Sum Interest: {$sumInterest}" .
+			"  Sum Emp: {$sumEmp}  Sum EmpSupp: {$sumEmpSupp}" .
+			"  Sum NMC: {$sumNmc}  Sum NMCSupp: {$sumNmcSupp}" .
+			"  Sum LoanInst: {$sumLoanInst}  Sum LoanTaken: {$sumLoanTaken}" .
+			"  Sum Interest: {$sumInterest}" .
 			"  Opening: {$opening}  >>> FINAL CLOSING: {$closing}\n" .
 			str_repeat('-', 80) . "\n",
 			FILE_APPEND
 			);*/
-			// ===== END DEBUG =====
+			
+			//$_dbg_closing_cr = ($opening + ($totals['emp_regular']+$totals['emp_supp']+$totals['loan_installment']) + ($totals['nmc_regular']+$totals['nmc_supp'])) - $totals['loan_taken'] + $totals['total_interest'];
 			
 			return (int)$closing;
-		}
+		} 
+		
+		
 		
 		/**
 		 * Get Year-Wise Broad Sheet Summary (aggregated across all employees)
