@@ -1572,8 +1572,230 @@
 			return (int)$closing;
 		}
 		
+		/**
+		 * Get Year-Wise Broad Sheet Summary (aggregated across all employees)
+		 * Shows: Opening Balance, Total Contributions, Interest, Withdrawals, Closing Balance
+		 */
+		public function getYearWiseBroadSheetSummary($firstYear, $secondYear)
+		{
+			$firstYear = (int)$firstYear;
+			$secondYear = (int)$secondYear;
+			
+			if ($firstYear <= 0) {
+				return array();
+			}
+			
+			// Get all employees' month-wise data for the financial year
+			$data = array(
+				'first_year' => $firstYear,
+				'second_year' => $secondYear,
+				'f_year' => $firstYear . "-" . $secondYear
+			);
+			
+			$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
+			
+			$summary = array(
+				'financial_year' => $firstYear . "-" . $secondYear,
+				'first_year' => $firstYear,
+				'second_year' => $secondYear,
+				'opening_balance' => 0,
+				'emp_contribution_regular' => 0,
+				'emp_contribution_supp' => 0,
+				'total_emp_contribution' => 0,
+				'nmc_contribution_regular' => 0,
+				'nmc_contribution_supp' => 0,
+				'total_corp_contribution' => 0,
+				'loan_installment' => 0,
+				'total_deposits' => 0,
+				'loan_taken' => 0,
+				'total_withdrawals' => 0,
+				'total_interest' => 0,
+				'closing_balance' => 0,
+				'monthly_details' => array()
+			);
+			
+			// Get opening balance (previous year's closing)
+			$summary['opening_balance'] = (int)$this->getYearWisePreviousClosingBalance($firstYear);
+			
+			$monthsOrder = array(4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3);
+			$rates = $this->getInterestRates($firstYear, $secondYear);
+			if (!is_array($rates)) {
+				$rates = array();
+			}
+			
+			// Group by month
+			$byMonth = array();
+			if (is_array($dcpsRows)) {
+				foreach ($dcpsRows as $r) {
+					$m = (int)$r['for_month'];
+					if (!isset($byMonth[$m])) {
+						$byMonth[$m] = array();
+					}
+					$byMonth[$m][] = $r;
+				}
+			}
+			
+			$runningBalance = $summary['opening_balance'];
+			
+			foreach ($monthsOrder as $m) {
+				$monthRecords = isset($byMonth[$m]) ? $byMonth[$m] : array();
+				
+				$monthData = array(
+					'month' => $m,
+					'year' => ($m >= 4) ? $firstYear : $secondYear,
+					'emp_regular' => 0,
+					'emp_supp' => 0,
+					'nmc_regular' => 0,
+					'nmc_supp' => 0,
+					'loan_installment' => 0,
+					'loan_taken' => 0,
+					'interest' => 0,
+					'monthly_closing' => 0
+				);
+				
+				$rate = isset($rates[$m]) ? (int)$rates[$m] : 0;
+				
+				// Sort by voucher date if records exist
+				if (!empty($monthRecords) && is_array($monthRecords)) {
+					usort($monthRecords, function ($a, $b) {
+						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
+						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
+						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
+						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
+						$tsA = $dtA ? $dtA->getTimestamp() : 0;
+						$tsB = $dtB ? $dtB->getTimestamp() : 0;
+						if ($tsA !== $tsB) {
+							return $tsA <=> $tsB;
+						}
+						return 0;
+					});
+				}
+				
+				// Aggregate all records for this month
+				if (!empty($monthRecords)) {
+					foreach ($monthRecords as $r) {
+						$salaryType = isset($r['salary_type']) ? (string)$r['salary_type'] : '';
+						
+						$emp_reg = isset($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
+						$emp_supp = isset($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
+						$nmc_reg = isset($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : 0;
+						$nmc_supp = isset($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+						$loan_inst = isset($r['loan_installment_paid_through_salary']) ? (int)$r['loan_installment_paid_through_salary'] : 0;
+						$loan_taken = isset($r['DCPS_loan_taken_by_an_employee']) ? (int)$r['DCPS_loan_taken_by_an_employee'] : 0;
+						
+						$monthData['emp_regular'] += $emp_reg;
+						$monthData['emp_supp'] += $emp_supp;
+						$monthData['nmc_regular'] += $nmc_reg;
+						$monthData['nmc_supp'] += $nmc_supp;
+						$monthData['loan_installment'] += $loan_inst;
+						$monthData['loan_taken'] += $loan_taken;
+					}
+				}
+				
+				// Calculate month totals
+				$empTotal = $monthData['emp_regular'] + $monthData['emp_supp'];
+				$nmcTotal = $monthData['nmc_regular'] + $monthData['nmc_supp'];
+				$monthDeposits = $empTotal + $nmcTotal + $monthData['loan_installment'];
+				$monthWithdrawals = $monthData['loan_taken'];
+				
+				// Calculate month-wise interest on running balance
+				$monthInterest = 0;
+				if ($rate > 0) {
+					$balanceBeforeInterest = $runningBalance + $monthDeposits;
+					$monthInterest = round(($balanceBeforeInterest * $rate / 100) / 12, 0);
+				}
+				
+				$monthData['interest'] = $monthInterest;
+				$monthData['monthly_closing'] = $runningBalance + $monthDeposits - $monthWithdrawals + $monthInterest;
+				
+				// Update running balance
+				$runningBalance = $monthData['monthly_closing'];
+				
+				// Add to summary arrays
+				$summary['emp_contribution_regular'] += $monthData['emp_regular'];
+				$summary['emp_contribution_supp'] += $monthData['emp_supp'];
+				$summary['nmc_contribution_regular'] += $monthData['nmc_regular'];
+				$summary['nmc_contribution_supp'] += $monthData['nmc_supp'];
+				$summary['loan_installment'] += $monthData['loan_installment'];
+				$summary['loan_taken'] += $monthData['loan_taken'];
+				$summary['total_interest'] += $monthInterest;
+				
+				$summary['monthly_details'][$m] = $monthData;
+			}
+			
+			// Calculate final totals
+			$summary['total_emp_contribution'] = $summary['emp_contribution_regular'] + $summary['emp_contribution_supp'];
+			$summary['total_corp_contribution'] = $summary['nmc_contribution_regular'] + $summary['nmc_contribution_supp'];
+			$summary['total_deposits'] = $summary['total_emp_contribution'] + $summary['total_corp_contribution'] + $summary['loan_installment'];
+			$summary['total_withdrawals'] = $summary['loan_taken'];
+			
+			// Closing balance calculation
+			$summary['closing_balance'] = $summary['opening_balance'] 
+				+ $summary['total_deposits'] 
+				- $summary['total_withdrawals'] 
+				+ $summary['total_interest'];
+			
+			return $summary;
+		}
 		
+		/**
+		 * Get Year-Wise Previous Closing Balance (for opening balance of current year)
+		 * Calculates closing balance of previous financial year across all employees
+		 */
+		public function getYearWisePreviousClosingBalance($firstYear)
+		{
+			$firstYear = (int)$firstYear;
+			
+			if ($firstYear <= 2005) {
+				return 0;
+			}
+			
+			// Previous FY starts one year before
+			$prevFirstYear = $firstYear - 1;
+			$prevSecondYear = $firstYear;
+			
+			// Get all employee closing balances for previous year
+			$data = array(
+				'first_year' => $prevFirstYear,
+				'second_year' => $prevSecondYear
+			);
+			
+			$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
+			
+			if (empty($dcpsRows)) {
+				return 0;
+			}
+			
+			// Collect unique employee IDs
+			$empIds = array();
+			foreach ($dcpsRows as $r) {
+				$empIds[(int)$r['emp_td']] = true;
+			}
+			
+			// Calculate closing for each employee in previous year and sum
+			$totalClosing = 0;
+			foreach (array_keys($empIds) as $empId) {
+				$empClosing = (int)$this->getFinalLedgerOpeningBalanceRuntime($empId, $firstYear);
+				$totalClosing += $empClosing;
+			}
+			
+			return (int)$totalClosing;
+		}
 		
+		/**
+		 * Get Month-Wise Year Summary for Broad Sheet Report
+		 * Returns array indexed by month with totals
+		 */
+		public function getYearWiseMonthlyBreakdown($firstYear, $secondYear)
+		{
+			$summary = $this->getYearWiseBroadSheetSummary($firstYear, $secondYear);
+			
+			if (empty($summary) || empty($summary['monthly_details'])) {
+				return array();
+			}
+			
+			return $summary['monthly_details'];
+		}
 		
 	}
 ?>
