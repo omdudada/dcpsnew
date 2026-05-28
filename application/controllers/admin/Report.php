@@ -288,7 +288,7 @@ class Report extends CI_Controller{
 		$this->load->view('admin/common/header');
 		$this->load->view('admin/report/team_wise_tasks',$data);
 	}
-
+	
 	// =========================================================================
 	// Team Tasks (Data-quality): Missing Record
 	// =========================================================================

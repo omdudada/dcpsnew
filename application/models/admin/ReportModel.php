@@ -441,6 +441,13 @@ class ReportModel extends CI_Model
             $updateArray['salary_end_date'] = isset($postData['salary_end_date']) ? $postData['salary_end_date'] : '';
             $updateArray['remark'] = isset($postData['remark']) ? $postData['remark'] : '';
             $updateArray['reason'] = isset($postData['reason']) ? $postData['reason'] : '';
+			if(isset($postData['remark']) && $postData['remark'] == "Entry to be Deleted. Checked and Verified."){
+				$updateArray['is_deleted'] = 3; 
+			}
+			else{
+			    $updateArray['is_deleted'] = 0; 
+			}
+
     
             $updateArray['updated_by'] = $propCreatedBy;
             $updateArray['updated_date'] = time();
@@ -450,37 +457,7 @@ class ReportModel extends CI_Model
             $this->db->where('id', $id);
             $this->db->update('master_dcps', $updateArray);
     
-            if ($this->db->affected_rows() > 0) {
-                // After updating the deduction record, recalculate yearly balances
-                // Extract employee ID and financial year from the updated record
-                $updatedRecord = $this->getDeatailsOfEmployee($id);
-                
-                if ($updatedRecord) {
-                    $empId = (int)$updatedRecord['emp_td'];
-                    $forYear = (int)$updatedRecord['for_year'];
-                    $forMonth = (int)$updatedRecord['for_month'];
-                    
-                    // Determine the financial year based on month
-                    // Months 4-12 belong to the financial year starting in that calendar year
-                    // Months 1-3 belong to the previous financial year
-                    if ($forMonth >= 4) {
-                        $fyStart = $forYear;
-                    } else {
-                        $fyStart = $forYear - 1;
-                    }
-                    
-                    // Load the yearly balance helper
-                    $this->load->helper('yearly_balance');
-                    
-                    // Recalculate balances from this financial year onward
-                    $debugLog = APPPATH . 'logs/yearly_balance_recalc.txt';
-                    recalculate_yearly_balances($this->db, $empId, $fyStart, $debugLog);
-                }
-                
-                return 1;
-            }
-    
-            return 0;
+            return ($this->db->affected_rows() > 0) ? 1 : 0;
         }
     }
 
@@ -798,7 +775,7 @@ class ReportModel extends CI_Model
 		return [];
 	}
 
-	// =========================================================================
+    // =========================================================================
 	// Team Tasks (Data-quality)
 	// =========================================================================
 	private function _applyMissingFilters($teamMonth = 0, $search = '')

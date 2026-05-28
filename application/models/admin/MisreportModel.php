@@ -1797,5 +1797,8 @@
 			return $summary['monthly_details'];
 		}
 		
+		
+		
+		
 	}
 ?>
