@@ -238,10 +238,10 @@
                                     <table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
                                         <thead>
                                             <tr>
-                                                <th style="text-align:center;" colspan="19">नाशिक महानगरपालिका,नाशिक</th>
+                                                <th style="text-align:center;" colspan="21">नाशिक महानगरपालिका,नाशिक</th>
                                             </tr>
                                             <tr>
-                                                <th style="text-align:center;" colspan="19">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
+                                                <th style="text-align:center;" colspan="21">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी क्रमांक</th>
@@ -249,7 +249,7 @@
                                                 <th>कर्मचारी नाव</th>
                                                 <td colspan="6"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                                                 <th colspan="3">सुरवातीची शिल्लक</th>
-                                                <td colspan="7" style="text-align:right;"><?= _n0($opening); ?></td>
+                                                <td colspan="9" style="text-align:right;"><?= _n0($opening); ?></td>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी नियुक्ती दिनांक</th>
@@ -257,7 +257,7 @@
                                                 <th>पे सेंटर</th>
                                                 <td><?= !empty($ownerDetail['pay_center']) ? $ownerDetail['pay_center'] : ''; ?></td>
                                                 <th>हुद्दा</th>
-                                                <td colspan="14"><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
+                                                <td colspan="16"><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
                                             </tr>
                                             <tr>
                                                 <th rowspan="2">महिना</th>
@@ -266,8 +266,8 @@
                                                 <th rowspan="2">प्रमाणक क्रमांक</th>
                                                 <th rowspan="2">प्रमाणक दिनांक</th>
                                                 
-                                                <th colspan="2">कर्मचारी वर्गणी</th>
-                                                <th colspan="2">मनपा वर्गणी</th>
+                                                <th colspan="3">कर्मचारी वर्गणी</th>
+                                                <th colspan="3">मनपा वर्गणी</th>
                                                 <th rowspan="2">कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा हप्ता (जमा)</th>
                                                 <th rowspan="2">एकूण जमा</th>
                                                 <th rowspan="2">काढलेल्या कर्जाची रक्कम</th>
@@ -283,8 +283,10 @@
                                             <tr>
                                                 <th>नियमित वेतन</th>
                                                 <th>पुरवणी वेतन</th>
+                                                <th>कर्मचारी अंशदानातील फरक</th>
                                                 <th>नियमित वेतन</th>
                                                 <th>पुरवणी वेतन</th>
+                                                <th>मनपा अंशदानातील फरक</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -295,8 +297,10 @@
                                                 $totShow = array(
                                                     'emp_regular' => 0,
                                                     'emp_supp' => 0,
+                                                    'emp_diff' => 0,
                                                     'nmc_regular' => 0,
                                                     'nmc_supp' => 0,
+                                                    'nmc_diff' => 0,
                                                     'loan_installment' => 0,
                                                     'total_deposit' => 0,
                                                     'loan_taken' => 0,
@@ -352,8 +356,10 @@
                                                 $m = (int) $row['month'];
                                                 $totShow['emp_regular'] += (int) $row['emp_regular'];
                                                 $totShow['emp_supp'] += (int) $row['emp_supp'];
+                                                $totShow['emp_diff'] += isset($row['emp_diff']) ? (int) $row['emp_diff'] : 0;
                                                 $totShow['nmc_regular'] += (int) $row['nmc_regular'];
                                                 $totShow['nmc_supp'] += (int) $row['nmc_supp'];
+                                                $totShow['nmc_diff'] += isset($row['nmc_diff']) ? (int) $row['nmc_diff'] : 0;
                                                 $totShow['loan_installment'] += (int) $row['loan_installment'];
                                                 $totShow['total_deposit'] += (int) $row['total_deposit'];
                                                 $totShow['loan_taken'] += (int) $row['loan_taken'];
@@ -410,8 +416,10 @@
                                                     <td class="clsCenter"><?= $voucherDt !== '' ? htmlspecialchars($voucherDt) : ''; ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_regular']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_supp']); ?></td>
+                                                    <td style="text-align:right;"><?= _n0(isset($row['emp_diff']) ? $row['emp_diff'] : 0); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['nmc_regular']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['nmc_supp']); ?></td>
+                                                    <td style="text-align:right;"><?= _n0(isset($row['nmc_diff']) ? $row['nmc_diff'] : 0); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['loan_installment']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['total_deposit']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['loan_taken']); ?></td>
@@ -428,8 +436,10 @@
                                                 <td colspan="5" style="text-align:center;"><strong>एकुण <?= htmlspecialchars((string) $searchData['f_year']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_regular']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_supp']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0(isset($totShow['emp_diff']) ? $totShow['emp_diff'] : 0); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['nmc_regular']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['nmc_supp']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0(isset($totShow['nmc_diff']) ? $totShow['nmc_diff'] : 0); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['loan_installment']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['total_deposit']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['loan_taken']); ?></strong></td>

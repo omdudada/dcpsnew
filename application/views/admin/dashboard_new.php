@@ -342,7 +342,7 @@ $monthNames = [
             <?php endif; ?>
         </div>
     </div>
-
+<?php /*
     <!-- ===================== TABBED TABLES ===================== -->
     <div class="dash-panel">
         <div class="dash-panel-header">
@@ -532,9 +532,11 @@ $monthNames = [
 
         </div><!-- /.dash-panel-body -->
     </div><!-- /.dash-panel -->
+ */
+?>   
 
 </div><!-- /.dash-page -->
-
+<?php /*
 <script>
 // ================================================================
 // MONTH TABLE SEARCH FILTER
@@ -772,3 +774,4 @@ function resetDeduction() {
         '<tr><td colspan="9" style="text-align:center;color:#888;padding:30px;">Apply a filter and click "Apply Filter" to load data.</td></tr>';
 }
 </script>
+*/ ?>

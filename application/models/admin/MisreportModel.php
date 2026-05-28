@@ -927,6 +927,8 @@
 				'emp_interest'     => 0,
 				'nmc_interest'     => 0,
 				'total_interest'   => 0,
+				'emp_diff'         => 0,
+				'nmc_diff'         => 0,
 				);
 				
 				$rows = array();
@@ -979,19 +981,29 @@
 						$nmcSupp         = 0;
 						$loanInstallment = 0;
 						$loanTaken       = 0;
+						$empActual       = 0;
+						$nmcActual       = 0;
 						
 						if ($salaryType === 'Regular') {
 							$empRegular = !empty($r['emp_DCPS_contribution'])
 							? (int)$r['emp_DCPS_contribution'] : 0;
 							$nmcRegular = !empty($r['NMC_DCPS_contribution'])
 							? (int)$r['NMC_DCPS_contribution'] : 0;
+							$empActual  = $empRegular;
+							$nmcActual  = $nmcRegular;
 							} elseif ($salaryType === 'Suplimentory') {
 							$empSupp = !empty($r['emp_supplimentory_contribution'])
 							? (int)$r['emp_supplimentory_contribution'] : 0;
 							$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
 							? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+							$empActual = $empSupp;
+							$nmcActual = $nmcSupp;
 							
 						}
+						
+						// Difference: actual collected - ideal contribution
+						$empDiff = $empActual - $ideal;
+						$nmcDiff = $nmcActual - $ideal;
 						
 						$loanInstallment = !empty($r['loan_installment_paid_through_salary'])
 						? (int)$r['loan_installment_paid_through_salary'] : 0;
@@ -1034,6 +1046,8 @@
 						'emp_supp'                         => $empSupp,
 						'nmc_regular'                      => $nmcRegular,
 						'nmc_supp'                         => $nmcSupp,
+						'emp_diff'                         => $empDiff,
+						'nmc_diff'                         => $nmcDiff,
 						'loan_installment'                 => $loanInstallment,
 						'total_deposit'                    => $totalDeposit,
 						'loan_taken'                       => $loanTaken,
@@ -1054,6 +1068,8 @@
 						$totals['emp_supp']         += $empSupp;
 						$totals['nmc_regular']      += $nmcRegular;
 						$totals['nmc_supp']         += $nmcSupp;
+						$totals['emp_diff']         += $empDiff;
+						$totals['nmc_diff']         += $nmcDiff;
 						$totals['loan_installment'] += $loanInstallment;
 						$totals['total_deposit']    += $totalDeposit;
 						$totals['loan_taken']       += $loanTaken;
