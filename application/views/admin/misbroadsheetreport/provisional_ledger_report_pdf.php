@@ -381,10 +381,12 @@ if (!function_exists('_nf')) {
 
                 <?php
                 $fyMarchYear   = isset($searchData['second_year']) ? (int) $searchData['second_year'] : 0;
-                $sumEmpContrib = $tot['emp_regular'] + $tot['emp_supp'];
-                $sumNmcContrib = $tot['nmc_regular'] + $tot['nmc_supp'];
-                $sumRow4       = $sumEmpContrib + $tot['loan_installment'];
+                $sumEmpContrib = $totShow['emp_regular'] + $totShow['emp_supp'];
+                $sumNmcContrib = $totShow['nmc_regular'] + $totShow['nmc_supp'];
+                $sumRow4       = $sumEmpContrib + $totShow['loan_installment'];
                 $sumRow6       = $opening + $sumRow4 + $sumNmcContrib;
+                $sumInterest   = $totShow['emp_interest'] + $totShow['nmc_interest'];
+                $calcClosing   = $sumRow6 - $totShow['loan_taken'] + $sumInterest;
                 ?>
                 <table class="final-ledger-bottom-wrap" cellspacing="0">
                     <tr>
@@ -431,7 +433,7 @@ if (!function_exists('_nf')) {
                                 <tr>
                                     <td class="fls-num">3</td>
                                     <td class="fls-desc">कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा एकूण हप्ता (जमा)</td>
-                                    <td class="fls-amt"><?= _nf($tot['loan_installment']); ?></td>
+                                    <td class="fls-amt"><?= _nf($totShow['loan_installment']); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">4</td>
@@ -452,29 +454,29 @@ if (!function_exists('_nf')) {
                                 <tr>
                                     <td class="fls-num">7</td>
                                     <td class="fls-desc">काढलेल्या कर्जाची रक्कम (-)</td>
-                                    <td class="fls-amt"><?= _nf($tot['loan_taken']); ?></td>
+                                    <td class="fls-amt"><?= _nf($totShow['loan_taken']); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">8</td>
                                     <td class="fls-desc">कर्मचारी वर्गणी - मिळणाऱ्या व्याजाची रक्कम</td>
-                                    <td class="fls-amt"><?= _nf($tot['emp_interest']); ?></td>
+                                    <td class="fls-amt"><?= _nf($totShow['emp_interest']); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">9</td>
                                     <td class="fls-desc">मनपा वर्गणी - मिळणाऱ्या व्याजाची रक्कम</td>
-                                    <td class="fls-amt"><?= _nf($tot['nmc_interest']); ?></td>
+                                    <td class="fls-amt"><?= _nf($totShow['nmc_interest']); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">10</td>
                                     <td class="fls-desc">एकूण मिळणाऱ्या व्याजाची रक्कम (8+9)</td>
-                                    <td class="fls-amt"><?= _nf($tot['total_interest']); ?></td>
+                                    <td class="fls-amt"><?= _nf($sumInterest); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">11</td>
                                     <td class="fls-desc">मार्च
                                         <?= $fyMarchYear ? htmlspecialchars((string) $fyMarchYear) : ''; ?> अखेर शिल्लक (6-7+10)
                                     </td>
-                                    <td class="fls-amt" style="font-weight:700;"><?= _nf($closing); ?></td>
+                                    <td class="fls-amt" style="font-weight:700;"><?= _nf($calcClosing); ?></td>
                                 </tr>
                             </table>
                             <table class="final-ledger-sign-row" cellspacing="0">
