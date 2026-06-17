@@ -105,5 +105,18 @@ $route['admin/dashboard/ledgerSummary']                         = 'admin/dashboa
 $route['admin/dashboard/deductionSummary']                      = 'admin/dashboard/deductionSummary';
 $route['admin/dashboard/recordsByMonthYear/(:num)/(:num)']      = 'admin/dashboard/recordsByMonthYear/$1/$2';
 
+// FORM-1 (DCPS application / PRAN) CRUD routes
+$route['admin/form1']                 = 'admin/form1/index';
+$route['admin/form1/add']             = 'admin/form1/add';
+$route['admin/form1/edit/(:num)']     = 'admin/form1/edit/$1';
+$route['admin/form1/view/(:num)']     = 'admin/form1/view/$1';
+$route['admin/form1/delete/(:num)']   = 'admin/form1/delete/$1';
+
+// Statutory print forms (FORM-2 / FORM-R-2 / FORM-3 register / Day Book)
+$route['admin/statutory-forms/form2']          = 'admin/statutoryforms/form2Schedule';
+$route['admin/statutory-forms/form-r2']        = 'admin/statutoryforms/formR2';
+$route['admin/statutory-forms/form3-register'] = 'admin/statutoryforms/form3Register';
+$route['admin/statutory-forms/day-book']       = 'admin/statutoryforms/dayBook';
+
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;

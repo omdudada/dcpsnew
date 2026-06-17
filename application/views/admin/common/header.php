@@ -60,6 +60,17 @@
             <li><a href="<?php echo base_url('admin/team-tasks/duplicate-record'); ?>">Duplicate Record</a></li>
         </ul>
     </div>
+
+    <div class="dropdown">
+        <a href="#">DCPS Forms &#9660;</a>
+        <ul class="dropdown-menu">
+            <li><a href="<?php echo base_url('admin/form1'); ?>">FORM-1 &ndash; Application (PRAN)</a></li>
+            <li><a href="<?php echo base_url('admin/statutory-forms/form2'); ?>">FORM-2 &ndash; Contribution Schedule</a></li>
+            <li><a href="<?php echo base_url('admin/statutory-forms/form-r2'); ?>">FORM-R-2 &ndash; Consolidated Schedule</a></li>
+            <li><a href="<?php echo base_url('admin/statutory-forms/form3-register'); ?>">FORM-3 &ndash; SRKA Register</a></li>
+            <li><a href="<?php echo base_url('admin/statutory-forms/day-book'); ?>">Treasury Day Book</a></li>
+        </ul>
+    </div>
 </nav>
 
 <!-- CONTENT START -->
