@@ -223,6 +223,10 @@
                                 $tot = $ledger['totals'];
                                 $closing = ($opening + ($tot['emp_regular']+$tot['emp_supp']+$tot['loan_installment']) + ($tot['nmc_regular']+$tot['nmc_supp'])) - $tot['loan_taken'] + $tot['total_interest'];
 
+                                // NEW (additive): Employee Contribution opening/closing — independent of $opening/$closing
+                                $employeeContributionOpening = isset($ledger['ec_opening_balance']) ? (int)$ledger['ec_opening_balance'] : 0;
+                                $employeeContributionClosing = $employeeContributionOpening + (int)$tot['emp_regular'] + (int)$tot['emp_interest'];
+
                                 // ===== DEBUG VIEW: per-employee header =====
                                 /*$_dbg_view_log = APPPATH . 'logs/final_ledger_view_debug.txt';
                                 file_put_contents($_dbg_view_log,
@@ -568,6 +572,16 @@
                                                         <td class="fls-num">11</td>
                                                         <td class="fls-desc">मार्च <?= $fyMarchYear ? htmlspecialchars((string) $fyMarchYear) : ''; ?> अखेर शिल्लक (6-7+10)</td>
                                                         <td class="fls-amt" style="font-weight:700;"><?= _nf($closing); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">12</td>
+                                                        <td class="fls-desc">कर्मचारी वर्गणी सुरुवातीची शिल्लक</td>
+                                                        <td class="fls-amt"><?= _nf($employeeContributionOpening); ?></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fls-num">13</td>
+                                                        <td class="fls-desc">कर्मचारी वर्गणी अखेर शिल्लक (कर्मचारी वर्गणी + व्याज)</td>
+                                                        <td class="fls-amt" style="font-weight:700;"><?= _nf($employeeContributionClosing); ?></td>
                                                     </tr>
                                                 </table>
                                                 <table class="final-ledger-sign-row" cellspacing="0">
