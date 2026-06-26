@@ -220,8 +220,9 @@
                                 $ledger = $finalLedger[$empId];
                                 //echo "<Pre>"; print_r($ledger); exit;
                                 $opening = (int)$ledger['opening_balance'];
+                                
                                 $tot = $ledger['totals'];
-                                $closing = ($opening + ($tot['emp_regular']+$tot['emp_supp']+$tot['loan_installment']) + ($tot['nmc_regular']+$tot['nmc_supp'])) - $tot['loan_taken'] + $tot['total_interest'];
+                                $closing = (($opening*2) + ($tot['emp_regular']+$tot['emp_supp']+$tot['loan_installment']) + ($tot['nmc_regular']+$tot['nmc_supp'])) - $tot['loan_taken'] + $tot['total_interest'];
 
                                 // NEW (additive): Employee Contribution opening/closing — independent of $opening/$closing
                                 $employeeContributionOpening = isset($ledger['ec_opening_balance']) ? (int)$ledger['ec_opening_balance'] : 0;
@@ -253,7 +254,7 @@
                                                 <th>कर्मचारी नाव</th>
                                                 <td colspan="6"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                                                 <th colspan="3">सुरवातीची शिल्लक</th>
-                                                <td colspan="7" style="text-align:right;"><?= _n0($opening); ?></td>
+                                                <td colspan="7" style="text-align:right;"><?= _n0($opening * 2); ?></td>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी नियुक्ती दिनांक</th>
@@ -483,7 +484,7 @@
                                         $sumEmpContrib = $tot['emp_regular'] + $tot['emp_supp'];
                                         $sumNmcContrib = $tot['nmc_regular'] + $tot['nmc_supp'];
                                         $sumRow4 = $sumEmpContrib + $tot['loan_installment'];
-                                        $sumRow6 = $opening + $sumRow4 + $sumNmcContrib;
+                                        $sumRow6 = ($opening*2) + $sumRow4 + $sumNmcContrib;
                                     ?>
                                     <table class="final-ledger-bottom-wrap" cellspacing="0">
                                         <tr>
@@ -521,7 +522,7 @@
                                                     <tr>
                                                         <td class="fls-num">1</td>
                                                         <td class="fls-desc">सुरुवातीची शिल्लक</td>
-                                                        <td class="fls-amt"><?= _nf($opening); ?></td>
+                                                        <td class="fls-amt"><?= _nf($opening*2); ?></td>
                                                     </tr>
                                                     <tr>
                                                         <td class="fls-num">2</td>
@@ -578,11 +579,11 @@
                                                         <td class="fls-desc">कर्मचारी वर्गणी सुरुवातीची शिल्लक</td>
                                                         <td class="fls-amt"><?= _nf($employeeContributionOpening); ?></td>
                                                     </tr>
-                                                    <tr>
+                                                    <!--<tr>
                                                         <td class="fls-num">13</td>
                                                         <td class="fls-desc">कर्मचारी वर्गणी अखेर शिल्लक (कर्मचारी वर्गणी + व्याज)</td>
                                                         <td class="fls-amt" style="font-weight:700;"><?= _nf($employeeContributionClosing); ?></td>
-                                                    </tr>
+                                                    </tr>-->
                                                 </table>
                                                 <table class="final-ledger-sign-row" cellspacing="0">
                                                     <tr>

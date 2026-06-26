@@ -649,7 +649,7 @@ class MisreportModel extends CI_Model
 
 		$out = array();
 		foreach ($empIds as $empId) {
-			$opening = isset($openingByEmp[$empId]) ? (int) $openingByEmp[$empId] : 0;
+			$opening = isset($ecOpeningByEmp[$empId]) ? (int) $ecOpeningByEmp[$empId] : 0;
 
 			/*file_put_contents($_dbg_model_log,
 			"\n" . str_repeat('*', 80) . "\n" .
@@ -1345,8 +1345,8 @@ class MisreportModel extends CI_Model
 			}
 		}
 
-		$empBase = $opening;
-		$nmcBase = $opening;
+		$empBase = $employeeContributionOpening;
+		$nmcBase = $employeeContributionOpening;
 
 		$sumEmp = 0;
 		$sumEmpSupp = 0;
@@ -1537,13 +1537,14 @@ class MisreportModel extends CI_Model
 			+ ($sumNmc + $sumNmcSupp)) - $sumLoanTaken
 			+ ($sumInterest);
 
-		$employeeClosing = ($opening + ($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken + $totalEmpInterest);
-
+		
 		// ── NEW (additive): Employee Contribution running balance ────────────────
 		// Independent of $closing / $employeeClosing. Carried forward year-over-year:
 		//   Next FY Employee Contribution Opening = Previous FY Employee Contribution Closing
 		// Closing = carried-in opening + this FY employee contribution + this FY employee interest
-		$employeeContributionClosing = (int) ($employeeContributionOpening + $sumEmp + $totalEmpInterest);
+		//$employeeContributionClosing = (int) ($employeeContributionOpening + $sumEmp + $totalEmpInterest);
+
+		$employeeContributionClosing = (int) ($employeeContributionOpening + ($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken + $totalEmpInterest);
 
 		/*file_put_contents($_dbg_model_log,
 		"[MODEL-COMPUTE] FY: {$_dbg_fy_label}  EmpId: {$empId}" .
