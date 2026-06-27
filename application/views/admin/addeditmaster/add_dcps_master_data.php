@@ -1,6 +1,6 @@
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
-		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/add_master.jpg'); ?>" alt="Add DCPS Master Data"></div>
+		<div class="clsHeading"><img src="<?php echo base_url('assets/images/add_master.jpg'); ?>" alt="Add DCPS Master Data"></div>
 		<h1>Add DCPS Master Data</h1>
 		<!-- <ol class="breadcrumb">
 			<li><a href="<?=base_url('admin/index')?>"><i class="fa fa-dashboard"></i>Dashboard</a></li>

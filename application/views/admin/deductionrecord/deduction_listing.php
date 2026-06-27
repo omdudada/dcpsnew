@@ -59,7 +59,7 @@
 <?php //echo "<pre>";print_r($data);die(); ?>
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
     <section class="content-header">
-        <div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/month_wise_deduction.jpg'); ?>" alt="DCPS Deduction Record"></div>
+        <div class="clsHeading"><img src="<?php echo base_url('assets/images/month_wise_deduction.jpg'); ?>" alt="DCPS Deduction Record"></div>
         <h1>DCPS Deduction Record</h1>
         <!-- <ol class="breadcrumb">
             <li><a href="<?=base_url('admin/index')?>"><i class="fa fa-dashboard"></i>Dashboard</a></li>

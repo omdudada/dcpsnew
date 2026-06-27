@@ -250,3 +250,7 @@
 .w3_megamenu .dropdown-menu > li > a {font-size: 12px;}
 .w3_megamenu .dropdown a, .w3_megamenu .dropdown-menu a {font-size: 12px;}
 }
+.clsHeading img{
+	width: 48px;
+	height: 48px;
+}
