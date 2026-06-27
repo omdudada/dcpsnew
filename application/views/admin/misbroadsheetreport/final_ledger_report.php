@@ -132,6 +132,7 @@
 
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
     <section class="content-header">
+        <div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/final_ledger.jpg'); ?>" alt="Final Ledger Report"></div>
         <h1>Final Ledger Report</h1>
     </section>
 

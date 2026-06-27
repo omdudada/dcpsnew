@@ -210,6 +210,7 @@
 <?php //echo "<pre>";print_r($data);die(); ?>
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
     <section class="content-header">
+        <div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/broadsheet_report.jpg'); ?>" alt="Ledger Report"></div>
         <h1>Ledger Report</h1>
         
         <!-- <ol class="breadcrumb">

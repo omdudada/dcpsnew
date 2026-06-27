@@ -9,6 +9,7 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
+		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/month_wise_deduction.jpg'); ?>" alt="Edit DCPS Master Data"></div>
 		<h1>Edit DCPS Master Data</h1>
 		<!-- <ol class="breadcrumb">
 			<li><a href="<?=base_url('admin/index')?>"><i class="fa fa-dashboard"></i>Dashboard</a></li>

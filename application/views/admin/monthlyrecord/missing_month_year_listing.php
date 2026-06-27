@@ -9,6 +9,7 @@
 </style>
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
     <section class="content-header">
+        <div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/warning.png'); ?>" alt="Pending Month & Year Records"></div>
         <h1>Pending Month & Year Records</h1>
     </section>
     <section class="content">

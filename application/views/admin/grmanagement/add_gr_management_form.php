@@ -1,5 +1,6 @@
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
+		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/file.png'); ?>" alt="Add Gr Management"></div>
 		<h1>Add Gr Management</h1>
 		<!-- <ol class="breadcrumb">
 			<li><a href="<?=base_url('admin/index')?>"><i class="fa fa-dashboard"></i>Dashboard</a></li>

@@ -32,6 +32,7 @@ $total   = !empty($records) ? count($records) : 0;
 <div class="content-wrapper">
 
 <section class="content-header">
+    <div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/month_wise_deduction.jpg'); ?>" alt="Records"></div>
     <h1>
         Records — <?php echo htmlspecialchars($mName . ' ' . $yr); ?>
         <small>Financial Year:

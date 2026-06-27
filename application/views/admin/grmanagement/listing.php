@@ -1,6 +1,7 @@
 <?php //echo "<pre>";print_r($grResults);die();?>
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
+		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/file.png'); ?>" alt="Gr Management"></div>
 		<h1>Gr Management</h1>
 		<!-- <ol class="breadcrumb">
 			<li><a href="<?=base_url('admin/dashboard')?>"><i class="fa fa-dashboard"></i>Dashboard</a></li>

@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="<?php echo base_url('assets/css/font-awesome.min.css'); ?>">
 
 <div class="content-wrapper" style="min-height:970px;height:auto !important;">
-	<section class="content-header"><h1>FORM-R-2 &ndash; Consolidated Receipt-cum-Schedule</h1></section>
+	<section class="content-header"><div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/file.png'); ?>" alt="FORM-R-2 — Consolidated Receipt-cum-Schedule"></div><h1>FORM-R-2 &ndash; Consolidated Receipt-cum-Schedule</h1></section>
 	<section class="content"><div class="box"><div class="box-body">
 
 		<?php $this->load->view('admin/statutoryforms/_filter', array(

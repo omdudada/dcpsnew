@@ -1,5 +1,6 @@
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
+		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/user_edit.png'); ?>" alt="Employee Master"></div>
 		<h1>Employee Master</h1>
 		<!-- <ol class="breadcrumb">
 			<li><a href="<?=base_url('admin/dashboard')?>"><i class="fa fa-dashboard"></i>Dashboard</a></li>

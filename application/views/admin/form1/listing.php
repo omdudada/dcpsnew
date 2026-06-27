@@ -5,6 +5,7 @@
 
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
+		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/file.png'); ?>" alt="FORM-1 — DCPS Application (Pension Account No.)"></div>
 		<h1>FORM-1 &ndash; DCPS Application (Pension Account No.)</h1>
 	</section>
 	<section class="content" style="height: auto !important; min-height: 0px !important;">

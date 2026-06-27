@@ -11,6 +11,7 @@ $buildUrl = function($params = []) {
 ?>
 
 <div class="page-header">
+    <div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/error.png'); ?>" alt="Team Tasks — Duplicate Record"></div>
     <h1>Team Tasks — Duplicate Record</h1>
     <ul class="breadcrumb">
         <li><a href="<?php echo base_url('admin/dashboard'); ?>">Home</a></li>

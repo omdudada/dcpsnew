@@ -43,6 +43,7 @@
 <?php //echo "<pre>";print_r($broadSheetSummary);die(); ?>
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
     <section class="content-header">
+        <div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/broadsheet_report.jpg'); ?>" alt="Broad Sheet Report (Year-Wise)"></div>
         <h1>Broad Sheet Report (Year-Wise)</h1>
 	</section>
 	

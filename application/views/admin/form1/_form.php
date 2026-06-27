@@ -28,6 +28,7 @@ $selected = function($field, $option) use ($record){
 
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
+		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/file.png'); ?>" alt="FORM-1 Application"></div>
 		<h1><?php echo ($mode === 'edit') ? 'Edit' : 'Add'; ?> FORM-1 Application</h1>
 	</section>
 	<section class="content" style="height:auto !important; min-height:0 !important;">

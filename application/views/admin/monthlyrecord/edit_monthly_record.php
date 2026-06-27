@@ -16,6 +16,7 @@ $months = [
 ?>
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
     <section class="content-header">
+        <div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/month_wise_deduction.jpg'); ?>" alt="Edit Monthly Record"></div>
         <h1>Edit Monthly Record</h1>
     </section>
     <section class="content">

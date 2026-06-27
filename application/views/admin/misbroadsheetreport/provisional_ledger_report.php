@@ -183,6 +183,7 @@ function _nf($v)
 
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
     <section class="content-header">
+        <div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/final_ledger.jpg'); ?>" alt="Provisional Ledger Report"></div>
         <h1>Provisional Ledger Report</h1>
     </section>
 
