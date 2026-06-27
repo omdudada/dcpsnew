@@ -222,7 +222,7 @@
                                 $opening = (int)$ledger['opening_balance'];
                                 
                                 $tot = $ledger['totals'];
-                                $closing = (($opening*2) + ($tot['emp_regular']+$tot['emp_supp']+$tot['loan_installment']) + ($tot['nmc_regular']+$tot['nmc_supp'])) - $tot['loan_taken'] + $tot['total_interest'];
+                                $closing = (($opening) + ($tot['emp_regular']+$tot['emp_supp']+$tot['loan_installment']) + ($tot['nmc_regular']+$tot['nmc_supp'])) - $tot['loan_taken'] + $tot['total_interest'];
 
                                 // NEW (additive): Employee Contribution opening/closing — independent of $opening/$closing
                                 $employeeContributionOpening = isset($ledger['ec_opening_balance']) ? (int)$ledger['ec_opening_balance'] : 0;
@@ -254,7 +254,7 @@
                                                 <th>कर्मचारी नाव</th>
                                                 <td colspan="6"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                                                 <th colspan="3">सुरवातीची शिल्लक</th>
-                                                <td colspan="7" style="text-align:right;"><?= _n0($opening * 2); ?></td>
+                                                <td colspan="7" style="text-align:right;"><?= _n0($opening); ?></td>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी नियुक्ती दिनांक</th>
@@ -371,7 +371,7 @@
 
                                                 $lastRowShown = $row;
                                                 $monthText = $months[$m] . ' ' . $row['year'];
-                                                $rateLabel = !empty($row['rate']) ? ('व्याज दर ' . number_format((int) $row['rate'], 2) . '%') : '';
+                                                $rateLabel = !empty($row['rate']) ? ('व्याज दर ' . number_format($row['rate'], 2) . '%') : '';
 
                                                 // ===== DEBUG VIEW: per-row =====
                                                 $_dbg_view_month_names = array(1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
@@ -484,7 +484,7 @@
                                         $sumEmpContrib = $tot['emp_regular'] + $tot['emp_supp'];
                                         $sumNmcContrib = $tot['nmc_regular'] + $tot['nmc_supp'];
                                         $sumRow4 = $sumEmpContrib + $tot['loan_installment'];
-                                        $sumRow6 = ($opening*2) + $sumRow4 + $sumNmcContrib;
+                                        $sumRow6 = ($opening) + $sumRow4 + $sumNmcContrib;
                                     ?>
                                     <table class="final-ledger-bottom-wrap" cellspacing="0">
                                         <tr>
@@ -522,7 +522,7 @@
                                                     <tr>
                                                         <td class="fls-num">1</td>
                                                         <td class="fls-desc">सुरुवातीची शिल्लक</td>
-                                                        <td class="fls-amt"><?= _nf($opening*2); ?></td>
+                                                        <td class="fls-amt"><?= _nf($opening); ?></td>
                                                     </tr>
                                                     <tr>
                                                         <td class="fls-num">2</td>
@@ -574,12 +574,12 @@
                                                         <td class="fls-desc">मार्च <?= $fyMarchYear ? htmlspecialchars((string) $fyMarchYear) : ''; ?> अखेर शिल्लक (6-7+10)</td>
                                                         <td class="fls-amt" style="font-weight:700;"><?= _nf($closing); ?></td>
                                                     </tr>
-                                                    <tr>
+                                                    <!--<tr>
                                                         <td class="fls-num">12</td>
                                                         <td class="fls-desc">कर्मचारी वर्गणी सुरुवातीची शिल्लक</td>
                                                         <td class="fls-amt"><?= _nf($employeeContributionOpening); ?></td>
                                                     </tr>
-                                                    <!--<tr>
+                                                    <tr>
                                                         <td class="fls-num">13</td>
                                                         <td class="fls-desc">कर्मचारी वर्गणी अखेर शिल्लक (कर्मचारी वर्गणी + व्याज)</td>
                                                         <td class="fls-amt" style="font-weight:700;"><?= _nf($employeeContributionClosing); ?></td>
