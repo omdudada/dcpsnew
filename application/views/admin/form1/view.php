@@ -2,7 +2,6 @@
 $full = trim($record['first_name'].' '.$record['middle_name'].' '.$record['last_name']);
 $nominees = isset($record['nominees']) ? $record['nominees'] : array();
 ?>
-<link rel="stylesheet" href="<?php echo base_url('assets/css/bootstrap.min.css'); ?>">
 <link rel="stylesheet" href="<?php echo base_url('assets/css/font-awesome.min.css'); ?>">
 
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">

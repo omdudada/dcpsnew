@@ -22,7 +22,6 @@ $selected = function($field, $option) use ($record){
 	return ((string)$cur === (string)$option) ? 'selected' : '';
 };
 ?>
-<link rel="stylesheet" href="<?php echo base_url('assets/css/bootstrap.min.css'); ?>">
 <link rel="stylesheet" href="<?php echo base_url('assets/css/font-awesome.min.css'); ?>">
 <link rel="stylesheet" href="<?php echo base_url('assets/css/bootstrap-datepicker.min.css'); ?>">
 

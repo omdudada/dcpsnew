@@ -276,6 +276,36 @@ body {
     font-size: 12px;
 }
 
+.btn-info {
+    background: #17a2b8;
+    color: #fff;
+}
+
+.btn-info:hover {
+    background: #138496;
+}
+
+.btn-default {
+    background: #f1f3f5;
+    color: #495057;
+    border: 1px solid #ced4da;
+}
+
+.btn-default:hover {
+    background: #e9ecef;
+    color: #212529;
+}
+
+.btn-circle {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* === FORMS === */
 .form-group {
     margin-bottom: 16px;

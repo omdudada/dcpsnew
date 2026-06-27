@@ -1,4 +1,3 @@
-<link rel="stylesheet" href="<?php echo base_url('assets/css/bootstrap.min.css'); ?>">
 <link rel="stylesheet" href="<?php echo base_url('assets/css/font-awesome.min.css'); ?>">
 
 <div class="content-wrapper" style="min-height:970px;height:auto !important;">
