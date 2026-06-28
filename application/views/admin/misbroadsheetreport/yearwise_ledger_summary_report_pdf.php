@@ -105,9 +105,9 @@
                             <th style="text-align:center; font-weight:bold;">आर्थिक वर्ष</th>
                             <th style="text-align:center; font-weight:bold;">सुरवातीची शिल्लक</th>
                             <th style="text-align:center; font-weight:bold;">कर्मचारी अंशदान</th>
-                            <th style="text-align:center; font-weight:bold;">प्रती वर्ष कर्मचारी अंशदानावर मिळणारे व्याज</th>
+                            <th style="text-align:center; font-weight:bold;">कर्मचारी अंशदानावर मिळणारे व्याज</th>
                             <th style="text-align:center; font-weight:bold;">नियोक्त्याचे (नाशिक म.न.पा.) अंशदान</th>
-                            <th style="text-align:center; font-weight:bold;">प्रती वर्ष नियोक्त्याच्या (नाशिक म.न.पा.) अंशदानावर मिळणारे व्याज</th>
+                            <th style="text-align:center; font-weight:bold;">नियोक्त्याच्या (नाशिक म.न.पा.) अंशदानावर मिळणारे व्याज</th>
                             <th style="text-align:center; font-weight:bold;">अखेर शिल्लक</th>
                         </tr>
                     </thead>
@@ -140,12 +140,12 @@
                         ?>
                         <tr>
                             <td class="clsCenter"><?= $y . '-' . ($y + 1); ?></td>
-                            <td class="clsRight"><?= number_format($opening, 2, '.', ''); ?></td>
-                            <td class="clsRight"><?= number_format($empContrib, 2, '.', ''); ?></td>
-                            <td class="clsRight"><?= number_format($empInterest, 2, '.', ''); ?></td>
-                            <td class="clsRight"><?= number_format($nmcContrib, 2, '.', ''); ?></td>
-                            <td class="clsRight"><?= number_format($nmcInterest, 2, '.', ''); ?></td>
-                            <td class="clsRight"><?= number_format($closing, 2, '.', ''); ?></td>
+                            <td class="clsRight"><?= number_format($opening, 0, '.', ''); ?></td>
+                            <td class="clsRight"><?= number_format($empContrib, 0, '.', ''); ?></td>
+                            <td class="clsRight"><?= number_format($empInterest, 0, '.', ''); ?></td>
+                            <td class="clsRight"><?= number_format($nmcContrib, 0, '.', ''); ?></td>
+                            <td class="clsRight"><?= number_format($nmcInterest, 0, '.', ''); ?></td>
+                            <td class="clsRight"><?= number_format($closing, 0, '.', ''); ?></td>
                         </tr>
                         <?php
                             }
@@ -153,11 +153,22 @@
                         <tr style="font-weight: bold; background-color: #f2f2f2;">
                             <td class="clsCenter"><strong>एकूण</strong></td>
                             <td class="clsRight"></td>
-                            <td class="clsRight"><strong><?= number_format($totalEmpContrib, 2, '.', ''); ?></strong></td>
-                            <td class="clsRight"><strong><?= number_format($totalEmpInterest, 2, '.', ''); ?></strong></td>
-                            <td class="clsRight"><strong><?= number_format($totalNmcContrib, 2, '.', ''); ?></strong></td>
-                            <td class="clsRight"><strong><?= number_format($totalNmcInterest, 2, '.', ''); ?></strong></td>
+                            <td class="clsRight"><strong><?= number_format($totalEmpContrib, 0, '.', ''); ?></strong></td>
+                            <td class="clsRight"><strong><?= number_format($totalEmpInterest, 0, '.', ''); ?></strong></td>
+                            <td class="clsRight"><strong><?= number_format($totalNmcContrib, 0, '.', ''); ?></strong></td>
+                            <td class="clsRight"><strong><?= number_format($totalNmcInterest, 0, '.', ''); ?></strong></td>
                             <td class="clsRight"></td>
+                        </tr>
+                        <?php
+                            $grandEmp = $totalEmpContrib + $totalEmpInterest;
+                            $grandNmc = $totalNmcContrib + $totalNmcInterest;
+                            $grandTotal = $grandEmp + $grandNmc;
+                        ?>
+                        <tr style="font-weight: bold; background-color: #f2f2f2;">
+                            <td colspan="2" class="clsLeft" style="padding-left: 10px; text-align: left;"><strong>एकूण एकंदर - अंशदान + अंशदानावर मिळणारे व्याज</strong></td>
+                            <td colspan="2" class="clsCenter" style="text-align: center;"><strong><?= number_format($grandEmp, 0, '.', ''); ?></strong></td>
+                            <td colspan="2" class="clsCenter" style="text-align: center;"><strong><?= number_format($grandNmc, 0, '.', ''); ?></strong></td>
+                            <td class="clsRight" style="text-align: right;"><strong><?php /* number_format($grandTotal, 0, '.', ''); */ ?></strong></td>
                         </tr>
                     </tbody>
                 </table>

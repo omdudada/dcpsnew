@@ -63,6 +63,32 @@ $months = [
             padding: 10px;
         }
 
+        .final-ledger-summary-wrap {
+            width: 62%;
+        }
+        .final-ledger-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .final-ledger-summary-table th,
+        .final-ledger-summary-table td {
+            border: 1px solid #000 !important;
+            padding: 4px 6px !important;
+            font-size: 10px;
+            vertical-align: middle;
+        }
+        .final-ledger-summary-table th {
+            text-align: center;
+            font-weight: bold;
+        }
+        .final-ledger-summary-table .fls-month {
+            text-align: center;
+        }
+        .final-ledger-summary-table .fls-amt {
+            text-align: right;
+            white-space: nowrap;
+        }
+
         .final-ledger-cert-box {
             width: 100%;
             font-size: 13px;
@@ -176,6 +202,7 @@ $months = [
                     <tbody>
                         <?php
                             $totalBasic = $totalGradePay = $totalDA = $totalTotalSalary = $totalIdealContribution = $totalEmpSupContri = $totalDifference = 0;
+                            $monthSummary = [];
                             
                             if (isset($dcpsDetails[$empId])) {
                                 // First Year: April to December
@@ -241,6 +268,18 @@ $months = [
                                             $totalEmpSupContri += ($row['is_deleted'] != 3) ? $emp_sup_contri : 0;
                                             $totalDifference += ($row['is_deleted'] != 3) ? $difference : 0;
                                             
+                                            if ($row['is_deleted'] != 3) {
+                                                $sumKey = (isset($months[$monthNo]) ? $months[$monthNo] : $monthNo) . ' ' . $year;
+                                                if (!isset($monthSummary[$sumKey])) {
+                                                    $monthSummary[$sumKey] = ['neg' => 0, 'pos' => 0];
+                                                }
+                                                if ($difference < 0) {
+                                                    $monthSummary[$sumKey]['neg'] += $difference;
+                                                } elseif ($difference > 0) {
+                                                    $monthSummary[$sumKey]['pos'] += $difference;
+                                                }
+                                            }
+                                            
                                             $monthName = isset($months[$monthNo]) ? $months[$monthNo] : $monthNo;
                                         ?>
                                         <tr>
@@ -280,6 +319,10 @@ $months = [
                                         }
                                     } else {
                                         $monthName = isset($months[$monthNo]) ? $months[$monthNo] : $monthNo;
+                                        $sumKey = $monthName . ' ' . $year;
+                                        if (!isset($monthSummary[$sumKey])) {
+                                            $monthSummary[$sumKey] = ['neg' => 0, 'pos' => 0];
+                                        }
                                     ?>
                                     <tr>
                                         <td><?= $monthName . ' ' . $year ?></td>
@@ -359,6 +402,18 @@ $months = [
                                             $totalEmpSupContri += ($row['is_deleted'] != 3) ? $emp_sup_contri : 0;
                                             $totalDifference += ($row['is_deleted'] != 3) ? $difference : 0;
                                             
+                                            if ($row['is_deleted'] != 3) {
+                                                $sumKey = (isset($months[$monthNo]) ? $months[$monthNo] : $monthNo) . ' ' . $year;
+                                                if (!isset($monthSummary[$sumKey])) {
+                                                    $monthSummary[$sumKey] = ['neg' => 0, 'pos' => 0];
+                                                }
+                                                if ($difference < 0) {
+                                                    $monthSummary[$sumKey]['neg'] += $difference;
+                                                } elseif ($difference > 0) {
+                                                    $monthSummary[$sumKey]['pos'] += $difference;
+                                                }
+                                            }
+                                            
                                             $monthName = isset($months[$monthNo]) ? $months[$monthNo] : $monthNo;
                                         ?>
                                         <tr>
@@ -398,6 +453,10 @@ $months = [
                                         }
                                     } else {
                                         $monthName = isset($months[$monthNo]) ? $months[$monthNo] : $monthNo;
+                                        $sumKey = $monthName . ' ' . $year;
+                                        if (!isset($monthSummary[$sumKey])) {
+                                            $monthSummary[$sumKey] = ['neg' => 0, 'pos' => 0];
+                                        }
                                     ?>
                                     <tr>
                                         <td><?= $monthName . ' ' . $year ?></td>
@@ -441,7 +500,7 @@ $months = [
                 <!-- Certificate Block -->
                 <table class="final-ledger-bottom-wrap" cellspacing="0">
                     <tr>
-                        <td class="final-ledger-cert-box">
+                        <td class="final-ledger-cert-box" style="width: 38%;">
                             <strong>प्रमाणपत्र</strong>
                             <p style="margin:0;">
                                 १. कर्मचारी अंशदान वर्गणी कपात नमुना - २, आणि / किंवा<br>
@@ -452,19 +511,63 @@ $months = [
                                 अन्वये सदर कर्मचाऱ्यांच्या नवीन परिभाषित अंशदान निवृत्तीवेतन योजनेबाबतच्या प्रति माह अंशदान वर्गणी कपाती विभागामार्फत प्रमाणित करण्यात येत असून, त्यानुसार सदर लेखांकन अचूक व बरोबर आहे. सदर बाबतीत भविष्यात काही आक्षेप आल्यास किंवा काही बदल असल्यास त्याची सर्वस्वी जबाबदारी कार्यकारी विभागाची राहील.
                             </p><br/><br/>
                             <div class="final-ledger-cert-signs">
-                                <div class="final-ledger-sign-line">
+                                <div class="final-ledger-sign-line" style="margin-top: 16px;">
                                     कर्मचारी स्वाक्षरी / अंगठा 
-                                </div><br/><br/>
+                                </div><br/>
                                 <div class="final-ledger-sign-line">
                                     बिल लिपिक / कनिष्ठ लिपिक
-                                </div><br/><br/>
+                                </div><br/>
                                 <div class="final-ledger-sign-line">
                                     वरिष्ठ  लिपिक / सहाय्यक अधीक्षक / अधीक्षक
-                                </div><br/><br/>
+                                </div><br/>
                                 <div class="final-ledger-sign-line">
                                     कार्यालय प्रमुख / विभाग प्रमुख / आहारण व संवितरण अधिकारी
-                                </div><br/><br/>
+                                </div>
                             </div>
+                        </td>
+                        <td class="final-ledger-summary-wrap" style="width: 62%; padding: 0;">
+                            <table class="final-ledger-summary-table" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>आर्थिक महिना</th>
+                                        <th>कपात न केलेली कर्मचारी अंशदान रक्कम</th>
+                                        <th>जादा कपात केलेली कर्मचारी अंशदान रक्कम</th>
+                                        <th>कपात न केलेली कर्मचारी अंशदान व जादा कपात केलेली कर्मचारी अंशदान रक्कम यातील फरक</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <?php
+                                    $grandNeg = $grandPos = 0;
+                                    if (!empty($monthSummary)) {
+                                        foreach ($monthSummary as $sumMonth => $sumVals) {
+                                            $negAmt = $sumVals['neg'];
+                                            $posAmt = $sumVals['pos'];
+                                            $diffAmt = $posAmt + $negAmt;
+                                            $grandNeg += $negAmt;
+                                            $grandPos += $posAmt;
+                                ?>
+                                <tr>
+                                    <td class="fls-month"><?= $sumMonth; ?></td>
+                                    <td class="fls-amt"><?= number_format($negAmt, 0, '.', ''); ?></td>
+                                    <td class="fls-amt"><?= number_format($posAmt, 0, '.', ''); ?></td>
+                                    <td class="fls-amt"><?= number_format($diffAmt, 0, '.', ''); ?></td>
+                                </tr>
+                                <?php
+                                        }
+                                    } else {
+                                ?>
+                                <tr>
+                                    <td class="fls-month" colspan="4">माहिती उपलब्ध नाही</td>
+                                </tr>
+                                <?php } ?>
+                                <tr style="font-weight: bold; background-color: #f2f2f2;">
+                                    <td class="fls-month"><strong>एकूण</strong></td>
+                                    <td class="fls-amt"><strong><?= number_format($grandNeg, 0, '.', ''); ?></strong></td>
+                                    <td class="fls-amt"><strong><?= number_format($grandPos, 0, '.', ''); ?></strong></td>
+                                    <td class="fls-amt"><strong><?= number_format($grandPos + $grandNeg, 0, '.', ''); ?></strong></td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </td>
                     </tr>
                 </table>

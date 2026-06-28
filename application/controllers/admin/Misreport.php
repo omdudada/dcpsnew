@@ -848,36 +848,123 @@
 		
 		public function broad_sheet_report()
 		{
-			//echo 14; exit;
-			
 			$postData = $this->input->post();
 			$data = array();
 			
-			if($postData && isset($postData['year'])){
-				//echo "<pre>"; print_r($postData); exit;
+			$searchData = array();
+			if($postData){
+				$searchData = $postData;
+				$searchData['pay_center'] = $postData['pay_center'];
+				$searchData['emp_id'] = $postData['emp_id'];
+				$searchData['year'] = $postData['year'];
 				
-				$firstYear = (int)$postData['year']; 
-				$secondYear = ($firstYear + 1);
-				$fYear = $firstYear . "-" . $secondYear;
-				
-				// Get year-wise broad sheet summary (aggregated across all employees)
-				$broadSheetSummary = $this->mrModel->getYearWiseBroadSheetSummary($firstYear, $secondYear);
-				
-				//echo "<pre>"; print_r($broadSheetSummary); exit;
-				
-				$data['broadSheetSummary'] = $broadSheetSummary;
-				$data['firstYear'] = $firstYear;
-				$data['secondYear'] = $secondYear;
-				$data['fYear'] = $fYear;
-				
-				// Get interest rates for display
-				$data['interestRates'] = $this->mrModel->getInterestRates($firstYear, $secondYear);
+				$searchData['first_year'] = $postData['year'];
+				$searchData['second_year'] = $postData['year'] + 1;
+				$searchData['f_year'] = $searchData['first_year'] . "-" . $searchData['second_year'];
 			}
 			
-			//echo "<pre>"; print_r($data); exit;
+			if(is_array($searchData) && !empty($searchData['emp_id']) && !empty($searchData['year'])){
+				$data['searchData'] = $searchData;
+				
+				$empDetails = $this->mrModel->gerMasterDetails($searchData['emp_id']);
+				if(!empty($empDetails)){
+					$data['ownerDetail'] = $empDetails[0];
+				}
+				
+				$finalLedgerData = $this->mrModel->getFinalLedgerCumulativeRows($searchData);
+				
+				if(!empty($finalLedgerData) && isset($finalLedgerData[$searchData['emp_id']])){
+					$ledger = $finalLedgerData[$searchData['emp_id']];
+					
+					$opening = (int)$ledger['opening_balance'];
+					$tot = $ledger['totals'];
+					
+					$dcpsDetails = array();
+					$monthsOrder = array(4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3);
+					foreach ($monthsOrder as $m) {
+						$dcpsDetails[$m] = array(
+							'emp_DCPS_contribution' => 0,
+							'NMC_DCPS_contribution' => 0,
+							'loan_installment_paid_through_salary' => 0,
+							'total_contribution' => 0,
+							'DCPS_loan_taken_by_an_employee' => 0,
+							'interest_base' => 0,
+							'interest' => 0
+						);
+					}
+					
+					// Running balance starting at opening
+					$runningTotalBase = $opening;
+					
+					// Group by month
+					$monthGroups = array();
+					foreach ($ledger['rows'] as $row) {
+						$m = (int)$row['month'];
+						if (!isset($monthGroups[$m])) {
+							$monthGroups[$m] = array();
+						}
+						$monthGroups[$m][] = $row;
+					}
+					
+					foreach ($monthsOrder as $m) {
+						if (!isset($monthGroups[$m])) {
+							continue;
+						}
+						
+						$mRows = $monthGroups[$m];
+						
+						$emp_reg_supp = 0;
+						$nmc_reg_supp = 0;
+						$loan_installment = 0;
+						$loan_taken = 0;
+						$month_interest = 0;
+						
+						foreach ($mRows as $row) {
+							$emp_reg_supp += ($row['emp_regular'] + $row['emp_supp']);
+							$nmc_reg_supp += ($row['nmc_regular'] + $row['nmc_supp']);
+							$loan_installment += $row['loan_installment'];
+							$loan_taken += $row['loan_taken'];
+							$month_interest += $row['total_interest'];
+						}
+						
+						$dcpsDetails[$m]['emp_DCPS_contribution'] = $emp_reg_supp;
+						$dcpsDetails[$m]['NMC_DCPS_contribution'] = $nmc_reg_supp;
+						$dcpsDetails[$m]['loan_installment_paid_through_salary'] = $loan_installment;
+						$dcpsDetails[$m]['total_contribution'] = $emp_reg_supp + $nmc_reg_supp;
+						$dcpsDetails[$m]['DCPS_loan_taken_by_an_employee'] = $loan_taken;
+						$dcpsDetails[$m]['interest'] = $month_interest;
+						
+						// In final ledger, the base is computed month-wise based on running balance:
+						// Let's compute the monthly base using the same math:
+						// Month base = opening balance of this month + deposits for this month
+						$monthDeposits = $emp_reg_supp + $nmc_reg_supp + $loan_installment;
+						$dcpsDetails[$m]['interest_base'] = $runningTotalBase + $monthDeposits;
+						
+						// Update running total base for next month
+						$runningTotalBase = $runningTotalBase + $monthDeposits - $loan_taken + $month_interest;
+					}
+					
+					$data['dcpsDetails'] = $dcpsDetails;
+					
+					$data['interestDetail'] = array(
+						'opening_balance' => $opening,
+						'emp_contri' => (int)$tot['emp_regular'] + (int)$tot['emp_supp'] + (int)$tot['loan_installment'],
+						'nmc_contri' => (int)$tot['nmc_regular'] + (int)$tot['nmc_supp'],
+						'total_contri' => $opening + (int)$tot['emp_regular'] + (int)$tot['emp_supp'] + (int)$tot['loan_installment'] + (int)$tot['nmc_regular'] + (int)$tot['nmc_supp'],
+						'loan_amount' => (int)$tot['loan_taken'],
+						'interest' => (int)$tot['total_interest'],
+						'grand_total' => $opening + (int)$tot['emp_regular'] + (int)$tot['emp_supp'] + (int)$tot['loan_installment'] + (int)$tot['nmc_regular'] + (int)$tot['nmc_supp'] - (int)$tot['loan_taken'] + (int)$tot['total_interest']
+					);
+				}
+				
+				$data['interestRates'] = $this->mrModel->getInterestRates($searchData['first_year'], $searchData['second_year']);
+			}
+			
+			$data['paycenterData'] = $this->mrModel->getPayCenterData();
+			$data['employeeData'] = $this->mrModel->gerMasterDetails();
 			
 			$this->load->view('admin/common/header');
-			$this->load->view('admin/misbroadsheetreport/broad_sheet',$data);
+			$this->load->view('admin/misbroadsheetreport/broad_sheet', $data);
 		}
 		
 		public function employee_contribution_excess_report()
