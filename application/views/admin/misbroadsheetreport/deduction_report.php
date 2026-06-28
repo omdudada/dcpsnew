@@ -237,7 +237,7 @@
 		padding: 10px;
 	}
 	.final-ledger-cert-box {
-		width: 100%;
+		width: 38%;
 		font-size: 13px;
 		line-height: 1.45;
 		text-align: justify;
@@ -247,6 +247,31 @@
 		text-align: center;
 		margin-bottom: 10px;
 		font-size: 14px;
+	}
+	.final-ledger-summary-wrap {
+		width: 62%;
+	}
+	.final-ledger-summary-table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+	.final-ledger-summary-table th,
+	.final-ledger-summary-table td {
+		border: 1px solid #000;
+		padding: 6px 8px;
+		font-size: 12px;
+		vertical-align: middle;
+	}
+	.final-ledger-summary-table th {
+		text-align: center;
+		font-weight: 700;
+	}
+	.final-ledger-summary-table .fls-month {
+		text-align: center;
+	}
+	.final-ledger-summary-table .fls-amt {
+		text-align: right;
+		white-space: nowrap;
 	}
 	.final-ledger-cert-signs {
 		margin-top: 20px;
@@ -297,7 +322,7 @@
                             <h3 class="box-title">Deduction Report</h3>
                 			<?php if(!empty($this->input->post('year'))){ ?>
                 				<a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfDeductionReport();">Print</a>
-                				<a class="btn btn-success" style="float:right;" href="javascript:void(0);" onclick="exportExcelDeductionReport();">Export Excel</a>
+                				<?php /*<a class="btn btn-success" style="float:right;" href="javascript:void(0);" onclick="exportExcelDeductionReport();">Export Excel</a> */ ?>
                 			<?php } ?>
 							<?php
 							}
@@ -462,7 +487,11 @@
 											<tbody>
                                                 <?php
                                                     $totalBasic = $totalGradePay = $totalDA = $totalTotalSalary = $totalIdealContribution = $totalEmpSupContri = $totalDifference = 0;
-                                                    
+
+                                                    // Month-wise summary of कर्मचारी अंशदानातील फरक (difference)
+                                                    // Keyed by "MonthName Year", preserving encounter order.
+                                                    $monthSummary = [];
+
                                                     $empId = $ownerDetail['emp_id'];
                                                     
                                                     if (isset($dcpsDetails[$empId])) {
@@ -554,7 +583,21 @@
 																		}
                                                                         
 																	?>
-																	<td class="clsCenter"><?= isset($row['bunch_no']) ? $row['bunch_no'] : '' ?></td>
+																	<?php
+																			/* Month-wise summary accumulation (कर्मचारी अंशदानातील फरक) */
+																			if ($row['is_deleted'] != 3) {
+																				$sumKey = $monthName . ' ' . $year;
+																				if (!isset($monthSummary[$sumKey])) {
+																					$monthSummary[$sumKey] = ['neg' => 0, 'pos' => 0];
+																				}
+																				if ($difference < 0) {
+																					$monthSummary[$sumKey]['neg'] += $difference;
+																				} elseif ($difference > 0) {
+																					$monthSummary[$sumKey]['pos'] += $difference;
+																				}
+																			}
+																		?>
+																		<td class="clsCenter"><?= isset($row['bunch_no']) ? $row['bunch_no'] : '' ?></td>
 																	<td><?= isset($row['file_no']) ? $row['file_no'] : '' ?></td>
 																	<td><?= isset($row['recovered_DCPS_with_voucher_no']) ? $row['recovered_DCPS_with_voucher_no'] : '' ?></td>
 																	<td><?= isset($row['recovered_DCPS_with_voucher_date']) ? $row['recovered_DCPS_with_voucher_date'] : '' ?></td>
@@ -684,7 +727,21 @@
 																		}
                                                                         
 																	?>
-																	<td><?= isset($row['bunch_no']) ? $row['bunch_no'] : '' ?></td>
+																	<?php
+																			/* Month-wise summary accumulation (कर्मचारी अंशदानातील फरक) */
+																			if ($row['is_deleted'] != 3) {
+																				$sumKey = $monthName . ' ' . $year;
+																				if (!isset($monthSummary[$sumKey])) {
+																					$monthSummary[$sumKey] = ['neg' => 0, 'pos' => 0];
+																				}
+																				if ($difference < 0) {
+																					$monthSummary[$sumKey]['neg'] += $difference;
+																				} elseif ($difference > 0) {
+																					$monthSummary[$sumKey]['pos'] += $difference;
+																				}
+																			}
+																		?>
+																		<td><?= isset($row['bunch_no']) ? $row['bunch_no'] : '' ?></td>
 																	<td><?= isset($row['file_no']) ? $row['file_no'] : '' ?></td>
 																	<td><?= isset($row['recovered_DCPS_with_voucher_no']) ? $row['recovered_DCPS_with_voucher_no'] : '' ?></td>
 																	<td><?= isset($row['recovered_DCPS_with_voucher_date']) ? $row['recovered_DCPS_with_voucher_date'] : '' ?></td>
@@ -787,6 +844,50 @@
 																		<span style="font-weight:600;">&nbsp;</span>
 																	</div>
 																</div>
+															</td>
+															<td class="final-ledger-summary-wrap">
+																<table class="final-ledger-summary-table" cellspacing="0">
+																	<thead>
+																		<tr>
+																			<th>आर्थिक महिना</th>
+																			<th>कपात न केलेली कर्मचारी अंशदान रक्कम</th>
+																			<th>जादा कपात केलेली कर्मचारी अंशदान रक्कम</th>
+																			<th>कपात न केलेली कर्मचारी अंशदान व जादा कपात केलेली कर्मचारी अंशदान रक्कम यातील फरक</th>
+																		</tr>
+																	</thead>
+																	<tbody>
+																	<?php
+																		$grandNeg = $grandPos = 0;
+																		if (!empty($monthSummary)) {
+																			foreach ($monthSummary as $sumMonth => $sumVals) {
+																				$negAmt = $sumVals['neg'];
+																				$posAmt = $sumVals['pos'];
+																				$diffAmt = $posAmt + $negAmt;
+																				$grandNeg += $negAmt;
+																				$grandPos += $posAmt;
+																	?>
+																	<tr>
+																		<td class="fls-month"><?= $sumMonth; ?></td>
+																		<td class="fls-amt"><?= $negAmt; ?></td>
+																		<td class="fls-amt"><?= $posAmt; ?></td>
+																		<td class="fls-amt"><?= $diffAmt; ?></td>
+																	</tr>
+																	<?php
+																			}
+																		} else {
+																	?>
+																	<tr>
+																		<td class="fls-month" colspan="4">माहिती उपलब्ध नाही</td>
+																	</tr>
+																	<?php } ?>
+																	<tr>
+																		<td class="fls-month"><strong>एकूण</strong></td>
+																		<td class="fls-amt"><strong><?= $grandNeg; ?></strong></td>
+																		<td class="fls-amt"><strong><?= $grandPos; ?></strong></td>
+																		<td class="fls-amt"><strong><?= $grandPos + $grandNeg; ?></strong></td>
+																	</tr>
+																	</tbody>
+																</table>
 															</td>
 														</tr>
 													</table>

@@ -144,7 +144,7 @@
                         <h3 class="box-title">Final Ledger Report</h3>
                         <?php if(!empty($this->input->post('year'))){ ?>
                             <a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfReport();">Print</a>
-                            <a class="btn btn-success" style="float:right;" href="<?=base_url();?>admin/misreport/final_ledger_report/year/<?=$this->input->post('year');?>/option/excel">Export Excel</a>
+                            <?php /*<a class="btn btn-success" style="float:right;" href="<?=base_url();?>admin/misreport/final_ledger_report/year/<?=$this->input->post('year');?>/option/excel">Export Excel</a> */ ?>
                         <?php } ?>
 					</div>
 
