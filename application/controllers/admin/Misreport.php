@@ -880,6 +880,129 @@
 			$this->load->view('admin/misbroadsheetreport/broad_sheet',$data);
 		}
 		
+		public function employee_contribution_excess_report()
+		{
+			$postData = $this->input->post();
+			
+			$data['urlAry'] = array();
+			$urlAry = $this->uri->uri_to_assoc(4);
+			
+			$searchData = array();
+			if($postData){
+				$searchData = $postData;
+				$searchData['pay_center'] = $postData['pay_center'];
+				$searchData['emp_id'] = $postData['emp_id'];
+			}
+			
+			if(isset($urlAry['option']) && in_array($urlAry['option'], ["print", "csv", "excel"])){ 
+				$data['urlAry'] = $urlAry;
+			}
+			
+			if(is_array($searchData) && !empty($searchData['emp_id'])){
+				$data['searchData'] = $searchData;
+				
+				$dcpsDetails = $this->mrModel->getdcpsAllDetailsForDeduction($searchData);
+				
+				$processedEmpTDs = [];
+				if(!empty($dcpsDetails)){
+					foreach ($dcpsDetails as $dcpsDetail) {
+						$data['dcpsDetails'][$dcpsDetail['emp_td']][] = $dcpsDetail;
+						if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
+							$data['ownerDetails'][$dcpsDetail['emp_td']] = [
+								'emp_id' => $dcpsDetail['emp_td'],
+								'designation_name' => $dcpsDetail['designation_name'],
+								'emp_name' => $dcpsDetail['emp_name'],
+								'joining_date' => $dcpsDetail['joining_date'],
+								'pay_center' => $dcpsDetail['pay_center'],
+								'fixed_pay' => $dcpsDetail['fixed_pay'],
+							];
+							$processedEmpTDs[] = $dcpsDetail['emp_td'];
+						}
+					}
+				}
+			}
+			$data['paycenterData'] = $this->mrModel->getPayCenterData();
+			$data['employeeData'] = $this->mrModel->gerMasterDetails();
+			
+			if(isset($urlAry['option']) && $urlAry['option'] == "excel"){
+				$filename = "employee_contribution_excess_report_".date("Ymd_His").".xls";
+				header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+				header("Content-Disposition: attachment; filename=".$filename);
+				header("Pragma: no-cache");
+				header("Expires: 0");
+				
+				echo $this->load->view('admin/misbroadsheetreport/employee_contribution_excess_report_pdf', $data, true);
+				exit;
+			}
+			
+			$this->load->view('admin/common/header');
+			$this->load->view('admin/misbroadsheetreport/employee_contribution_excess_report', $data);
+		}
+		
+		public function generate_excess_report_mpdf()
+		{
+			$postData = $this->input->post();
+			$data['urlAry'] = array();
+			$urlAry = $this->uri->uri_to_assoc(4);
+			
+			$searchData = array();
+			if($postData){
+				$searchData = $postData;
+				$searchData['pay_center'] = $postData['pay_center'];
+				$searchData['emp_id'] = $postData['emp_id'];
+			}
+			
+			if(is_array($searchData) && !empty($searchData['emp_id'])){		    
+				$data['searchData'] = $searchData;
+				
+				$dcpsDetails = $this->mrModel->getdcpsAllDetailsForDeduction($searchData);
+				
+				$processedEmpTDs = [];
+				if(!empty($dcpsDetails)){
+					foreach ($dcpsDetails as $dcpsDetail) {
+						$data['dcpsDetails'][$dcpsDetail['emp_td']][] = $dcpsDetail;
+						if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
+							$data['ownerDetails'][$dcpsDetail['emp_td']] = [
+								'emp_id' => $dcpsDetail['emp_td'],
+								'designation_name' => $dcpsDetail['designation_name'],
+								'emp_name' => $dcpsDetail['emp_name'],
+								'joining_date' => $dcpsDetail['joining_date'],
+								'pay_center' => $dcpsDetail['pay_center'],
+								'fixed_pay' => $dcpsDetail['fixed_pay'],
+							];
+							$processedEmpTDs[] = $dcpsDetail['emp_td'];
+						}
+					}
+				}
+			} else {
+				show_404();
+			}
+			
+			$config = [
+				'mode' => 'utf-8',
+				'format' => 'A4',
+				'margin_left' => 15,
+				'margin_right' => 15,
+				'margin_top' => 15,
+				'margin_bottom' => 15,
+				'margin_header' => 0,
+				'margin_footer' => 0,
+				'autoScriptToLang' => true,
+				'autoLangToFont' => true,
+			];
+			
+			$this->load->library('m_pdf', $config);
+			
+			$this->m_pdf->pdf->SetTitle('Employee Contribution Excess Deduction Recovery Report');
+			$this->m_pdf->pdf->SetAuthor('NMC');
+			$this->m_pdf->pdf->SetCreator('Pension System');
+			
+			$html = $this->load->view('admin/misbroadsheetreport/employee_contribution_excess_report_pdf', $data, TRUE);
+			
+			$this->m_pdf->pdf->WriteHTML($html);
+			
+			$this->m_pdf->pdf->Output('Employee_Contribution_Excess_Report.pdf', 'I');
+		}
 		
 	}
 	
