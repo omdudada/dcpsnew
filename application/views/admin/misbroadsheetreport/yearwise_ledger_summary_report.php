@@ -205,7 +205,7 @@
                             <h3 class="box-title">Search Filter</h3>
                             <?php if(!empty($this->input->post('emp_id'))){ ?>
                                 <a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfReport();">Print</a>
-                                <a class="btn btn-success" style="float:right;" href="javascript:void(0);" onclick="exportExcelReport();">Export Excel</a>
+                                <!--<a class="btn btn-success" style="float:right;" href="javascript:void(0);" onclick="exportExcelReport();">Export Excel</a>-->
                             <?php } ?>
                             <?php
                             }
@@ -315,8 +315,8 @@
                                                 <?php
                                                     $totalOpening = $totalEmpContrib = $totalEmpInterest = $totalNmcContrib = $totalNmcInterest = $totalClosing = 0;
                                                     
-                                                    // Display only years from 2006-2007 to 2014-2015
-                                                    for ($y = 2006; $y <= 2014; $y++) {
+                                                    // Display only years from 2005-2006 to 2014-2015
+                                                    for ($y = 2005; $y <= 2014; $y++) {
                                                         $row = isset($yearwiseSummary[$y]) ? $yearwiseSummary[$y] : [
                                                             'opening_balance' => 0,
                                                             'employee_contribution' => 0,

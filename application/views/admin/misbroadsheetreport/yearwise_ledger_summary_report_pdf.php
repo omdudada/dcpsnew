@@ -115,8 +115,8 @@
                         <?php
                             $totalOpening = $totalEmpContrib = $totalEmpInterest = $totalNmcContrib = $totalNmcInterest = $totalClosing = 0;
                             
-                            // Display only years from 2006-2007 to 2014-2015
-                            for ($y = 2006; $y <= 2014; $y++) {
+                            // Display only years from 2005-2006 to 2014-2015
+                            for ($y = 2005; $y <= 2014; $y++) {
                                 $row = isset($yearwiseSummary[$y]) ? $yearwiseSummary[$y] : [
                                     'opening_balance' => 0,
                                     'employee_contribution' => 0,

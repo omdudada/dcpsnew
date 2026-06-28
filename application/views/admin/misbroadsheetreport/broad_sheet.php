@@ -40,11 +40,15 @@
 	
 	
 </style>
-<?php //echo "<pre>";print_r($broadSheetSummary);die(); ?>
+<?php //echo "<pre>";print_r($data);die(); ?>
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
     <section class="content-header">
-        <div class="clsHeading"><img src="<?php echo base_url('assets/images/broadsheet_report.jpg'); ?>" alt="Broad Sheet Report (Year-Wise)"></div>
-        <h1>Broad Sheet Report (Year-Wise)</h1>
+        <h1>Broad Sheet Report</h1>
+        <!-- <ol class="breadcrumb">
+            <li><a href="<?=base_url('admin/index')?>"><i class="fa fa-dashboard"></i>Dashboard</a></li>
+            
+            <li class="active">Call Center Form</li>
+		</ol> -->
 	</section>
 	
     <?php if(validation_errors()){?>
@@ -60,7 +64,7 @@
             <div class="col-lg-12">
                 <div class="box">
                     <div class="box-header with-border">
-                        <h3 class="box-title">Broad Sheet Report - Financial Year Summary</h3>
+                        <h3 class="box-title">Broad Sheet Report</h3>
 					</div>
                     
                     <?php if($this->session->flashdata('success')):?>
@@ -76,17 +80,16 @@
 					</div>
                     <?php endif; ?>
                     <div class="box-body">
-                        <form action="" method="post" name="broadsheet_form" id="broadsheet_form" enctype="multipart/form-data" >
+                        <?php //echo "<pre>";print_r($hospitals);die(); ?>
+                        <form action="" method="post" name="typicaltypes" id="typicaltypes" enctype="multipart/form-data" >
 							<div class="form-row">
 							    <div class="form-group col-md-3">
-							     	<label for="inputState" >Financial Year</label>
-							     	<select id="year" name="year" class="form-control" required="required">
-                                    	<option value="">-- Select Year --</option>
+							     	<label for="inputState" >Year</label>
+							     	<select id="year" name="year" class="form-control" required ="required">
                                     	<?php
                                             for ($start = 2005; $start <= 2014; $start++) {
                                                 $end = $start + 1;
-                                                $selected = (isset($firstYear) && $firstYear == $start) ? 'selected' : '';
-                                                echo '<option value="' . htmlspecialchars($start) . '" ' . $selected . '>' . htmlspecialchars($start . '-' . $end) . '</option>';
+                                                echo '<option value="' . htmlspecialchars($start) . '">' . htmlspecialchars($start . '-' . $end) . '</option>';
                                             }
                                             ?>
                                     </select>
@@ -97,172 +100,144 @@
 								</div>
 							</div>
 							<br/><br/>
-							
-							<?php if(isset($broadSheetSummary) && !empty($broadSheetSummary)): ?>
-							
-							<!-- Interest Rates Header -->
 							<div class="searchTable">
-                        		<table class="table table-striped table-bordered" cellspacing="0" width="100%">
-                        			<tr class="bg-primary">
-										<th colspan="8" style="text-align: center; padding: 10px; font-weight: bold;">
-											Financial Year: <?=$broadSheetSummary['financial_year'];?>
-										</th>
-									</tr>
-                        			<tr>
-										<th width="20%">Interest Rate (Apr-Nov <?=$broadSheetSummary['first_year'];?>)</th>
-										<td width="15%" style="text-align: center;"><strong><?=isset($interestRates[4]) ? $interestRates[4] : 0;?>%</strong></td>
-										<th width="20%">Interest Rate (Dec <?=$broadSheetSummary['first_year'];?> - Mar <?=$broadSheetSummary['second_year'];?>)</th>
-										<td width="15%" style="text-align: center;"><strong><?=isset($interestRates[12]) ? $interestRates[12] : 0;?>%</strong></td>
-										<th width="20%">Opening Balance</th>
-										<td colspan="3" style="text-align: right; font-weight: bold; padding-right: 20px;">
-											₹ <?=number_format($broadSheetSummary['opening_balance'], 0);?>
+                        		<table id="" class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
+                        			<thead class="bg-primary123">
+										<tr>
+											<th class="">व्याज दर (1) (एप्रिल <?=$this->input->post("year");?> ते नोव्हेंबर <?=$this->input->post("year");?>)</th>
+											<td><?=$interestRates[4];?></td>
+											<th class="">व्याज दर (2) (डिसेंबर <?=$this->input->post("year");?> ते मार्च <?=$this->input->post("year")+1;?>)</th>
+											<td><?=$interestRates[12];?></td>
+											<th class=""  colspan="3">सुरवातीची शिल्लक	</th>
+											<td><?=(isset($interestDetail['opening_balance']) && $interestDetail['opening_balance'] !="")? $interestDetail['opening_balance']:0 ?></td>
+										</tr>
+										<tr>
+											<th>महिना</th>
+											<th>कर्मचारी वर्गणी</th>
+											<th>शासकीय वर्गणी</th>
+											<th>कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा हप्ता</th>
+											<th>एकूण जमा</th>
+											<th>काढलेल्या कर्जाची रक्कम</th>
+											<th>व्याज आकारली जाते ती मासिक रक्कम</th>
+											<th>मिळणाऱ्या व्याजाची रक्कम</th>
+										</tr>
+										<?php 
+											$months = array(4=>"एप्रिल",5=>"मे",6=>"जुन",7=>"जुलै",8=>"ऑगस्ट",9=>"सप्टेंबर",10=>"ऑक्टोबर",11=>"नोव्हेंबर",12=>"डिसेंबर",1=>"जानेवारी",2=>"फेब्रुवारी",3=>"मार्च");
+											
+											$mo =1; $openingBalance = (isset($interestDetail['opening_balance']) && $interestDetail['opening_balance'] !="")? $interestDetail['opening_balance']:0;
+											
+											$empContri = $totalEmpContri = $govContri = $totalGovContri = $loanInstallment = $totalLoanInstallment = $totAmount = $totalTotAmount = $loanAmount = $totalLoanAmount = $monthlyAmount = $totalMonthlyAmount = $interestAmount = $totalInterestAmount = 0;
+											
+											
+											foreach($months as $monthNo => $monthName){
+											    $totalAmount= 0;
+											    //if($mo > 1) { $openingBalance = 0; }
+											?>
+												<tr>
+													<td><?=$monthName;?> <?=($monthNo >=1 && $monthNo <= 3)?($this->input->post('year')+1):$this->input->post('year');?></td>
+													<td>
+													    <?php
+											echo $empContri =		    ($dcpsDetails[$monthNo]['emp_DCPS_contribution'] > 0)?$dcpsDetails[$monthNo]['emp_DCPS_contribution']:0;
+											$totalEmpContri+= $empContri;
+											?>
+											</td>
+													<td>
+													    <?php
+													    echo $govContri= ($dcpsDetails[$monthNo]['NMC_DCPS_contribution'] > 0)?$dcpsDetails[$monthNo]['NMC_DCPS_contribution']:0;
+													    $totalGovContri += $govContri;
+													    ?>
+													    </td>
+													<td>
+													<?php
+													echo $loanInstallment =  ($dcpsDetails[$monthNo]['loan_installment_paid_through_salary'] > 0)?$dcpsDetails[$monthNo]['loan_installment_paid_through_salary']:0;
+													 $totalLoanInstallment += $loanInstallment;
+													
+													?>
+													</td>
+													<td>
+													    <?php 
+										$totalAmount = 			    (($dcpsDetails[$monthNo]['total_contribution']+$dcpsDetails[$monthNo]['loan_installment_paid_through_salary']) > 0)?($dcpsDetails[$monthNo]['total_contribution']+$dcpsDetails[$monthNo]['loan_installment_paid_through_salary']):0;
+										
+										echo $totalAmount;
+										
+										$totalTotAmount += $totalAmount;
+										
+										?>
 										</td>
+													<td>
+													    <?php    echo $loanAmount = ($dcpsDetails[$monthNo]['DCPS_loan_taken_by_an_employee'] > 0)?$dcpsDetails[$monthNo]['DCPS_loan_taken_by_an_employee']:0;
+													    $totalLoanAmount+= $loanAmount;
+													    
+													    ?>
+													    </td>
+													<td>
+													    <?php 
+										        //$monthlyAmount+=$totalAmount;
+										//echo "Line no. 182=>".$monthlyAmount;			    
+													   $grandAmount = round($totalAmount + $openingBalance + ( ($dcpsDetails[$monthNo]['DCPS_loan_taken_by_an_employee'] > 0)?$dcpsDetails[$monthNo]['DCPS_loan_taken_by_an_employee']:0)) ;
+													   echo $grandAmount;
+													   
+													   $totalMonthlyAmount += $grandAmount;
+													   ?>
+													</td>
+													<td>
+													    <?php 
+													    $interest = round($grandAmount*($interestRates[$monthNo] /100)/12,2);
+													    echo $interest;
+													    
+													    $totalInterestAmount+=$interest;
+													    
+													    $openingBalance+= $totalAmount +  ( ($dcpsDetails[$monthNo]['DCPS_loan_taken_by_an_employee'] > 0)?$dcpsDetails[$monthNo]['DCPS_loan_taken_by_an_employee']:0);
+													    
+													    
+													    ?>
+													</td>
+												</tr>
+											<?php 
+											$mo++;
+											}
+										?>
+									</thead>
+									<tr>
+									    <th>एकुण <?=$this->input->post('year');?>-<?=$this->input->post('year')+1;?></th>
+									    <th><?=$totalEmpContri;?></th>
+									    <th><?=$totalGovContri;?></th>
+									    <th><?=$totalLoanInstallment;?></th>
+									    <th><?=$totalTotAmount;?></th>
+									    <th><?=$totalLoanAmount;?></th>
+									    <th><?=$totalMonthlyAmount;?></th>
+									    <th><?=round($totalInterestAmount);?></th>
+									</tr>	
+									<tr>
+									    <th colspan="7" style="text-align: right">सुरुवातीची शिल्लक		</th>
+									    <th><?=$interestDetail['opening_balance'];?></th>
+									</tr>
+									<tr>
+									    <th colspan="7" style="text-align: right">एकुण कर्मचारी वर्गणी व कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा हप्ता : जमा (+)	</th>
+									    <th><?=$interestDetail['emp_contri'];?></th>
+									</tr>
+									<tr>
+									    <th colspan="7" style="text-align: right">शासकीय वर्गणी</th>
+									    <th><?=$interestDetail['nmc_contri'];?></th>
+									</tr>
+									<tr>
+									    <th colspan="7" style="text-align: right">एकुण जमा (सुरवातीची शिलकेसह)			</th>
+									    <th><?=$interestDetail['total_contri'];?></th>
+									</tr>
+									<tr>
+									    <th colspan="7" style="text-align: right">काढलेल्या कर्जाची रक्कम (-)			</th>
+									    <th><?=$interestDetail['loan_amount'];?></th>
+									</tr>
+									<tr>
+									    <th colspan="7" style="text-align: right">मिळणाऱ्या व्याजाची रक्कम (+)			</th>
+									    <th><?=$interestDetail['interest'];?></th>
+									</tr>
+									<tr>
+									    <th colspan="7" style="text-align: right">मार्च अखेर शिल्लक (+)			</th>
+									    <th><?=$interestDetail['grand_total'];?></th>
 									</tr>
 								</table>
 							</div>
-							
-							<!-- Month-wise Breakdown -->
-							<div class="searchTable" style="margin-top: 20px;">
-                        		<table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
-                        			<thead class="bg-info">
-										<tr>
-											<th>Month</th>
-											<th style="text-align: right;">Employee Contribution</th>
-											<th style="text-align: right;">Corporation Contribution</th>
-											<th style="text-align: right;">Loan Installment</th>
-											<th style="text-align: right;">Total Deposits</th>
-											<th style="text-align: right;">Loan Withdrawn</th>
-											<th style="text-align: right;">Interest</th>
-											<th style="text-align: right;">Balance</th>
-										</tr>
-									</thead>
-									<tbody>
-										<?php 
-										$months = array(
-											4=>"April", 5=>"May", 6=>"June", 7=>"July", 
-											8=>"August", 9=>"September", 10=>"October", 11=>"November", 
-											12=>"December", 1=>"January", 2=>"February", 3=>"March"
-										);
-										
-										$totalEmpContri = 0;
-										$totalNmcContri = 0;
-										$totalLoanInst = 0;
-										$totalDeposits = 0;
-										$totalLoanWithdrawn = 0;
-										$totalInterest = 0;
-										
-										foreach($months as $monthNo => $monthName){
-											$monthData = isset($broadSheetSummary['monthly_details'][$monthNo]) 
-												? $broadSheetSummary['monthly_details'][$monthNo] 
-												: array();
-											
-											$emp = isset($monthData['emp_regular']) ? $monthData['emp_regular'] : 0;
-											$emp += isset($monthData['emp_supp']) ? $monthData['emp_supp'] : 0;
-											$nmc = isset($monthData['nmc_regular']) ? $monthData['nmc_regular'] : 0;
-											$nmc += isset($monthData['nmc_supp']) ? $monthData['nmc_supp'] : 0;
-											$loanInst = isset($monthData['loan_installment']) ? $monthData['loan_installment'] : 0;
-											$loanTaken = isset($monthData['loan_taken']) ? $monthData['loan_taken'] : 0;
-											$interest = isset($monthData['interest']) ? $monthData['interest'] : 0;
-											$closing = isset($monthData['monthly_closing']) ? $monthData['monthly_closing'] : 0;
-											
-											$deposits = $emp + $nmc + $loanInst;
-											
-											$totalEmpContri += $emp;
-											$totalNmcContri += $nmc;
-											$totalLoanInst += $loanInst;
-											$totalDeposits += $deposits;
-											$totalLoanWithdrawn += $loanTaken;
-											$totalInterest += $interest;
-											
-											$year = ($monthNo >= 4) ? $broadSheetSummary['first_year'] : $broadSheetSummary['second_year'];
-										?>
-										<tr>
-											<td><strong><?=$monthName . ' ' . $year;?></strong></td>
-											<td style="text-align: right;">₹ <?=number_format($emp, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($nmc, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($loanInst, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($deposits, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($loanTaken, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($interest, 0);?></td>
-											<td style="text-align: right; font-weight: bold;">₹ <?=number_format($closing, 0);?></td>
-										</tr>
-										<?php 
-										}
-										?>
-									</tbody>
-									<tfoot class="bg-light">
-										<tr style="font-weight: bold; background-color: #f5f5f5;">
-											<td>TOTAL <?=$broadSheetSummary['financial_year'];?></td>
-											<td style="text-align: right;">₹ <?=number_format($totalEmpContri, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($totalNmcContri, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($totalLoanInst, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($totalDeposits, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($totalLoanWithdrawn, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($totalInterest, 0);?></td>
-											<td style="text-align: right;">₹ <?=number_format($broadSheetSummary['closing_balance'], 0);?></td>
-										</tr>
-									</tfoot>
-								</table>
-							</div>
-							
-							<!-- Summary Section -->
-							<div class="searchTable" style="margin-top: 20px;">
-                        		<table class="table table-striped table-bordered" cellspacing="0" width="100%">
-                        			<thead class="bg-success">
-										<tr>
-											<th colspan="2" style="text-align: center; font-weight: bold; font-size: 16px;">FINANCIAL SUMMARY</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr>
-											<td width="70%"><strong>Opening Balance (Prev. Year Closing)</strong></td>
-											<td style="text-align: right; padding-right: 20px;">₹ <?=number_format($broadSheetSummary['opening_balance'], 0);?></td>
-										</tr>
-										<tr>
-											<td><strong>Total Employee Contribution</strong></td>
-											<td style="text-align: right; padding-right: 20px;">₹ <?=number_format($broadSheetSummary['total_emp_contribution'], 0);?></td>
-										</tr>
-										<tr>
-											<td><strong>Total Corporation Contribution</strong></td>
-											<td style="text-align: right; padding-right: 20px;">₹ <?=number_format($broadSheetSummary['total_corp_contribution'], 0);?></td>
-										</tr>
-										<tr>
-											<td><strong>Total Loan Installment (Repayment)</strong></td>
-											<td style="text-align: right; padding-right: 20px;">₹ <?=number_format($broadSheetSummary['loan_installment'], 0);?></td>
-										</tr>
-										<tr style="background-color: #e8f5e9; font-weight: bold;">
-											<td><strong>Total Deposits (+)</strong></td>
-											<td style="text-align: right; padding-right: 20px;">₹ <?=number_format($broadSheetSummary['total_deposits'], 0);?></td>
-										</tr>
-										<tr>
-											<td><strong>Total Withdrawals / Loans Taken (-)</strong></td>
-											<td style="text-align: right; padding-right: 20px;">₹ <?=number_format($broadSheetSummary['total_withdrawals'], 0);?></td>
-										</tr>
-										<tr>
-											<td><strong>Total Interest Accrued (+)</strong></td>
-											<td style="text-align: right; padding-right: 20px;">₹ <?=number_format($broadSheetSummary['total_interest'], 0);?></td>
-										</tr>
-										<tr style="background-color: #fff3cd; font-weight: bold; font-size: 16px;">
-											<td><strong>Closing Balance (March <?=$broadSheetSummary['second_year'];?>)</strong></td>
-											<td style="text-align: right; padding-right: 20px; font-size: 16px;">₹ <?=number_format($broadSheetSummary['closing_balance'], 0);?></td>
-										</tr>
-									</tbody>
-								</table>
-							</div>
-							
-							<!-- Calculation Note -->
-							<div class="alert alert-info" style="margin-top: 20px;">
-								<strong>Calculation Logic:</strong><br/>
-								Closing Balance = Opening Balance + Total Deposits - Total Withdrawals + Total Interest<br/>
-								= ₹ <?=number_format($broadSheetSummary['opening_balance'], 0);?> + ₹ <?=number_format($broadSheetSummary['total_deposits'], 0);?> - ₹ <?=number_format($broadSheetSummary['total_withdrawals'], 0);?> + ₹ <?=number_format($broadSheetSummary['total_interest'], 0);?> = <strong>₹ <?=number_format($broadSheetSummary['closing_balance'], 0);?></strong>
-							</div>
-							
-							<?php else: ?>
-							<div class="alert alert-info">
-								<strong>Info:</strong> Select a financial year and click 'Search' to view the Broad Sheet Report.
-							</div>
-							<?php endif; ?>
-							
 							<div class="clearfix"></div>
 					</form>
 				</div>
@@ -278,8 +253,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
 <script type="text/javascript">
 	$(document).ready(function(){
+		$('#employee').select2();
+		<?php if($this->input->post('emp_id')){?>
+		    $('#employee').val('<?=$this->input->post('emp_id');?>').select2();
+		    /*$("#employee").select().select2("val", "<?=$this->input->post('emp_id');?>"); */
+		<?php } ?>
+		
 		<?php if($this->input->post('year')){?>
+		    //alert(<?=$this->input->post('year');?>);
 		    $('#year').val('<?=$this->input->post('year');?>');
 		<?php } ?>
+		
 	});
 	</script>						
