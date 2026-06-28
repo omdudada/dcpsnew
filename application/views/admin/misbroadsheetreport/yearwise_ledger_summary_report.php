@@ -1,0 +1,438 @@
+<style type="text/css">
+    .spaceTot label.form-label {
+        display: none;
+    }
+    .spaceArr label.form-label {
+        display: none;
+    }
+    .spaceCurr label.form-label {
+        display: none;
+    }
+    
+    .form-error p {
+        color: #ff8080;
+        font-size: 12px;
+    }
+    label.form-label{
+        display: table-cell;   
+        float:left;
+        width: 246px;
+    }
+    .container {
+        display: table;
+        width: 100%
+    }
+    .controls {
+        display: table-cell;
+        overflow: hidden;
+        padding: 0 4px 0 6px
+    }
+    input {
+        width: 100%;
+    }
+    .required:after {
+        content:" *";
+        color: red;
+        font-size: 18px;
+    }
+    
+    table td{
+        text-align: center;
+    }
+    table td.clsCenter{
+        text-align: center;   
+    }
+    
+    table td.clsRight, table th.clsRight{
+        text-align: right;
+    }
+    table td.clsLeft{
+        text-align: left;
+    }
+    
+    <?php
+        if (isset($urlAry['option']) && $urlAry['option'] == "print") {
+        ?>
+        <style>
+            #header {
+                font-size: 12px;
+            }
+            
+            .bodyContent {
+                margin: 0 auto;
+                line-height: 24px;
+                font-size: 15px;
+            }
+            
+            #taxDetails,
+            #contactDetails {
+                width: 100%;
+            }
+            
+            #contactDetails {
+                line-height: 5px;
+                font-size: 15px;
+            }
+            
+            .btnPrint {
+                background: url(<?= base_url('assets/front/images/print_ic.gif'); ?>) no-repeat scroll 5px center #F4F4F4;
+                border: 1px solid #8C8C8C;
+                cursor: pointer;
+                font-weight: bold;
+                padding: 5px 10px 5px 35px;
+                margin-top: 2px;
+            }
+            
+            #watermarkImg {
+                display: none;
+                position: absolute;
+                z-index: 100;
+                opacity: 0.1;
+                top: 50%;
+                left: 50%;
+                width: 300px;
+                height: 393px;
+                margin-top: -196.5px;
+                margin-left: -150px;
+            }
+            
+            table {
+                width: 100% !important;
+                margin-bottom: 0px !important;
+                border-collapse: collapse !important;
+            }
+            
+            th, td {
+                border: 1px solid black !important;
+                padding: 5px;
+                font-size: 12px;
+                word-wrap: break-word;
+                white-space: normal;
+            }
+            
+            .table-bordered,
+            .table-bordered > thead > tr > th,
+            .table-bordered > tbody > tr > th,
+            .table-bordered > tfoot > tr > th,
+            .table-bordered > thead > tr > td,
+            .table-bordered > tbody > tr > td,
+            .table-bordered > tfoot > tr > td {
+                border: 1px solid #000 !important;
+                border-collapse: collapse !important;
+            }
+            
+            @media print {
+                @page :first {
+                    margin-top: 10mm;
+                    margin-bottom: 20mm;
+                    margin-left: 20mm;
+                    margin-right: 20mm;
+                }
+                @page {
+                    size: A4;
+                    margin: 20mm;
+                }
+                
+                .no-print {
+                    display: none !important;
+                }
+                
+                body {
+                    margin: 0;
+                    padding: 0;
+                    font-size: 12px;
+                }
+                
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 1rem;
+                }
+                
+                table th, table td {
+                    border: 1px solid #000;
+                    padding: 6px;
+                    text-align: left;
+                    vertical-align: middle;
+                }
+                
+                table thead th {
+                    font-weight: bold;
+                    background-color: #f2f2f2;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                
+                #watermarkImg {
+                    display: block !important;
+                }
+                
+                .new-page {
+                    position:relative;
+                    top: 50px;
+                    page-break-after: always;
+                    break-after: always;
+                }
+                .new-page:first{
+                    top: 0px;
+                }
+            }
+        </style>
+    <?php } ?>
+</style>
+
+<div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
+    <section class="content-header">
+        <div class="clsHeading"><img src="<?php echo base_url('assets/images/final_ledger.jpg'); ?>" alt="Final Ledger Report"></div>
+        <h1>Year-wise Ledger Summary Report</h1>
+    </section>
+    
+    <?php if(validation_errors()){?>
+        <div class="alert alert-danger">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <?php echo validation_errors();?>
+        </div>
+    <?php }?>  
+    
+    <section class="content" style="height: auto !important; min-height: 0px !important;">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                        <?php
+                            if(!isset($urlAry['option']) || $urlAry['option'] != "print"){ 
+                            ?>
+                            <h3 class="box-title">Search Filter</h3>
+                            <?php if(!empty($this->input->post('emp_id'))){ ?>
+                                <a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfReport();">Print</a>
+                                <a class="btn btn-success" style="float:right;" href="javascript:void(0);" onclick="exportExcelReport();">Export Excel</a>
+                            <?php } ?>
+                            <?php
+                            }
+                        ?>
+                    </div>
+                    
+                    <div class="box-body ">
+                        <form action="" method="post" name="typicaltypes" id="typicaltypes" enctype="multipart/form-data" >
+                            <div class="form-row no-print">
+                                <?php
+                                    if(!isset($urlAry['option']) || $urlAry['option'] != "print"){ 
+                                    ?>
+                                    <div class="form-group col-md-3">
+                                        <label for="pay_center">Pay Center</label>
+                                        <select id="pay_center" name="pay_center" class="form-control" >
+                                            <option selected value="">Select Pay Center</option>
+                                            <?php
+                                                foreach($paycenterData as $row) {
+                                                    echo '<option value="' . htmlspecialchars($row['pay_center']) . '">' . htmlspecialchars($row['pay_center']) . '</option>';
+                                                }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="employee">Employee Name (Employee Id) </label>
+                                        <select id="employee" name="emp_id" class="form-control" >
+                                            <option name="emp_id" selected value="">Select Employee Name / Employee Id</option>
+                                            <?php
+                                                foreach($employeeData as $row)
+                                                {
+                                                    echo '<option value="'.$row['emp_id'].'">'.$row['emp_name']." (".$row['emp_id'].") ".'</option>';
+                                                }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <label class=""></label>
+                                        <input type="submit" class="btn btn-primary" id="search" value="Search" style="margin: 25px 0px 0px 10px">
+                                    </div>
+                                    <?php 
+                                    }
+                                ?>
+                            </div>
+                            <br/><br/>
+                            
+                            <?php
+                                if(!empty($ownerDetails) && !empty($yearwiseSummary)){
+                                    foreach ($ownerDetails as $ownerDetail) { 
+                                        $empId = $ownerDetail['emp_id'];
+                                        if (empty($yearwiseSummary)) {
+                                            continue;
+                                        }
+                                    ?>
+                                    <div class="searchTable new-page print-wrapper" id="print-wrapper" style="margin-top: 20px;">
+                                        
+                                        <!-- Basic Information Table -->
+                                        <table class="<?=(!isset($urlAry['option']) || $urlAry['option'] != "print")?'table table-striped table-bordered table-hover':'';?>" cellspacing="0" width="100%">
+                                            <thead class="bg-primary123">
+                                                <tr>
+                                                    <th style="text-align:center;" colspan="4">
+                                                        <strong>Year-wise Ledger Summary Report</strong>
+                                                    </th>
+                                                </tr>
+                                                <tr>
+                                                    <th style="text-align:center;" colspan="4">
+                                                        नाशिक महानगरपालिका,नाशिक
+                                                    </th>
+                                                </tr>
+                                                <tr>
+                                                    <th style="text-align:center;" colspan="4">
+                                                        परिभाषित अंशदान निवृत्ती वेतन योजना
+                                                    </th>
+                                                </tr>
+                                                <tr>
+                                                    <th style="text-align:left; width:25%;">कर्मचारी क्रमांक</th>
+                                                    <td style="text-align:left; width:25%;"><?= !empty($ownerDetail['emp_id']) ? $ownerDetail['emp_id'] : ''; ?></td>
+                                                    <th style="text-align:left; width:25%;">कर्मचारी नाव</th>
+                                                    <td style="text-align:left; width:25%;"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th style="text-align:left;">कर्मचारी नियुक्ती दिनांक</th>
+                                                    <td style="text-align:left;"><?= !empty($ownerDetail['joining_date']) ? $ownerDetail['joining_date'] : ''; ?></td>
+                                                    <th style="text-align:left;">पे सेंटर</th>
+                                                    <td style="text-align:left;"><?= !empty($ownerDetail['pay_center']) ? $ownerDetail['pay_center'] : ''; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th style="text-align:left;">हुद्दा</th>
+                                                    <td style="text-align:left;" colspan="3"><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                        
+                                        <!-- Year-Wise Values Table -->
+                                        <table class="<?=(!isset($urlAry['option']) || $urlAry['option'] != "print")?'table table-striped table-bordered table-hover':'';?>" cellspacing="0" width="100%" style="margin-top: 15px;">
+                                            <thead>
+                                                <tr>
+                                                    <th style="text-align:center; font-weight:bold;">आर्थिक वर्ष</th>
+                                                    <th style="text-align:center; font-weight:bold;">सुरवातीची शिल्लक</th>
+                                                    <th style="text-align:center; font-weight:bold;">कर्मचारी अंशदान</th>
+                                                    <th style="text-align:center; font-weight:bold;">प्रती वर्ष कर्मचारी अंशदानावर मिळणारे व्याज</th>
+                                                    <th style="text-align:center; font-weight:bold;">नियोक्त्याचे (नाशिक म.न.पा.) अंशदान</th>
+                                                    <th style="text-align:center; font-weight:bold;">प्रती वर्ष नियोक्त्याच्या (नाशिक म.न.पा.) अंशदानावर मिळणारे व्याज</th>
+                                                    <th style="text-align:center; font-weight:bold;">अखेर शिल्लक</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                    $totalOpening = $totalEmpContrib = $totalEmpInterest = $totalNmcContrib = $totalNmcInterest = $totalClosing = 0;
+                                                    
+                                                    // Display only years from 2006-2007 to 2014-2015
+                                                    for ($y = 2006; $y <= 2014; $y++) {
+                                                        $row = isset($yearwiseSummary[$y]) ? $yearwiseSummary[$y] : [
+                                                            'opening_balance' => 0,
+                                                            'employee_contribution' => 0,
+                                                            'employee_interest' => 0,
+                                                            'nmc_contribution' => 0,
+                                                            'nmc_interest' => 0,
+                                                            'closing_balance' => 0
+                                                        ];
+                                                        
+                                                        $opening = $row['opening_balance'];
+                                                        $empContrib = $row['employee_contribution'];
+                                                        $empInterest = $row['employee_interest'];
+                                                        $nmcContrib = $row['nmc_contribution'];
+                                                        $nmcInterest = $row['nmc_interest'];
+                                                        $closing = $row['closing_balance'];
+                                                        
+                                                        $totalEmpContrib += $empContrib;
+                                                        $totalEmpInterest += $empInterest;
+                                                        $totalNmcContrib += $nmcContrib;
+                                                        $totalNmcInterest += $nmcInterest;
+                                                ?>
+                                                <tr>
+                                                    <td class="clsCenter"><?= $y . '-' . ($y + 1); ?></td>
+                                                    <td class="clsRight"><?= number_format($opening, 2, '.', ''); ?></td>
+                                                    <td class="clsRight"><?= number_format($empContrib, 2, '.', ''); ?></td>
+                                                    <td class="clsRight"><?= number_format($empInterest, 2, '.', ''); ?></td>
+                                                    <td class="clsRight"><?= number_format($nmcContrib, 2, '.', ''); ?></td>
+                                                    <td class="clsRight"><?= number_format($nmcInterest, 2, '.', ''); ?></td>
+                                                    <td class="clsRight"><?= number_format($closing, 2, '.', ''); ?></td>
+                                                </tr>
+                                                <?php
+                                                    }
+                                                ?>
+                                                <tr style="font-weight: bold; background-color: #f2f2f2;">
+                                                    <td class="clsCenter"><strong>एकूण</strong></td>
+                                                    <td class="clsRight"></td>
+                                                    <td class="clsRight"><strong><?= number_format($totalEmpContrib, 2, '.', ''); ?></strong></td>
+                                                    <td class="clsRight"><strong><?= number_format($totalEmpInterest, 2, '.', ''); ?></strong></td>
+                                                    <td class="clsRight"><strong><?= number_format($totalNmcContrib, 2, '.', ''); ?></strong></td>
+                                                    <td class="clsRight"><strong><?= number_format($totalNmcInterest, 2, '.', ''); ?></strong></td>
+                                                    <td class="clsRight"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <?php 
+                                    }
+                                } 
+                            ?>
+                            <div class="clearfix"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        // Initialize Select2
+        $('#employee, #pay_center').select2();
+        
+        // Set pay center value
+        <?php if($this->input->post('pay_center')) { ?>
+            $('#pay_center').val('<?= $this->input->post('pay_center'); ?>').trigger('change');
+        <?php } ?>
+        
+        // Set employee value
+        <?php if($this->input->post('emp_id')) { ?>
+            $('#employee').val('<?= $this->input->post('emp_id'); ?>').trigger('change');
+        <?php } ?>
+        
+        // On change, fetch employee details
+        $('#pay_center').on('change', function() {
+            getEmployeeDetails(); 
+        });
+        
+        function getEmployeeDetails() {
+            var payCenter = $("#pay_center").val();
+            var selectedEmpId = '<?= $this->input->post('emp_id') ?>'; 
+            $('#employee').val(selectedEmpId).trigger('change');
+            return true;
+        }
+        
+        getEmployeeDetails();
+    });
+
+    function printPdfReport() {
+        var frm = document.getElementById('typicaltypes');
+        if(!frm) return;
+        var oldAction = frm.action;
+        var oldTarget = frm.target;
+        frm.action = "<?=base_url();?>admin/misreport/generate_yearwise_summary_report_mpdf";
+        frm.target = "_blank";
+        frm.submit();
+        setTimeout(function(){
+            frm.action = oldAction;
+            frm.target = oldTarget;
+        }, 500);
+    }
+
+    function exportExcelReport() {
+        var frm = document.getElementById('typicaltypes');
+        if(!frm) return;
+        var oldAction = frm.action;
+        var oldTarget = frm.target;
+        frm.action = "<?=base_url();?>admin/misreport/yearwise_ledger_summary_report/option/excel";
+        frm.target = "_blank";
+        frm.submit();
+        setTimeout(function(){
+            frm.action = oldAction;
+            frm.target = oldTarget;
+        }, 500);
+    }
+</script>

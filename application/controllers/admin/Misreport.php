@@ -1004,6 +1004,118 @@
 			$this->m_pdf->pdf->Output('Employee_Contribution_Excess_Report.pdf', 'I');
 		}
 		
+		public function yearwise_ledger_summary_report()
+		{
+			$postData = $this->input->post();
+			
+			$data['urlAry'] = array();
+			$urlAry = $this->uri->uri_to_assoc(4);
+			
+			$searchData = array();
+			if($postData){
+				$searchData = $postData;
+				$searchData['pay_center'] = $postData['pay_center'];
+				$searchData['emp_id'] = $postData['emp_id'];
+			}
+			
+			if(isset($urlAry['option']) && in_array($urlAry['option'], ["print", "csv", "excel"])){ 
+				$data['urlAry'] = $urlAry;
+			}
+			
+			if(is_array($searchData) && !empty($searchData['emp_id'])){
+				$data['searchData'] = $searchData;
+				
+				// Fetch the single employee master details
+				$empDetails = $this->mrModel->gerMasterDetails($searchData['emp_id']);
+				if(!empty($empDetails)){
+					$data['ownerDetails'][$searchData['emp_id']] = [
+						'emp_id' => $empDetails[0]['emp_id'],
+						'designation_name' => $empDetails[0]['designation_name'],
+						'emp_name' => $empDetails[0]['emp_name'],
+						'joining_date' => $empDetails[0]['joining_date'],
+						'pay_center' => $empDetails[0]['pay_center'],
+					];
+				}
+				
+				// Fetch year-wise ledger summary values for the employee
+				$data['yearwiseSummary'] = $this->mrModel->getYearwiseLedgerSummary($searchData['emp_id']);
+			}
+			$data['paycenterData'] = $this->mrModel->getPayCenterData();
+			$data['employeeData'] = $this->mrModel->gerMasterDetails();
+			
+			if(isset($urlAry['option']) && $urlAry['option'] == "excel"){
+				$filename = "yearwise_ledger_summary_report_".date("Ymd_His").".xls";
+				header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+				header("Content-Disposition: attachment; filename=".$filename);
+				header("Pragma: no-cache");
+				header("Expires: 0");
+				
+				echo $this->load->view('admin/misbroadsheetreport/yearwise_ledger_summary_report_pdf', $data, true);
+				exit;
+			}
+			
+			$this->load->view('admin/common/header');
+			$this->load->view('admin/misbroadsheetreport/yearwise_ledger_summary_report', $data);
+		}
+		
+		public function generate_yearwise_summary_report_mpdf()
+		{
+			$postData = $this->input->post();
+			$data['urlAry'] = array();
+			$urlAry = $this->uri->uri_to_assoc(4);
+			
+			$searchData = array();
+			if($postData){
+				$searchData = $postData;
+				$searchData['pay_center'] = $postData['pay_center'];
+				$searchData['emp_id'] = $postData['emp_id'];
+			}
+			
+			if(is_array($searchData) && !empty($searchData['emp_id'])){		    
+				$data['searchData'] = $searchData;
+				
+				$empDetails = $this->mrModel->gerMasterDetails($searchData['emp_id']);
+				if(!empty($empDetails)){
+					$data['ownerDetails'][$searchData['emp_id']] = [
+						'emp_id' => $empDetails[0]['emp_id'],
+						'designation_name' => $empDetails[0]['designation_name'],
+						'emp_name' => $empDetails[0]['emp_name'],
+						'joining_date' => $empDetails[0]['joining_date'],
+						'pay_center' => $empDetails[0]['pay_center'],
+					];
+				}
+				
+				$data['yearwiseSummary'] = $this->mrModel->getYearwiseLedgerSummary($searchData['emp_id']);
+			} else {
+				show_404();
+			}
+			
+			$config = [
+				'mode' => 'utf-8',
+				'format' => 'A4',
+				'margin_left' => 15,
+				'margin_right' => 15,
+				'margin_top' => 15,
+				'margin_bottom' => 15,
+				'margin_header' => 0,
+				'margin_footer' => 0,
+				'autoScriptToLang' => true,
+				'autoLangToFont' => true,
+			];
+			
+			$this->load->library('m_pdf', $config);
+			
+			$this->m_pdf->pdf->SetTitle('Year-wise Ledger Summary Report');
+			$this->m_pdf->pdf->SetAuthor('NMC');
+			$this->m_pdf->pdf->SetCreator('Pension System');
+			
+			$html = $this->load->view('admin/misbroadsheetreport/yearwise_ledger_summary_report_pdf', $data, TRUE);
+			
+			$this->m_pdf->pdf->WriteHTML($html);
+			
+			$this->m_pdf->pdf->Output('Yearwise_Ledger_Summary_Report.pdf', 'I');
+		}
+		
 	}
 	
 ?>

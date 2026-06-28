@@ -2046,8 +2046,174 @@ class MisreportModel extends CI_Model
 		return $summary['monthly_details'];
 	}
 
+	public function getYearwiseLedgerSummary($empId)
+	{
+		$empId = (int) $empId;
+		if ($empId <= 0) {
+			return array();
+		}
 
+		$monthsOrder = array(4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3);
+		$yearlyData = array();
 
+		$opening = 0;
+		$ecOpening = 0;
+
+		// Loop through financial years from 2005 to 2014
+		for ($fy = 2005; $fy <= 2014; $fy++) {
+			$data = array(
+				'emp_id' => $empId,
+				'first_year' => $fy,
+				'second_year' => $fy + 1,
+				'f_year' => $fy . "-" . ($fy + 1),
+			);
+
+			$rates = $this->getInterestRates($fy, $fy + 1);
+			if (!is_array($rates)) {
+				$rates = array();
+			}
+
+			$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
+
+			$byMonth = array();
+			if (is_array($dcpsRows)) {
+				foreach ($dcpsRows as $r) {
+					$m = (int) $r['for_month'];
+					if (!isset($byMonth[$m])) {
+						$byMonth[$m] = array();
+					}
+					$byMonth[$m][] = $r;
+				}
+			}
+
+			$empBase = $ecOpening;
+			$nmcBase = $ecOpening;
+
+			$sumEmp = 0;
+			$sumEmpSupp = 0;
+			$sumNmc = 0;
+			$sumNmcSupp = 0;
+			$sumLoanInst = 0;
+			$sumLoanTaken = 0;
+			$totalEmpInterest = 0;
+			$totalNmcInterest = 0;
+
+			foreach ($monthsOrder as $m) {
+				$monthRecords = isset($byMonth[$m]) ? $byMonth[$m] : array();
+				$empRegular = 0;
+				$empSupp = 0;
+				$nmcRegular = 0;
+				$nmcSupp = 0;
+				$loanInstallment = 0;
+				$loanTaken = 0;
+				$empInterest = 0;
+				$nmcInterest = 0;
+
+				$rate = (isset($rates[$m]) ? $rates[$m] : 0);
+
+				if (!empty($monthRecords) && is_array($monthRecords)) {
+					usort($monthRecords, function ($a, $b) {
+						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
+						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
+						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
+						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
+						$tsA = $dtA ? $dtA->getTimestamp() : 0;
+						$tsB = $dtB ? $dtB->getTimestamp() : 0;
+						if ($tsA !== $tsB) {
+							return $tsA <=> $tsB;
+						}
+						$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
+						$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
+						if ($vnA !== $vnB) {
+							return $vnA <=> $vnB;
+						}
+						$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
+						$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
+						return $fnA <=> $fnB;
+					});
+				}
+
+				if (!empty($monthRecords)) {
+					foreach ($monthRecords as $r) {
+						$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
+						$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
+							&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
+							? (int) $r['Ideal_contribution_of_employee_for_DCPS'] : 0;
+
+						$rowEmp = 0;
+						$rowEmpSupp = 0;
+						$rowNmc = 0;
+						$rowNmcSupp = 0;
+						$rowLoanInst = 0;
+						$rowLoanTaken = 0;
+
+						if ($salaryType === 'Regular') {
+							$rowEmp = $ideal;
+							$rowNmc = $ideal;
+						} elseif ($salaryType === 'Suplimentory') {
+							$rowEmpSupp = $ideal;
+							$rowNmcSupp = $ideal;
+						}
+
+						$rowLoanInst = !empty($r['loan_installment_paid_through_salary'])
+							? (int) $r['loan_installment_paid_through_salary'] : 0;
+						$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
+							? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
+
+						$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
+						$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
+
+						$rowEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
+						$rowNmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
+
+						$empInterest += $rowEmpInterest;
+						$nmcInterest += $rowNmcInterest;
+
+						$empRegular += $rowEmp;
+						$empSupp += $rowEmpSupp;
+						$nmcRegular += $rowNmc;
+						$nmcSupp += $rowNmcSupp;
+						$loanInstallment += $rowLoanInst;
+						$loanTaken += $rowLoanTaken;
+					}
+				} else {
+					$empInterest = round((($empBase * $rate) / 100), 0) / 12;
+					$nmcInterest = round((($nmcBase * $rate) / 100), 0) / 12;
+				}
+
+				$totalEmpInterest += $empInterest;
+				$totalNmcInterest += $nmcInterest;
+				$sumEmp += $empRegular;
+				$sumEmpSupp += $empSupp;
+				$sumNmc += $nmcRegular;
+				$sumNmcSupp += $nmcSupp;
+				$sumLoanInst += $loanInstallment;
+				$sumLoanTaken += $loanTaken;
+			}
+
+			$sumInterest = ($totalEmpInterest + $totalNmcInterest);
+			$closing = ($opening
+				+ ($sumEmp + $sumEmpSupp + $sumLoanInst)
+				+ ($sumNmc + $sumNmcSupp)) - $sumLoanTaken
+				+ ($sumInterest);
+
+			$employeeContributionClosing = (int) (($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken + $totalEmpInterest);
+
+			$yearlyData[$fy] = array(
+				'opening_balance' => $opening,
+				'employee_contribution' => ($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken,
+				'employee_interest' => $totalEmpInterest,
+				'nmc_contribution' => ($sumNmc + $sumNmcSupp),
+				'nmc_interest' => $totalNmcInterest,
+				'closing_balance' => $closing
+			);
+
+			$opening = (int) $closing;
+			$ecOpening = (int) $employeeContributionClosing;
+		}
+
+		return $yearlyData;
+	}
 
 }
 ?>
