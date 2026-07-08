@@ -436,7 +436,7 @@
 												<tr>
 													<th style="text-align:center;" colspan="18">
 														<strong>Form R-3</strong>
-														<div>(As referred to in Para no. 18 & 23 of Government Resolution - Finance Departmeny, No. CPS 1007/18/SER-4, dated 7 July, 2007)</div>
+														<div>(As referred to in Para no. 18 & 23 of Government Resolution - Finance Department, No. CPS 1007/18/SER-4, dated 7 July, 2007)</div>
 													</th>
 												</tr>
 												<tr>
@@ -612,10 +612,10 @@
 																	<td><?= isset($row['salary_end_date']) ? $row['salary_end_date'] : '' ?></td>
 																	<td>
                                                                         <?php 
-                                                                            if((isset($row['basic']) &&  $row['grade_pay'] != 0) && (isset($row['grade_pay']) &&  $row['grade_pay'] != 0) && (isset($row['da']) &&  $row['da'] != 0)) {
-																			echo "Regular";                                   }
+                                                                            if((isset($row['basic']) &&  $row['basic'] != 0) && (isset($row['grade_pay']) &&  $row['grade_pay'] == 0) && (isset($row['da']) &&  $row['da'] == 0)) {
+																			echo "Supplementary";                                   }
 																			else{
-																				echo 'Suplimentory';
+																				echo 'Regular';
 																			}
 																		?>
 																	</td>
@@ -756,10 +756,10 @@
 																	<td><?= isset($row['salary_end_date']) ? $row['salary_end_date'] : '' ?></td>
 																	<td>
                                                                         <?php 
-                                                                            if((isset($row['basic']) &&  $row['grade_pay'] != 0) && (isset($row['grade_pay']) &&  $row['grade_pay'] != 0) && (isset($row['da']) &&  $row['da'] != 0)) {
-																			echo "Regular";                                   }
+                                                                            if((isset($row['basic']) &&  $row['basic'] != 0) && (isset($row['grade_pay']) &&  $row['grade_pay'] == 0) && (isset($row['da']) &&  $row['da'] == 0)) {
+																			echo "Supplementary";                                   }
 																			else{
-																				echo 'Suplimentory';
+																				echo 'Regular';
 																			}
 																		?>
 																	</td>

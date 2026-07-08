@@ -169,7 +169,7 @@
 									<input type="text" name="recovered_DCPS_with_voucher_date" id="recovered_DCPS_with_voucher_date" class="form-control" placeholder="Recovered DCPS with Voucher Date" value="<?php echo $editData['recovered_DCPS_with_voucher_date']; ?>">
 							    </div>
 							    <div class="form-group col-md-4">
-                                    <label>Salary Type</label><br>
+                                    <label>Salary Invoice Type</label><br>
                                     <div class="form-check form-check-inline">
                                         <input type="radio" 
                                                name="salary_type" 

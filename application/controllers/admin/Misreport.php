@@ -770,7 +770,7 @@
 				show_404();
 			}
 			
-			$config = [
+			/*$config = [
 	        'mode' => 'utf-8',
 	        'format' => 'A4',
 	        'margin_left' => 15,
@@ -788,11 +788,38 @@
 			$this->m_pdf->pdf->SetTitle('Deduction Report');
 			$this->m_pdf->pdf->SetAuthor('NMC');
 			$this->m_pdf->pdf->SetCreator('Pension System');
+			$this->m_pdf->pdf->AddPage('L', [355.6, 215.9]);
 			
 			$html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $data, TRUE);
 			
 			$this->m_pdf->pdf->WriteHTML($html);
 			
+			$this->m_pdf->pdf->Output('Deduction_Report.pdf', 'I');*/
+
+			$config = [
+				'mode'             => 'utf-8',
+				'format'           => 'Legal-L',    // ← mPDF built-in: Legal paper + Landscape
+				'margin_left'      => 15,
+				'margin_right'     => 15,
+				'margin_top'       => 15,
+				'margin_bottom'    => 15,
+				'margin_header'    => 0,
+				'margin_footer'    => 0,
+				'autoScriptToLang' => true,
+				'autoLangToFont'   => true,
+			];
+
+			$this->load->library('m_pdf', $config);
+
+			$this->m_pdf->pdf->SetTitle('Deduction Report');
+			$this->m_pdf->pdf->SetAuthor('NMC');
+			$this->m_pdf->pdf->SetCreator('Pension System');
+
+			// ← No AddPage() here — WriteHTML handles it
+
+			$html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $data, TRUE);
+
+			$this->m_pdf->pdf->WriteHTML($html);
 			$this->m_pdf->pdf->Output('Deduction_Report.pdf', 'I');
 		}
 		

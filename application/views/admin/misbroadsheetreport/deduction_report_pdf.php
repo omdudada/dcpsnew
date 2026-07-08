@@ -130,6 +130,11 @@ $months = [
             margin-bottom: 10px;
             font-weight: bold;
         }
+
+        @page {
+            size: 355.6mm 215.9mm landscape;
+            margin: 15mm;
+        }
     </style>
 </head>
 <body>
@@ -150,7 +155,7 @@ $months = [
                         <tr>
                             <th style="text-align:center;" colspan="17">
                                 <strong>Form R-3</strong>
-                                <div style="font-size:10px;">(As referred to in Para no. 18 & 23 of Government Resolution - Finance Departmeny, No. CPS 1007/18/SER-4, dated 7 July, 2007)</div>
+                                <div style="font-size:10px;">(As referred to in Para no. 18 & 23 of Government Resolution - Finance Department, No. CPS 1007/18/SER-4, dated 7 July, 2007)</div>
                             </th>
                         </tr>
                         <tr>
@@ -304,11 +309,11 @@ $months = [
                                             <td><?= isset($row['salary_end_date']) ? $row['salary_end_date'] : '' ?></td>
                                             <td>
                                                 <?php 
-                                                    if((isset($row['basic']) &&  $row['grade_pay'] != 0) && (isset($row['grade_pay']) &&  $row['grade_pay'] != 0) && (isset($row['da']) &&  $row['da'] != 0)) {
-                                                    echo "Regular";                                   
+                                                    if((isset($row['basic']) &&  $row['basic'] != 0) && (isset($row['grade_pay']) &&  $row['grade_pay'] == 0) && (isset($row['da']) &&  $row['da'] == 0)) {
+                                                    echo "Supplementary";                                   
                                                     }
                                                     else{
-                                                        echo 'Suplimentory';
+                                                        echo 'Regular';
                                                     }
                                                 ?>
                                             </td>
@@ -438,11 +443,11 @@ $months = [
                                             <td><?= isset($row['salary_end_date']) ? $row['salary_end_date'] : '' ?></td>
                                             <td>
                                                 <?php 
-                                                    if((isset($row['basic']) &&  $row['grade_pay'] != 0) && (isset($row['grade_pay']) &&  $row['grade_pay'] != 0) && (isset($row['da']) &&  $row['da'] != 0)) {
-                                                    echo "Regular";                                   
+                                                    if((isset($row['basic']) &&  $row['basic'] != 0) && (isset($row['grade_pay']) &&  $row['grade_pay'] == 0) && (isset($row['da']) &&  $row['da'] == 0)) {
+                                                    echo "Supplementary";                                   
                                                     }
                                                     else{
-                                                        echo 'Suplimentory';
+                                                        echo 'Regular';
                                                     }
                                                 ?>
                                             </td>
@@ -513,15 +518,15 @@ $months = [
                             <div class="final-ledger-cert-signs">
                                 <div class="final-ledger-sign-line" style="margin-top: 16px;">
                                     कर्मचारी स्वाक्षरी / अंगठा 
-                                </div><br/>
+                                </div><br/><br/>
                                 <div class="final-ledger-sign-line">
                                     बिल लिपिक / कनिष्ठ लिपिक
-                                </div><br/>
+                                </div><br/><br/>
                                 <div class="final-ledger-sign-line">
                                     वरिष्ठ  लिपिक / सहाय्यक अधीक्षक / अधीक्षक
-                                </div><br/>
+                                </div><br/><br/>
                                 <div class="final-ledger-sign-line">
-                                    कार्यालय प्रमुख / विभाग प्रमुख / आहारण व संवितरण अधिकारी
+                                    कार्यालय प्रमुख / विभाग प्रमुख / आहरण व संवितरण अधिकारी (सही व शिक्का)
                                 </div>
                             </div>
                         </td>
