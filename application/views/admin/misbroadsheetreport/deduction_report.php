@@ -840,7 +840,7 @@
 																		<span style="font-weight:600;">&nbsp;</span>
 																	</div></br>
 																	<div class="final-ledger-sign-line">
-																		कार्यालय प्रमुख / विभाग प्रमुख / आहारण व संवितरण अधिकारी<br>
+																		कार्यालय प्रमुख / विभाग प्रमुख / आहरण व संवितरण अधिकारी (सही व शिक्का)<br>
 																		<span style="font-weight:600;">&nbsp;</span>
 																	</div>
 																</div>

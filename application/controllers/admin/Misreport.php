@@ -360,7 +360,7 @@
 				show_404();
 			}
 			
-			$config = [
+			/*$config = [
             'mode' => 'utf-8',
             'format' => 'A4',
             'margin_left' => 15,
@@ -379,6 +379,47 @@
 			$this->m_pdf->pdf->SetAuthor('NMC');
 			$this->m_pdf->pdf->SetCreator('Pension System');
 			
+			$html = $this->load->view('admin/misbroadsheetreport/final_ledger_report_pdf', $data, TRUE);
+			
+			$this->m_pdf->pdf->WriteHTML($html);
+			
+			$this->m_pdf->pdf->Output('Final_Ledger_Report.pdf', 'I');*/
+
+			
+			$config = [
+				'mode'             => 'utf-8',
+				'format'           => 'Legal-L',
+				'margin_left'      => 15,
+				'margin_right'     => 15,
+				'margin_top'       => 15,
+				'margin_bottom'    => 20,   // ← increase bottom to make room for footer
+				'margin_header'    => 0,
+				'margin_footer'    => 10,   // ← add footer margin
+				'autoScriptToLang' => true,
+				'autoLangToFont'   => true,
+			];
+
+			$this->load->library('m_pdf', $config);
+
+			$this->m_pdf->pdf->SetTitle('Deduction Report');
+			$this->m_pdf->pdf->SetAuthor('NMC');
+			$this->m_pdf->pdf->SetCreator('Pension System');
+
+			// ── Page number footer ──────────────────────────────────────
+			$this->m_pdf->pdf->SetFooter('||पृष्ठ {PAGENO} / {nb}||');
+			// {PAGENO} = current page, {nb} = total pages
+			// Format: left | center | right  (pipe-separated)
+			// Above puts it in the center. Change position as needed:
+			// Left:   'पृष्ठ {PAGENO} / {nb}||'
+			// Right:  '||पृष्ठ {PAGENO} / {nb}'
+
+			// ── Must call AddPage first, then SetHTMLFooter ──
+			$this->m_pdf->pdf->AddPage();
+
+			$this->m_pdf->pdf->SetHTMLFooter('
+				<div style="text-align:right">Page No. {PAGENO} / {nb}</div>
+			');
+
 			$html = $this->load->view('admin/misbroadsheetreport/final_ledger_report_pdf', $data, TRUE);
 			
 			$this->m_pdf->pdf->WriteHTML($html);
@@ -798,13 +839,13 @@
 
 			$config = [
 				'mode'             => 'utf-8',
-				'format'           => 'Legal-L',    // ← mPDF built-in: Legal paper + Landscape
+				'format'           => 'Legal-L',
 				'margin_left'      => 15,
 				'margin_right'     => 15,
 				'margin_top'       => 15,
-				'margin_bottom'    => 15,
+				'margin_bottom'    => 20,   // ← increase bottom to make room for footer
 				'margin_header'    => 0,
-				'margin_footer'    => 0,
+				'margin_footer'    => 10,   // ← add footer margin
 				'autoScriptToLang' => true,
 				'autoLangToFont'   => true,
 			];
@@ -815,7 +856,20 @@
 			$this->m_pdf->pdf->SetAuthor('NMC');
 			$this->m_pdf->pdf->SetCreator('Pension System');
 
-			// ← No AddPage() here — WriteHTML handles it
+			// ── Page number footer ──────────────────────────────────────
+			$this->m_pdf->pdf->SetFooter('||पृष्ठ {PAGENO} / {nb}||');
+			// {PAGENO} = current page, {nb} = total pages
+			// Format: left | center | right  (pipe-separated)
+			// Above puts it in the center. Change position as needed:
+			// Left:   'पृष्ठ {PAGENO} / {nb}||'
+			// Right:  '||पृष्ठ {PAGENO} / {nb}'
+
+			// ── Must call AddPage first, then SetHTMLFooter ──
+			$this->m_pdf->pdf->AddPage();
+
+			$this->m_pdf->pdf->SetHTMLFooter('
+				<div style="text-align:right">Page No. {PAGENO} / {nb}</div>
+			');
 
 			$html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $data, TRUE);
 
