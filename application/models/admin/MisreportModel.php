@@ -711,7 +711,7 @@ class MisreportModel extends CI_Model
 				}
 
 				if (empty($monthRecords)) {
-					$monthRecords = array(array());
+					$monthRecords = array(array());					
 				}
 				//echo "<pre>Line No. 715=>"; print_r($rates); exit;
 				$rate = isset($rates[$m]) ?  $rates[$m] : 0;
@@ -722,8 +722,22 @@ class MisreportModel extends CI_Model
 				$monthNmcInterest = 0;
 
 				
-
-				foreach ($monthRecords as $r) {
+				//echo "<pre>Line No. 724=>"; print_r($monthRecords); exit;
+				foreach ($monthRecords as $r) {		
+					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
+						$r = array(
+							'salary_type' => '',
+							'Ideal_contribution_of_employee_for_DCPS' => 0,
+							'emp_DCPS_contribution' => 0,
+							'emp_supplimentory_contribution' => 0,
+							'NMC_DCPS_contribution' => 0,
+							'NMC_supplimentory_DCPS_contribution' => 0,
+							'loan_installment_paid_through_salary' => 0,
+							'DCPS_loan_taken_by_an_employee' => 0,
+							'bunch_no' => '',
+						);
+					}
+					
 					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
 					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
 						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
@@ -764,9 +778,9 @@ class MisreportModel extends CI_Model
 					$totalDeposit = ($empRegular + $empSupp + $loanInstallment) + ($nmcRegular + $nmcSupp);
 
 					// ── Update bases PER RECORD ──────────────────────────────────
-					$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
-					$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
-					$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
+					$empBase = $ideal > 0 ? ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken : 0;
+					$nmcBase = $ideal > 0 ? ($nmcBase + $nmcRegular + $nmcSupp) : 0;
+					$totalBase = $ideal > 0 ? ($totalBase + $totalDeposit) - $loanTaken : 0;
 
 					// ── Interest calculated on updated base AFTER EACH RECORD ────
 					$rowEmpInterest = round((($empBase * $rate) / 100 / 12), 0);
@@ -1413,8 +1427,21 @@ class MisreportModel extends CI_Model
 				});
 			}
 
-			if (!empty($monthRecords)) {
+			/*if (!empty($monthRecords)) {*/
 				foreach ($monthRecords as $r) {
+					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
+						$r = array(
+							'salary_type' => '',
+							'Ideal_contribution_of_employee_for_DCPS' => 0,
+							'emp_DCPS_contribution' => 0,
+							'emp_supplimentory_contribution' => 0,
+							'NMC_DCPS_contribution' => 0,
+							'NMC_supplimentory_DCPS_contribution' => 0,
+							'loan_installment_paid_through_salary' => 0,
+							'DCPS_loan_taken_by_an_employee' => 0,
+							'bunch_no' => '',
+						);
+					}
 					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
 					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
 						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
@@ -1453,8 +1480,8 @@ class MisreportModel extends CI_Model
 						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
 
 					// ── Update bases PER RECORD ──────────────────────────────────────
-					$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
-					$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
+					$empBase = $ideal > 0 ? ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken : 0;
+					$nmcBase = $ideal > 0 ? ($nmcBase + $rowNmc + $rowNmcSupp) : 0;
 
 					// ── Interest calculated on updated base after EACH record ────────
 					//echo "<br/>empId=>".$empId.", firstYear=>".$fyStart.", Month=>".$m.", SalaryType=>".$salaryType.", EmpBase=>".$empBase.", NMCBase=>".$nmcBase.", Rate=>".$rate;
@@ -1501,11 +1528,11 @@ class MisreportModel extends CI_Model
 					FILE_APPEND
 					);*/
 				}
-			} else {
+			/*} else {
 				// No records this month — still compute interest on carry-forward base
 				$empInterest = round((($empBase * $rate) / 100), 0) / 12;
 				$nmcInterest = round((($nmcBase * $rate) / 100), 0) / 12;
-			}
+			}*/
 
 			// ── Month-level debug log ────────────────────────────────────────────────
 			$_dbg_month_names = array(
@@ -1673,6 +1700,19 @@ class MisreportModel extends CI_Model
 
 			if (!empty($monthRecords)) {
 				foreach ($monthRecords as $r) {
+					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
+						$r = array(
+							'salary_type' => '',
+							'Ideal_contribution_of_employee_for_DCPS' => 0,
+							'emp_DCPS_contribution' => 0,
+							'emp_supplimentory_contribution' => 0,
+							'NMC_DCPS_contribution' => 0,
+							'NMC_supplimentory_DCPS_contribution' => 0,
+							'loan_installment_paid_through_salary' => 0,
+							'DCPS_loan_taken_by_an_employee' => 0,
+							'bunch_no' => '',
+						);
+					}
 					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
 					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
 						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
@@ -1706,8 +1746,8 @@ class MisreportModel extends CI_Model
 						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
 
 					// ── Update bases PER RECORD ──────────────────────────────────────
-					$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
-					$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
+					$empBase = $ideal > 0 ? ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken : 0;
+					$nmcBase = $ideal > 0 ? ($nmcBase + $rowNmc + $rowNmcSupp) : 0;
 
 					// ── Interest calculated on updated base after EACH record ────────
 					$rowEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
@@ -2056,11 +2096,22 @@ class MisreportModel extends CI_Model
 		$monthsOrder = array(4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3);
 		$yearlyData = array();
 
-		$opening = 0;
-		$ecOpening = 0;
-
 		// Loop through financial years from 2005 to 2014
 		for ($fy = 2005; $fy <= 2014; $fy++) {
+
+			// ── Get opening & ecOpening from the SAME authoritative method
+			//    that the final_ledger_report uses (getFinalLedgerEmployeeContributionOpeningBalanceRuntime)
+			//    This ensures opening balances and interest bases match the final ledger exactly.
+			$authResult = $this->getFinalLedgerEmployeeContributionOpeningBalanceRuntime($empId, $fy);
+			if (is_array($authResult)) {
+				list($opening, $ecOpening) = $authResult;
+			} else {
+				$opening = (int) $authResult;
+				$ecOpening = 0;
+			}
+			$opening = (int) $opening;
+			$ecOpening = (int) $ecOpening;
+
 			$data = array(
 				'emp_id' => $empId,
 				'first_year' => $fy,
@@ -2086,6 +2137,7 @@ class MisreportModel extends CI_Model
 				}
 			}
 
+			// Seed interest bases from ecOpening (matching getFinalLedgerCumulativeRows)
 			$empBase = $ecOpening;
 			$nmcBase = $ecOpening;
 
@@ -2133,8 +2185,27 @@ class MisreportModel extends CI_Model
 					});
 				}
 
-				if (!empty($monthRecords)) {
+				//echo "<pre>"; print_r($monthRecords); echo "</pre>";
+
+				/*if (!empty($monthRecords)) {*/
 					foreach ($monthRecords as $r) {
+						// Zero-salary guard (matching getFinalLedgerCumulativeRows)
+						if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
+							$r = array(
+								'salary_type' => '',
+								'Ideal_contribution_of_employee_for_DCPS' => 0,
+								'emp_DCPS_contribution' => 0,
+								'emp_supplimentory_contribution' => 0,
+								'NMC_DCPS_contribution' => 0,
+								'NMC_supplimentory_DCPS_contribution' => 0,
+								'loan_installment_paid_through_salary' => 0,
+								'DCPS_loan_taken_by_an_employee' => 0,
+								'bunch_no' => '',
+							);
+							//continue;
+							//echo "<br>2203: Zero-salary record found for empId {$empId} in FY {$fy}, month {$m}. Using zeroed contributions.";	
+						}
+						
 						$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
 						$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
 							&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
@@ -2160,8 +2231,9 @@ class MisreportModel extends CI_Model
 						$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
 							? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
 
-						$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
-						$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
+						// Base update with $ideal > 0 guard (matching getFinalLedgerCumulativeRows)
+						$empBase = $ideal > 0 ? ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken : 0;
+						$nmcBase = $ideal > 0 ? ($nmcBase + $rowNmc + $rowNmcSupp) : 0;
 
 						$rowEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
 						$rowNmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
@@ -2176,10 +2248,10 @@ class MisreportModel extends CI_Model
 						$loanInstallment += $rowLoanInst;
 						$loanTaken += $rowLoanTaken;
 					}
-				} else {
+				/*} else {
 					$empInterest = round((($empBase * $rate) / 100), 0) / 12;
 					$nmcInterest = round((($nmcBase * $rate) / 100), 0) / 12;
-				}
+				}*/
 
 				$totalEmpInterest += $empInterest;
 				$totalNmcInterest += $nmcInterest;
@@ -2197,8 +2269,6 @@ class MisreportModel extends CI_Model
 				+ ($sumNmc + $sumNmcSupp)) - $sumLoanTaken
 				+ ($sumInterest);
 
-			$employeeContributionClosing = (int) (($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken + $totalEmpInterest);
-
 			$yearlyData[$fy] = array(
 				'opening_balance' => $opening,
 				'employee_contribution' => ($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken,
@@ -2207,9 +2277,6 @@ class MisreportModel extends CI_Model
 				'nmc_interest' => $totalNmcInterest,
 				'closing_balance' => $closing
 			);
-
-			$opening = (int) $closing;
-			$ecOpening = (int) $employeeContributionClosing;
 		}
 
 		return $yearlyData;

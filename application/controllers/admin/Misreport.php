@@ -1221,6 +1221,8 @@
 				echo $this->load->view('admin/misbroadsheetreport/yearwise_ledger_summary_report_pdf', $data, true);
 				exit;
 			}
+
+			//echo "<pre>"; print_r($data); exit;
 			
 			$this->load->view('admin/common/header');
 			$this->load->view('admin/misbroadsheetreport/yearwise_ledger_summary_report', $data);
