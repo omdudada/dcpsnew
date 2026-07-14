@@ -56,6 +56,64 @@
     table td.clsLeft{
         text-align: left;
     }
+
+    /* Bottom section: certificate (left) + summary table (right), print-friendly */
+    .final-ledger-bottom-wrap {
+        width: 100%;
+        margin-top: 16px;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    .final-ledger-bottom-wrap td {
+        vertical-align: top;
+        border: 1px solid #000;
+        padding: 10px;
+    }
+    .final-ledger-cert-box {
+        width: 38%;
+        font-size: 13px;
+        line-height: 1.45;
+        text-align: justify;
+    }
+    .final-ledger-cert-box strong {
+        display: block;
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+    .final-ledger-summary-wrap {
+        width: 62%;
+    }
+    .final-ledger-sign-row {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+    }
+    .final-ledger-sign-row td {
+        border: none;
+        padding: 24px 12px 8px;
+        vertical-align: bottom;
+        font-size: 13px;
+        width: 50%;
+    }
+    .final-ledger-sign-line {
+        border-top: 1px solid #000;
+        margin-top: 36px;
+        padding-top: 6px;
+        text-align: center;
+    }
+    .final-ledger-cert-signs {
+        margin-top: 20px;
+        padding-top: 8px;
+    }
+    .final-ledger-cert-signs .final-ledger-sign-line {
+        margin-top: 28px;
+        font-size: 12px;
+        line-height: 1.35;
+    }
+    .final-ledger-cert-signs .final-ledger-sign-line:first-child {
+        margin-top: 16px;
+    }
     
     <?php
         if (isset($urlAry['option']) && $urlAry['option'] == "print") {
@@ -381,6 +439,40 @@
                                                     <td class="clsRight"><strong><?= number_format($grandNeg + $grandPos, 2, '.', ''); ?></strong></td>
                                                 </tr>
                                             </tbody>
+                                        </table>
+                                        <table class="final-ledger-bottom-wrap" cellspacing="0">
+                                        <tr>
+                                            <td class="final-ledger-cert-box">
+                                                <strong>प्रमाणपत्र</strong>
+                                                <p style="margin:0;">
+                                                    १. कर्मचारी अंशदान वर्गणी कपात नमुना - २, आणि / किंवा<br>
+                                                    २. वेतन देयक, आणि / किंवा<br>
+                                                    ३. वेतन पत्रिका, आणि / किंवा<br>
+                                                    ४. पगार बिल ओ.सी. (Payment OC) इत्यादी<br>
+                                                
+                                                    अन्वये सदर कर्मचाऱ्यांच्या नवीन परिभाषित अंशदान निवृत्तीवेतन योजनेबाबतच्या प्रति माह अंशदान वर्गणी कपाती विभागामार्फत प्रमाणित करण्यात येत असून, त्यानुसार सदर लेखांकन अचूक व बरोबर आहे.                                                     सदर बाबतीत भविष्यात काही आक्षेप आल्यास किंवा काही बदल असल्यास त्याची सर्वस्वी जबाबदारी कार्यकारी विभागाची राहील.
+                                                </p><br/>
+                                                <div class="final-ledger-cert-signs">
+                                                    <div class="final-ledger-sign-line">
+                                                        कर्मचारी स्वाक्षरी / अंगठा <br>
+                                                        <span style="font-weight:600;">&nbsp;</span>
+                                                    </div><br/>
+                                                    <div class="final-ledger-sign-line">
+                                                        बिल लिपिक / कनिष्ठ लिपिक<br>
+                                                        <span style="font-weight:600;">&nbsp;</span>
+                                                    </div><br/>
+                                                    <div class="final-ledger-sign-line">
+                                                        वरिष्ठ  लिपिक / सहाय्यक अधीक्षक / अधीक्षक<br>
+                                                        <span style="font-weight:600;">&nbsp;</span>
+                                                    </div></br/>
+                                                    <div class="final-ledger-sign-line">
+                                                        कार्यालय प्रमुख / विभाग प्रमुख / आहरण व संवितरण अधिकारी (सही व शिक्का)<br>
+                                                        <span style="font-weight:600;">&nbsp;</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            
+                                        </tr>
                                         </table>
                                     </div>
                                     <?php 

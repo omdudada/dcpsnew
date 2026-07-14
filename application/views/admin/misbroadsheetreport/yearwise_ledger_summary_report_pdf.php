@@ -46,6 +46,73 @@
         .new-page {
             page-break-after: always;
         }
+
+        .final-ledger-bottom-wrap {
+            width: 100%;
+            margin-top: 16px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .final-ledger-bottom-wrap td {
+            vertical-align: top;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+
+        .final-ledger-cert-box {
+            width: 38%;
+            font-size: 13px;
+            line-height: 1.45;
+            text-align: justify;
+        }
+
+        .final-ledger-cert-box strong {
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .final-ledger-summary-wrap {
+            width: 62%;
+        }
+
+        .final-ledger-sign-row {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .final-ledger-sign-row td {
+            border: none !important;
+            padding: 24px 12px 8px;
+            vertical-align: bottom;
+            font-size: 13px;
+            width: 50%;
+        }
+
+        .final-ledger-sign-line {
+            border-top: 1px solid #000;
+            margin-top: 36px;
+            padding-top: 6px;
+            text-align: center;
+        }
+
+        .final-ledger-cert-signs {
+            margin-top: 20px;
+            padding-top: 8px;
+        }
+
+        .final-ledger-cert-signs .final-ledger-sign-line {
+            margin-top: 28px;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .final-ledger-cert-signs .final-ledger-sign-line:first-child {
+            margin-top: 16px;
+        }
     </style>
 </head>
 <body>
@@ -171,6 +238,41 @@
                             <td class="clsRight" style="text-align: right;"><strong><?php /* number_format($grandTotal, 0, '.', ''); */ ?></strong></td>
                         </tr>
                     </tbody>
+                </table>
+                <table class="final-ledger-bottom-wrap" cellspacing="0">
+                    <tr>                        
+                        <td class="final-ledger-summary-wrap">
+                            <table class="final-ledger-sign-row" cellspacing="0">
+                                <tr>
+                                    <td style="width: 33%">
+                                        <div class="final-ledger-sign-line">
+                                            कनिष्ठ लिपिक / कनिष्ठ लेखापाल
+                                        </div>
+                                    </td>
+
+                                    <td style="width: 33%">
+                                        <div class="final-ledger-sign-line">
+                                            उपलेखापाल / वरीष्ठ लेखापाल
+                                        </div>
+                                    </td>
+                                    <td style="width: 33%">
+                                        <div class="final-ledger-sign-line">
+                                            उप मुख्य लेखा व वित्त अधिकारी
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 33%">&nbsp;</td>
+                                    <td style="width: 33%">
+                                        <div class="final-ledger-sign-line">
+                                            मुख्य लेखा व वित्त अधिकारी (सही व शिक्का)
+                                        </div>
+                                    </td>
+                                    <td style="width: 33%">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
                 </table>
             </div>
         <?php } ?>

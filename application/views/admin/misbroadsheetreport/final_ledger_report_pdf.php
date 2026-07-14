@@ -199,10 +199,10 @@ if (!function_exists('_nf')) {
                 <table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th style="text-align:center;" colspan="19">नाशिक महानगरपालिका,नाशिक</th>
+                            <th style="text-align:center;" colspan="21">नाशिक महानगरपालिका,नाशिक</th>
                         </tr>
                         <tr>
-                            <th style="text-align:center;" colspan="19">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र
+                            <th style="text-align:center;" colspan="21">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र
                                 (<?= $searchData['f_year']; ?>)</th>
                         </tr>
                         <tr>
@@ -211,7 +211,7 @@ if (!function_exists('_nf')) {
                                     class="emp-pill"><?= !empty($ownerDetail['emp_id']) ? $ownerDetail['emp_id'] : ''; ?></span>
                             </td>
                             <th>कर्मचारी नाव</th>
-                            <td colspan="6"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
+                            <td colspan="8"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                             <th colspan="3">सुरवातीची शिल्लक</th>
                             <td colspan="7" style="text-align:right;"><?= _n0($opening); ?></td>
                         </tr>
@@ -221,7 +221,7 @@ if (!function_exists('_nf')) {
                             <th>पे सेंटर</th>
                             <td><?= !empty($ownerDetail['pay_center']) ? $ownerDetail['pay_center'] : ''; ?></td>
                             <th>हुद्दा</th>
-                            <td colspan="14">
+                            <td colspan="16">
                                 <?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?>
                             </td>
                         </tr>
@@ -231,8 +231,8 @@ if (!function_exists('_nf')) {
                             <th rowspan="2">फाईल क्रमांक</th>
                             <th rowspan="2">प्रमाणक क्रमांक</th>
                             <th rowspan="2">प्रमाणक दिनांक</th>
-                            <th colspan="2">कर्मचारी वर्गणी</th>
-                            <th colspan="2">मनपा वर्गणी</th>
+                            <th colspan="3">कर्मचारी वर्गणी</th>
+                            <th colspan="3">मनपा वर्गणी</th>
                             <th rowspan="2">कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा हप्ता (जमा)</th>
                             <th rowspan="2">एकूण जमा</th>
                             <th rowspan="2">काढलेल्या कर्जाची रक्कम</th>
@@ -247,8 +247,10 @@ if (!function_exists('_nf')) {
                         <tr>
                             <th>नियमित वेतन</th>
                             <th>पुरवणी वेतन</th>
+                            <th>एकूण</th>
                             <th>नियमित वेतन</th>
                             <th>पुरवणी वेतन</th>
+                            <th>एकूण</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -341,8 +343,12 @@ if (!function_exists('_nf')) {
                                 <td class="clsCenter"><?= $voucherDt !== '' ? htmlspecialchars($voucherDt) : ''; ?></td>
                                 <td style="text-align:right;"><?= _n0($row['emp_regular']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['emp_supp']); ?></td>
+                                <td style="text-align:right; font-weight:600;">
+                                    <?= _n0((int) $row['emp_regular'] + (int) $row['emp_supp']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['nmc_regular']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['nmc_supp']); ?></td>
+                                <td style="text-align:right; font-weight:600;">
+                                    <?= _n0((int) $row['nmc_regular'] + (int) $row['nmc_supp']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['loan_installment']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['total_deposit']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['loan_taken']); ?></td>
@@ -360,8 +366,12 @@ if (!function_exists('_nf')) {
                                     <?= htmlspecialchars((string) $searchData['f_year']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['emp_regular']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['emp_supp']); ?></strong></td>
+                            <td style="text-align:right;">
+                                <strong><?= _n0($totShow['emp_regular'] + $totShow['emp_supp']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['nmc_regular']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['nmc_supp']); ?></strong></td>
+                            <td style="text-align:right;">
+                                <strong><?= _n0($totShow['nmc_regular'] + $totShow['nmc_supp']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['loan_installment']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['total_deposit']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['loan_taken']); ?></strong></td>
@@ -373,6 +383,7 @@ if (!function_exists('_nf')) {
                             <td style="text-align:right;"><strong><?= _n0($totShow['total_interest']); ?></strong></td>
                             <td></td>
                         </tr>
+
                     </tbody>
                 </table>
 
@@ -401,11 +412,11 @@ if (!function_exists('_nf')) {
                             <div class="final-ledger-cert-signs">
                                 <div class="final-ledger-sign-line">
                                     कर्मचारी स्वाक्षरी / अंगठा<br>
-                                    
+
                                 </div><br /><br />
                                 <div class="final-ledger-sign-line">
                                     बिल लिपिक / कनिष्ठ लिपिक<br>
-                                    
+
                                 </div><br /><br />
                                 <div class="final-ledger-sign-line">
                                     वरिष्ठ लिपिक / सहाय्यक अधीक्षक / अधीक्षक<br>
@@ -501,8 +512,18 @@ if (!function_exists('_nf')) {
                                     </td>
                                     <td style="width: 33%">
                                         <div class="final-ledger-sign-line">
-                                            उप मुख्य लेखा व वित्त अधिकारी </div>
+                                            उप मुख्य लेखा व वित्त अधिकारी
+                                        </div>
                                     </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 33%">&nbsp;</td>
+                                    <td style="width: 33%">
+                                        <div class="final-ledger-sign-line">
+                                            मुख्य लेखा व वित्त अधिकारी (सही व शिक्का)
+                                        </div>
+                                    </td>
+                                    <td style="width: 33%">&nbsp;</td>
                                 </tr>
                             </table>
                         </td>
