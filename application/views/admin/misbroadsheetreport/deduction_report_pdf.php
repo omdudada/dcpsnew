@@ -5,6 +5,7 @@ $months = [
     1 => "जानेवारी", 2 => "फेब्रुवारी", 3 => "मार्च"
 ];
 ?>
+<?php if(empty($is_chunk)) { ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -138,6 +139,7 @@ $months = [
     </style>
 </head>
 <body>
+<?php } ?>
     <?php if(!empty($ownerDetails) && !empty($dcpsDetails) && !empty($searchData['f_year'])){ ?>
         <?php 
         $total_employees = count($ownerDetails);
@@ -148,8 +150,10 @@ $months = [
                 continue;
             }
             $emp_count++;
+            $isLastInChunk = ($emp_count == $total_employees);
+            $hasPageBreak = !$isLastInChunk || !empty($force_page_break_last);
         ?>
-            <div class="searchTable <?= ($emp_count < $total_employees) ? 'new-page' : ''; ?>" style="margin-top:15px;">
+            <div class="searchTable <?= $hasPageBreak ? 'new-page' : ''; ?>" style="margin-top:15px;">
                 <table cellspacing="0" width="100%">
                     <thead class="bg-primary123">
                         <tr>
@@ -581,5 +585,7 @@ $months = [
         }
     } 
     ?>
+<?php if (empty($is_chunk)) { ?>
 </body>
 </html>
+<?php } ?>

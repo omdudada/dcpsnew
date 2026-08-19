@@ -317,6 +317,10 @@
 		
 		public function generate_final_ledger_report_mpdf()
 		{
+			ini_set('pcre.backtrack_limit', '50000000');
+			ini_set('memory_limit', '2048M');
+			set_time_limit(1800);
+
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
@@ -429,6 +433,10 @@
 
 		public function generate_provisional_ledger_report_mpdf()
 		{
+			ini_set('pcre.backtrack_limit', '50000000');
+			ini_set('memory_limit', '2048M');
+			set_time_limit(1800);
+
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
@@ -753,6 +761,10 @@
 		
 		public function generate_deduction_report_mpdf()
 		{
+			ini_set('pcre.backtrack_limit', '50000000');
+			ini_set('memory_limit', '2048M');
+			set_time_limit(1800);
+
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
@@ -807,35 +819,9 @@
 				foreach ($interestDetails as $interestDetail) {
 					$data['interestDetail'][$interestDetail['employee_id']] = $interestDetail;
 				}
-				} else {
+			} else {
 				show_404();
 			}
-			
-			/*$config = [
-	        'mode' => 'utf-8',
-	        'format' => 'A4',
-	        'margin_left' => 15,
-	        'margin_right' => 15,
-	        'margin_top' => 15,
-	        'margin_bottom' => 15,
-	        'margin_header' => 0,
-	        'margin_footer' => 0,
-	        'autoScriptToLang' => true,
-	        'autoLangToFont' => true,
-			];
-			
-			$this->load->library('m_pdf', $config);
-			
-			$this->m_pdf->pdf->SetTitle('Deduction Report');
-			$this->m_pdf->pdf->SetAuthor('NMC');
-			$this->m_pdf->pdf->SetCreator('Pension System');
-			$this->m_pdf->pdf->AddPage('L', [355.6, 215.9]);
-			
-			$html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $data, TRUE);
-			
-			$this->m_pdf->pdf->WriteHTML($html);
-			
-			$this->m_pdf->pdf->Output('Deduction_Report.pdf', 'I');*/
 
 			$config = [
 				'mode'             => 'utf-8',
@@ -856,24 +842,150 @@
 			$this->m_pdf->pdf->SetAuthor('NMC');
 			$this->m_pdf->pdf->SetCreator('Pension System');
 
-			// ── Page number footer ──────────────────────────────────────
-			$this->m_pdf->pdf->SetFooter('||पृष्ठ {PAGENO} / {nb}||');
-			// {PAGENO} = current page, {nb} = total pages
-			// Format: left | center | right  (pipe-separated)
-			// Above puts it in the center. Change position as needed:
-			// Left:   'पृष्ठ {PAGENO} / {nb}||'
-			// Right:  '||पृष्ठ {PAGENO} / {nb}'
-
-			// ── Must call AddPage first, then SetHTMLFooter ──
-			$this->m_pdf->pdf->AddPage();
-
 			$this->m_pdf->pdf->SetHTMLFooter('
 				<div style="text-align:right">Page No. {PAGENO} / {nb}</div>
 			');
 
-			$html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $data, TRUE);
+			// Write CSS styles once to avoid repeating in every chunk
+			$css = '
+				body {
+					font-family: "freesans", sans-serif;
+					margin: 0;
+					padding: 0;
+				}
+				table {
+					width: 100%;
+					border-collapse: collapse;
+					font-size: 11px;
+					margin-bottom: 0px;
+				}
+				th, td {
+					border: 1px solid #000;
+					padding: 4px;
+					text-align: center;
+					word-wrap: break-word;
+					white-space: normal;
+				}
+				th {
+					font-weight: bold;
+				}
+				table td.clsCenter, table th.clsCenter {
+					text-align: center;
+					vertical-align: middle;
+				}
+				table td.clsRight, table th.clsRight {
+					text-align: right;
+					vertical-align: middle;
+				}
+				table td.clsLeft {
+					text-align: left;
+					vertical-align: middle;
+				}
+				.final-ledger-bottom-wrap {
+					width: 100%;
+					margin-top: 16px;
+					border-collapse: collapse;
+					table-layout: fixed;
+				}
+				.final-ledger-bottom-wrap td {
+					vertical-align: top;
+					border: 1px solid #000;
+					padding: 10px;
+				}
+				.final-ledger-summary-wrap {
+					width: 62%;
+				}
+				.final-ledger-summary-table {
+					width: 100%;
+					border-collapse: collapse;
+				}
+				.final-ledger-summary-table th,
+				.final-ledger-summary-table td {
+					border: 1px solid #000 !important;
+					padding: 4px 6px !important;
+					font-size: 10px;
+					vertical-align: middle;
+				}
+				.final-ledger-summary-table th {
+					text-align: center;
+					font-weight: bold;
+				}
+				.final-ledger-summary-table .fls-month {
+					text-align: center;
+				}
+				.final-ledger-summary-table .fls-amt {
+					text-align: right;
+					white-space: nowrap;
+				}
+				.final-ledger-cert-box {
+					width: 100%;
+					font-size: 13px;
+					line-height: 1.45;
+					text-align: justify;
+				}
+				.final-ledger-cert-box strong {
+					display: block;
+					text-align: center;
+					margin-bottom: 10px;
+					font-size: 14px;
+				}
+				.final-ledger-cert-signs {
+					margin-top: 20px;
+					padding-top: 8px;
+				}
+				.final-ledger-sign-line {
+					border-top: 1px solid #000;
+					margin-top: 36px;
+					padding-top: 6px;
+					text-align: center;
+					font-size: 12px;
+					line-height: 1.35;
+				}
+				.final-ledger-cert-signs .final-ledger-sign-line:first-child {
+					margin-top: 16px;
+				}
+				.new-page {
+					page-break-after: always;
+				}
+				.deduction-report-header {
+					text-align: center;
+					margin-bottom: 10px;
+					font-weight: bold;
+				}
+			';
+			$this->m_pdf->pdf->WriteHTML($css, \Mpdf\HTMLParserMode::HEADER_CSS);
 
-			$this->m_pdf->pdf->WriteHTML($html);
+			// Filter only owners with actual deduction data
+			$validOwners = [];
+			if(!empty($data['ownerDetails'])){
+				foreach ($data['ownerDetails'] as $empId => $ownerDetail) {
+					if(!empty($data['dcpsDetails'][$empId])){
+						$validOwners[$empId] = $ownerDetail;
+					}
+				}
+			}
+
+			if(!empty($validOwners)){
+				$chunkSize = 10; // Process in chunks of 10 employees to avoid pcre.backtrack_limit
+				$ownerChunks = array_chunk($validOwners, $chunkSize, true);
+				$totalChunks = count($ownerChunks);
+				$chunkIdx = 0;
+
+				foreach ($ownerChunks as $chunk) {
+					$chunkIdx++;
+					$chunkData = $data;
+					$chunkData['ownerDetails'] = $chunk;
+					$chunkData['is_chunk'] = true;
+					$chunkData['force_page_break_last'] = ($chunkIdx < $totalChunks);
+
+					$html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $chunkData, TRUE);
+					$this->m_pdf->pdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+				}
+			} else {
+				$html = '<div style="text-align:center; padding:50px; font-size:16px;">माहिती उपलब्ध नाही (No Data Available)</div>';
+				$this->m_pdf->pdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+			}
+
 			$this->m_pdf->pdf->Output('Deduction_Report.pdf', 'I');
 		}
 		
@@ -1109,6 +1221,10 @@
 		
 		public function generate_excess_report_mpdf()
 		{
+			ini_set('pcre.backtrack_limit', '50000000');
+			ini_set('memory_limit', '2048M');
+			set_time_limit(1800);
+
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
@@ -1230,6 +1346,10 @@
 		
 		public function generate_yearwise_summary_report_mpdf()
 		{
+			ini_set('pcre.backtrack_limit', '50000000');
+			ini_set('memory_limit', '2048M');
+			set_time_limit(1800);
+
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
