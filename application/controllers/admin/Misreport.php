@@ -220,7 +220,7 @@
 			
 			// Excel export: output as .xls (HTML table) for compatibility.
 			if(isset($urlAry['option']) && $urlAry['option'] === "excel"){
-				$filename = "final_ledger_report_".date("Ymd_His").".xls";
+				$filename = "provisional_ledger_report_".date("Ymd_His").".xls";
 				header("Content-Type: application/vnd.ms-excel; charset=utf-8");
 				header("Content-Disposition: attachment; filename=".$filename);
 				header("Pragma: no-cache");
@@ -481,24 +481,32 @@
 			}
 			
 			$config = [
-            'mode'             => 'utf-8',
-            'format'           => 'A4-L',
-            'margin_left'      => 8,
-            'margin_right'     => 8,
-            'margin_top'       => 10,
-            'margin_bottom'    => 10,
-            'margin_header'    => 0,
-            'margin_footer'    => 0,
-            'autoScriptToLang' => true,
-            'autoLangToFont'   => true,
+				'mode'             => 'utf-8',
+				'format'           => 'Legal-L',
+				'margin_left'      => 15,
+				'margin_right'     => 15,
+				'margin_top'       => 15,
+				'margin_bottom'    => 20,
+				'margin_header'    => 0,
+				'margin_footer'    => 10,
+				'autoScriptToLang' => true,
+				'autoLangToFont'   => true,
 			];
-			
+
 			$this->load->library('m_pdf', $config);
-			
+
 			$this->m_pdf->pdf->SetTitle('Provisional Ledger Report');
 			$this->m_pdf->pdf->SetAuthor('NMC');
 			$this->m_pdf->pdf->SetCreator('Pension System');
-			
+
+			$this->m_pdf->pdf->SetFooter('||पृष्ठ {PAGENO} / {nb}||');
+
+			$this->m_pdf->pdf->AddPage();
+
+			$this->m_pdf->pdf->SetHTMLFooter('
+				<div style="text-align:right">Page No. {PAGENO} / {nb}</div>
+			');
+
 			$html = $this->load->view('admin/misbroadsheetreport/provisional_ledger_report_pdf', $data, TRUE);
 			
 			$this->m_pdf->pdf->WriteHTML($html);

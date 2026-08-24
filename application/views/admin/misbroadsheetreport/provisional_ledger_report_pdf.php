@@ -1,17 +1,17 @@
 <?php
 $months = [
-    4  => "एप्रिल",
-    5  => "मे",
-    6  => "जुन",
-    7  => "जुलै",
-    8  => "ऑगस्ट",
-    9  => "सप्टेंबर",
+    4 => "एप्रिल",
+    5 => "मे",
+    6 => "जुन",
+    7 => "जुलै",
+    8 => "ऑगस्ट",
+    9 => "सप्टेंबर",
     10 => "ऑक्टोबर",
     11 => "नोव्हेंबर",
     12 => "डिसेंबर",
-    1  => "जानेवारी",
-    2  => "फेब्रुवारी",
-    3  => "मार्च"
+    1 => "जानेवारी",
+    2 => "फेब्रुवारी",
+    3 => "मार्च"
 ];
 
 if (!function_exists('_n0')) {
@@ -51,13 +51,13 @@ if (!function_exists('_nf')) {
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 11px;
         }
 
         th,
         td {
             border: 1px solid #000;
-            padding: 3px;
+            padding: 4px;
             text-align: center;
         }
 
@@ -181,14 +181,17 @@ if (!function_exists('_nf')) {
         $total_employees = count($ownerDetails);
         $emp_count = 0;
         foreach ($ownerDetails as $ownerDetail) {
-            $empId   = (int) $ownerDetail['emp_id'];
+            $empId = (int) $ownerDetail['emp_id'];
             if (empty($finalLedger[$empId])) {
                 continue;
             }
-            $ledger  = $finalLedger[$empId];
+            $ledger = $finalLedger[$empId];
             $opening = (int) $ledger['opening_balance'];
-            $tot     = $ledger['totals'];
-            $closing = ($opening + ($tot['emp_regular'] + $tot['emp_supp'] + $tot['loan_installment']) + ($tot['nmc_regular'] + $tot['nmc_supp'])) - $tot['loan_taken'] + $tot['total_interest'];
+            $tot = $ledger['totals'];
+            $closing = (($opening) + ($tot['emp_regular'] + $tot['emp_supp'] + $tot['loan_installment']) + ($tot['nmc_regular'] + $tot['nmc_supp'])) - $tot['loan_taken'] + $tot['total_interest'];
+
+            $employeeContributionOpening = isset($ledger['ec_opening_balance']) ? (int) $ledger['ec_opening_balance'] : 0;
+            $employeeContributionClosing = $employeeContributionOpening + (int) $tot['emp_regular'] + (int) $tot['emp_interest'];
             $emp_count++;
             ?>
             <div class="searchTable <?= ($emp_count < $total_employees) ? 'new-page' : ''; ?>" style="margin-top:15px;">
@@ -198,16 +201,18 @@ if (!function_exists('_nf')) {
                             <th style="text-align:center;" colspan="21">नाशिक महानगरपालिका,नाशिक</th>
                         </tr>
                         <tr>
-                            <th style="text-align:center;" colspan="21">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र
+                            <th style="text-align:center;" colspan="21">परिभाषित अंशदान निवृत्ती वेतन योजना - तात्पुरते विवरणपत्र
                                 (<?= $searchData['f_year']; ?>)</th>
                         </tr>
                         <tr>
                             <th>कर्मचारी क्रमांक</th>
-                            <td><span class="emp-pill"><?= !empty($ownerDetail['emp_id']) ? $ownerDetail['emp_id'] : ''; ?></span></td>
+                            <td><span
+                                    class="emp-pill"><?= !empty($ownerDetail['emp_id']) ? $ownerDetail['emp_id'] : ''; ?></span>
+                            </td>
                             <th>कर्मचारी नाव</th>
-                            <td colspan="6"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
+                            <td colspan="8"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                             <th colspan="3">सुरवातीची शिल्लक</th>
-                            <td colspan="9" style="text-align:right;"><?= _n0($opening); ?></td>
+                            <td colspan="7" style="text-align:right;"><?= _n0($opening); ?></td>
                         </tr>
                         <tr>
                             <th>कर्मचारी नियुक्ती दिनांक</th>
@@ -241,33 +246,31 @@ if (!function_exists('_nf')) {
                         <tr>
                             <th>नियमित वेतन</th>
                             <th>पुरवणी वेतन</th>
-                            <th>कर्मचारी अंशदानातील फरक</th>
+                            <th>एकूण</th>
                             <th>नियमित वेतन</th>
                             <th>पुरवणी वेतन</th>
-                            <th>मनपा अंशदानातील फरक</th>
+                            <th>एकूण</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
                         $fromMonth = isset($searchData['from_month']) && $searchData['from_month'] !== '' ? (int) $searchData['from_month'] : null;
-                        $toMonth   = isset($searchData['to_month'])   && $searchData['to_month']   !== '' ? (int) $searchData['to_month']   : null;
+                        $toMonth = isset($searchData['to_month']) && $searchData['to_month'] !== '' ? (int) $searchData['to_month'] : null;
 
                         $totShow = array(
-                            'emp_regular'      => 0,
-                            'emp_supp'         => 0,
-                            'emp_diff'         => 0,
-                            'nmc_regular'      => 0,
-                            'nmc_supp'         => 0,
-                            'nmc_diff'         => 0,
+                            'emp_regular' => 0,
+                            'emp_supp' => 0,
+                            'nmc_regular' => 0,
+                            'nmc_supp' => 0,
                             'loan_installment' => 0,
-                            'total_deposit'    => 0,
-                            'loan_taken'       => 0,
-                            'emp_base'         => 0,
-                            'nmc_base'         => 0,
-                            'total_base'       => 0,
-                            'emp_interest'     => 0,
-                            'nmc_interest'     => 0,
-                            'total_interest'   => 0,
+                            'total_deposit' => 0,
+                            'loan_taken' => 0,
+                            'emp_base' => 0,
+                            'nmc_base' => 0,
+                            'total_base' => 0,
+                            'emp_interest' => 0,
+                            'nmc_interest' => 0,
+                            'total_interest' => 0,
                         );
 
                         $fltRows = array();
@@ -286,53 +289,52 @@ if (!function_exists('_nf')) {
                             $fltRows[] = $row;
                         }
 
-                        $monthCounts  = array();
+                        $monthCounts = array();
                         foreach ($fltRows as $row) {
                             $mk = (int) $row['month'] . '|' . (int) $row['year'];
                             $monthCounts[$mk] = isset($monthCounts[$mk]) ? $monthCounts[$mk] + 1 : 1;
                         }
-                        $monthSeen    = array();
+                        $monthSeen = array();
                         $monthRowspan = array();
                         foreach ($fltRows as $i => $row) {
                             $mk = (int) $row['month'] . '|' . (int) $row['year'];
                             if (!isset($monthSeen[$mk])) {
-                                $monthSeen[$mk]    = true;
-                                $monthRowspan[$i]  = $monthCounts[$mk];
+                                $monthSeen[$mk] = true;
+                                $monthRowspan[$i] = $monthCounts[$mk];
                             } else {
-                                $monthRowspan[$i]  = 0;
+                                $monthRowspan[$i] = 0;
                             }
                         }
                         ?>
                         <?php foreach ($fltRows as $i => $row) {
                             $m = (int) $row['month'];
-                            $totShow['emp_regular']      += (int) $row['emp_regular'];
-                            $totShow['emp_supp']         += (int) $row['emp_supp'];
-                            $totShow['emp_diff']         += isset($row['emp_diff']) ? (int) $row['emp_diff'] : 0;
-                            $totShow['nmc_regular']      += (int) $row['nmc_regular'];
-                            $totShow['nmc_supp']         += (int) $row['nmc_supp'];
-                            $totShow['nmc_diff']         += isset($row['nmc_diff']) ? (int) $row['nmc_diff'] : 0;
+                            $totShow['emp_regular'] += (int) $row['emp_regular'];
+                            $totShow['emp_supp'] += (int) $row['emp_supp'];
+                            $totShow['nmc_regular'] += (int) $row['nmc_regular'];
+                            $totShow['nmc_supp'] += (int) $row['nmc_supp'];
                             $totShow['loan_installment'] += (int) $row['loan_installment'];
-                            $totShow['total_deposit']    += (int) $row['total_deposit'];
-                            $totShow['loan_taken']       += (int) $row['loan_taken'];
-                            $totShow['emp_base']         += (int) $row['emp_base'];
-                            $totShow['nmc_base']         += (int) $row['nmc_base'];
-                            $totShow['total_base']       += (int) $row['total_base'];
-                            $totShow['emp_interest']     += (int) $row['emp_interest'];
-                            $totShow['nmc_interest']     += (int) $row['nmc_interest'];
-                            $totShow['total_interest']   += (int) $row['total_interest'];
+                            $totShow['total_deposit'] += (int) $row['total_deposit'];
+                            $totShow['loan_taken'] += (int) $row['loan_taken'];
+                            $totShow['emp_base'] += (int) $row['emp_base'];
+                            $totShow['nmc_base'] += (int) $row['nmc_base'];
+                            $totShow['total_base'] += (int) $row['total_base'];
+                            $totShow['emp_interest'] += (int) $row['emp_interest'];
+                            $totShow['nmc_interest'] += (int) $row['nmc_interest'];
+                            $totShow['total_interest'] += (int) $row['total_interest'];
 
-                            $monthText  = $months[$m] . ' ' . $row['year'];
-                            $rateLabel  = !empty($row['rate']) ? ('व्याज दर ' . number_format((int) $row['rate'], 2) . '%') : '';
+                            $monthText = $months[$m] . ' ' . $row['year'];
+                            $rateLabel = !empty($row['rate']) ? ('व्याज दर ' . number_format($row['rate'], 2) . '%') : '';
 
-                            $bunchDisp  = (isset($row['bunch_no']) && $row['bunch_no'] !== '' && $row['bunch_no'] !== null) ? htmlspecialchars((string) $row['bunch_no']) : '';
-                            $fileDisp   = (isset($row['file_no'])  && $row['file_no']  !== '' && $row['file_no']  !== null) ? htmlspecialchars((string) $row['file_no'])  : '';
-                            $voucherNo  = isset($row['recovered_DCPS_with_voucher_no'])   ? trim((string) $row['recovered_DCPS_with_voucher_no'])   : '';
-                            $voucherDt  = isset($row['recovered_DCPS_with_voucher_date']) ? trim((string) $row['recovered_DCPS_with_voucher_date']) : '';
-                            $rsMonth    = isset($monthRowspan[$i]) ? (int) $monthRowspan[$i] : 1;
+                            $bunchDisp = (isset($row['bunch_no']) && $row['bunch_no'] !== '' && $row['bunch_no'] !== null) ? htmlspecialchars((string) $row['bunch_no']) : '';
+                            $fileDisp = (isset($row['file_no']) && $row['file_no'] !== '' && $row['file_no'] !== null) ? htmlspecialchars((string) $row['file_no']) : '';
+                            $voucherNo = isset($row['recovered_DCPS_with_voucher_no']) ? trim((string) $row['recovered_DCPS_with_voucher_no']) : '';
+                            $voucherDt = isset($row['recovered_DCPS_with_voucher_date']) ? trim((string) $row['recovered_DCPS_with_voucher_date']) : '';
+                            $rsMonth = isset($monthRowspan[$i]) ? (int) $monthRowspan[$i] : 1;
                             ?>
                             <tr>
                                 <?php if ($rsMonth > 0) { ?>
-                                    <td class="final-ledger-month-cell" rowspan="<?= $rsMonth; ?>"><?= htmlspecialchars($monthText); ?></td>
+                                    <td class="final-ledger-month-cell" rowspan="<?= $rsMonth; ?>"><?= htmlspecialchars($monthText); ?>
+                                    </td>
                                 <?php } ?>
                                 <td class="clsCenter"><?= $bunchDisp; ?></td>
                                 <td class="clsCenter"><?= $fileDisp; ?></td>
@@ -340,10 +342,12 @@ if (!function_exists('_nf')) {
                                 <td class="clsCenter"><?= $voucherDt !== '' ? htmlspecialchars($voucherDt) : ''; ?></td>
                                 <td style="text-align:right;"><?= _n0($row['emp_regular']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['emp_supp']); ?></td>
-                                <td style="text-align:right;"><?= _n0(isset($row['emp_diff']) ? $row['emp_diff'] : 0); ?></td>
+                                <td style="text-align:right; font-weight:600;">
+                                    <?= _n0((int) $row['emp_regular'] + (int) $row['emp_supp']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['nmc_regular']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['nmc_supp']); ?></td>
-                                <td style="text-align:right;"><?= _n0(isset($row['nmc_diff']) ? $row['nmc_diff'] : 0); ?></td>
+                                <td style="text-align:right; font-weight:600;">
+                                    <?= _n0((int) $row['nmc_regular'] + (int) $row['nmc_supp']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['loan_installment']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['total_deposit']); ?></td>
                                 <td style="text-align:right;"><?= _n0($row['loan_taken']); ?></td>
@@ -361,10 +365,12 @@ if (!function_exists('_nf')) {
                                     <?= htmlspecialchars((string) $searchData['f_year']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['emp_regular']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['emp_supp']); ?></strong></td>
-                            <td style="text-align:right;"><strong><?= _n0(isset($totShow['emp_diff']) ? $totShow['emp_diff'] : 0); ?></strong></td>
+                            <td style="text-align:right;">
+                                <strong><?= _n0($totShow['emp_regular'] + $totShow['emp_supp']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['nmc_regular']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['nmc_supp']); ?></strong></td>
-                            <td style="text-align:right;"><strong><?= _n0(isset($totShow['nmc_diff']) ? $totShow['nmc_diff'] : 0); ?></strong></td>
+                            <td style="text-align:right;">
+                                <strong><?= _n0($totShow['nmc_regular'] + $totShow['nmc_supp']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['loan_installment']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['total_deposit']); ?></strong></td>
                             <td style="text-align:right;"><strong><?= _n0($totShow['loan_taken']); ?></strong></td>
@@ -376,17 +382,16 @@ if (!function_exists('_nf')) {
                             <td style="text-align:right;"><strong><?= _n0($totShow['total_interest']); ?></strong></td>
                             <td></td>
                         </tr>
+
                     </tbody>
                 </table>
 
                 <?php
-                $fyMarchYear   = isset($searchData['second_year']) ? (int) $searchData['second_year'] : 0;
-                $sumEmpContrib = $totShow['emp_regular'] + $totShow['emp_supp'];
-                $sumNmcContrib = $totShow['nmc_regular'] + $totShow['nmc_supp'];
-                $sumRow4       = $sumEmpContrib + $totShow['loan_installment'];
-                $sumRow6       = $opening + $sumRow4 + $sumNmcContrib;
-                $sumInterest   = $totShow['emp_interest'] + $totShow['nmc_interest'];
-                $calcClosing   = $sumRow6 - $totShow['loan_taken'] + $sumInterest;
+                $fyMarchYear = isset($searchData['second_year']) ? (int) $searchData['second_year'] : 0;
+                $sumEmpContrib = $tot['emp_regular'] + $tot['emp_supp'];
+                $sumNmcContrib = $tot['nmc_regular'] + $tot['nmc_supp'];
+                $sumRow4 = $sumEmpContrib + $tot['loan_installment'];
+                $sumRow6 = ($opening) + $sumRow4 + $sumNmcContrib;
                 ?>
                 <table class="final-ledger-bottom-wrap" cellspacing="0">
                     <tr>
@@ -406,15 +411,17 @@ if (!function_exists('_nf')) {
                             <div class="final-ledger-cert-signs">
                                 <div class="final-ledger-sign-line">
                                     कर्मचारी स्वाक्षरी / अंगठा<br>
+
                                 </div><br /><br />
                                 <div class="final-ledger-sign-line">
                                     बिल लिपिक / कनिष्ठ लिपिक<br>
+
                                 </div><br /><br />
                                 <div class="final-ledger-sign-line">
                                     वरिष्ठ लिपिक / सहाय्यक अधीक्षक / अधीक्षक<br>
                                 </div><br /><br />
                                 <div class="final-ledger-sign-line">
-                                    कार्यालय प्रमुख / विभाग प्रमुख / आहारण व संवितरण अधिकारी<br>
+                                    कार्यालय प्रमुख / विभाग प्रमुख / आहरण व संवितरण अधिकारी (सही व शिक्का)<br>
                                 </div>
                             </div>
                         </td>
@@ -433,7 +440,7 @@ if (!function_exists('_nf')) {
                                 <tr>
                                     <td class="fls-num">3</td>
                                     <td class="fls-desc">कर्मचाऱ्याने काढलेल्या कर्ज रक्कमेचा एकूण हप्ता (जमा)</td>
-                                    <td class="fls-amt"><?= _nf($totShow['loan_installment']); ?></td>
+                                    <td class="fls-amt"><?= _nf($tot['loan_installment']); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">4</td>
@@ -454,29 +461,29 @@ if (!function_exists('_nf')) {
                                 <tr>
                                     <td class="fls-num">7</td>
                                     <td class="fls-desc">काढलेल्या कर्जाची रक्कम (-)</td>
-                                    <td class="fls-amt"><?= _nf($totShow['loan_taken']); ?></td>
+                                    <td class="fls-amt"><?= _nf($tot['loan_taken']); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">8</td>
                                     <td class="fls-desc">कर्मचारी वर्गणी - मिळणाऱ्या व्याजाची रक्कम</td>
-                                    <td class="fls-amt"><?= _nf($totShow['emp_interest']); ?></td>
+                                    <td class="fls-amt"><?= _nf($tot['emp_interest']); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">9</td>
                                     <td class="fls-desc">मनपा वर्गणी - मिळणाऱ्या व्याजाची रक्कम</td>
-                                    <td class="fls-amt"><?= _nf($totShow['nmc_interest']); ?></td>
+                                    <td class="fls-amt"><?= _nf($tot['nmc_interest']); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">10</td>
                                     <td class="fls-desc">एकूण मिळणाऱ्या व्याजाची रक्कम (8+9)</td>
-                                    <td class="fls-amt"><?= _nf($sumInterest); ?></td>
+                                    <td class="fls-amt"><?= _nf($tot['total_interest']); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fls-num">11</td>
                                     <td class="fls-desc">मार्च
                                         <?= $fyMarchYear ? htmlspecialchars((string) $fyMarchYear) : ''; ?> अखेर शिल्लक (6-7+10)
                                     </td>
-                                    <td class="fls-amt" style="font-weight:700;"><?= _nf($calcClosing); ?></td>
+                                    <td class="fls-amt" style="font-weight:700;"><?= _nf($closing); ?></td>
                                 </tr>
                             </table>
                             <table class="final-ledger-sign-row" cellspacing="0">
@@ -494,8 +501,18 @@ if (!function_exists('_nf')) {
                                     </td>
                                     <td style="width: 33%">
                                         <div class="final-ledger-sign-line">
-                                            उप मुख्य लेखा व वित्त अधिकारी </div>
+                                            उप मुख्य लेखा व वित्त अधिकारी
+                                        </div>
                                     </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 33%">&nbsp;</td>
+                                    <td style="width: 33%">
+                                        <div class="final-ledger-sign-line">
+                                            मुख्य लेखा व वित्त अधिकारी (सही व शिक्का)
+                                        </div>
+                                    </td>
+                                    <td style="width: 33%">&nbsp;</td>
                                 </tr>
                             </table>
                         </td>

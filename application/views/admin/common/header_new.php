@@ -47,6 +47,7 @@
         <ul class="dropdown-menu">
             <li><a href="<?php echo base_url('admin/misreport/deduction_report'); ?>">Deduction Report</a></li>
             <li><a href="<?php echo base_url('admin/misreport/ledger_report_new'); ?>">Ledger Report</a></li>
+            <li><a href="<?php echo base_url('admin/misreport/provisional_ledger_report'); ?>">Provisional Ledger Report</a></li>
             <li><a href="<?php echo base_url('admin/misreport/final_ledger_report'); ?>">Final Ledger Report</a></li>
         </ul>
     </div>
