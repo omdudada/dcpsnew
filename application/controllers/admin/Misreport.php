@@ -264,7 +264,7 @@
 			if(is_array($searchData)){		    
 				$data['searchData'] = $searchData;
 				
-				$dcpsDetails = $this->mrModel->getdcpsDetailsNew($searchData);
+				$dcpsDetails = $this->mrModel->getdcpsDetailsNewFinalLedger($searchData);
 				
 				if(!empty($dcpsDetails)){
 					//echo "<pre>"; print_r($dcpsDetails); exit;
@@ -339,7 +339,7 @@
 			if(is_array($searchData) && !empty($searchData)){		    
 				$data['searchData'] = $searchData;
 				
-				$dcpsDetails = $this->mrModel->getdcpsDetailsNew($searchData);
+				$dcpsDetails = $this->mrModel->getdcpsDetailsNewFinalLedger($searchData);
 				
 				$processedEmpTDs = [];
 				if(!empty($dcpsDetails)){
