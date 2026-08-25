@@ -244,16 +244,16 @@
                                     <table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
                                         <thead>
                                             <tr>
-                                                <th style="text-align:center;" colspan="21">नाशिक महानगरपालिका,नाशिक</th>
+                                                <th style="text-align:center;" colspan="23">नाशिक महानगरपालिका,नाशिक</th>
                                             </tr>
                                             <tr>
-                                                <th style="text-align:center;" colspan="21">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
+                                                <th style="text-align:center;" colspan="23">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी क्रमांक</th>
                                                 <td><span class="emp-pill"><?= !empty($ownerDetail['emp_id']) ? $ownerDetail['emp_id'] : ''; ?></span></td>
                                                 <th>कर्मचारी नाव</th>
-                                                <td colspan="8"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
+                                                <td colspan="10"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                                                 <th colspan="3">सुरवातीची शिल्लक</th>
                                                 <td colspan="7" style="text-align:right;"><?= _n0($opening); ?></td>
                                             </tr>
@@ -263,7 +263,7 @@
                                                 <th>पे सेंटर</th>
                                                 <td><?= !empty($ownerDetail['pay_center']) ? $ownerDetail['pay_center'] : ''; ?></td>
                                                 <th>हुद्दा</th>
-                                                <td colspan="16"><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
+                                                <td colspan="18"><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
                                             </tr>
                                             <tr>
                                                 <th rowspan="2">महिना</th>
@@ -271,6 +271,8 @@
                                                 <th rowspan="2">फाईल क्रमांक</th>
                                                 <th rowspan="2">प्रमाणक क्रमांक</th>
                                                 <th rowspan="2">प्रमाणक दिनांक</th>
+                                                <th rowspan="2">वेतन कालावधी पासून</th>
+                                                <th rowspan="2">वेतन कालावधी पर्यंत</th>
                                                 
                                                 <th colspan="3">कर्मचारी वर्गणी</th>
                                                 <th colspan="3">मनपा वर्गणी</th>
@@ -406,6 +408,8 @@
                                                 $fileDisp = (isset($row['file_no']) && $row['file_no'] !== '' && $row['file_no'] !== null) ? htmlspecialchars((string) $row['file_no']) : '';
                                                 $voucherNo = isset($row['recovered_DCPS_with_voucher_no']) ? trim((string) $row['recovered_DCPS_with_voucher_no']) : '';
                                                 $voucherDt = isset($row['recovered_DCPS_with_voucher_date']) ? trim((string) $row['recovered_DCPS_with_voucher_date']) : '';
+                                                $salaryStart = isset($row['salary_start_date']) ? trim((string) $row['salary_start_date']) : '';
+                                                $salaryEnd = isset($row['salary_end_date']) ? trim((string) $row['salary_end_date']) : '';
                                                 $rsMonth = isset($monthRowspan[$i]) ? (int) $monthRowspan[$i] : 1;
                                             ?>
                                                 <tr>
@@ -416,6 +420,8 @@
                                                     <td class="clsCenter"><?= $fileDisp; ?></td>
                                                     <td class="clsCenter"><?= $voucherNo !== '' ? htmlspecialchars($voucherNo) : ''; ?></td>
                                                     <td class="clsCenter"><?= $voucherDt !== '' ? htmlspecialchars($voucherDt) : ''; ?></td>
+                                                    <td class="clsCenter"><?= $salaryStart !== '' ? htmlspecialchars($salaryStart) : ''; ?></td>
+                                                    <td class="clsCenter"><?= $salaryEnd !== '' ? htmlspecialchars($salaryEnd) : ''; ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_regular']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_supp']); ?></td>
                                                     <td style="text-align:right; font-weight:600;"><?= _n0((int)$row['emp_regular'] + (int)$row['emp_supp']); ?></td>
@@ -435,7 +441,7 @@
                                                 </tr>
                                             <?php } ?>
                                             <tr>
-                                                <td colspan="5" style="text-align:center;"><strong>एकुण <?= htmlspecialchars((string) $searchData['f_year']); ?></strong></td>
+                                                <td colspan="7" style="text-align:center;"><strong>एकुण <?= htmlspecialchars((string) $searchData['f_year']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_regular']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_supp']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_regular'] + $totShow['emp_supp']); ?></strong></td>

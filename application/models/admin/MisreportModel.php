@@ -860,10 +860,18 @@ class MisreportModel extends CI_Model
 		if (is_array($dcpsRows)) {
 			foreach ($dcpsRows as $r) {
 				$empId = (int) $r['emp_td'];
-				$m = (int) $r['for_month'];
+				$m = 0;
+				if (!empty($r['recovered_DCPS_with_voucher_date'])) {
+					$dt = DateTime::createFromFormat('d-m-Y', $r['recovered_DCPS_with_voucher_date']) ?: DateTime::createFromFormat('Y-m-d', $r['recovered_DCPS_with_voucher_date']);
+					if ($dt) {
+						$m = (int) $dt->format('n');
+					}
+				}
 				if ($m < 1 || $m > 12) {
-					$dt = isset($r['recovered_DCPS_with_voucher_date']) ? (DateTime::createFromFormat('d-m-Y', $r['recovered_DCPS_with_voucher_date']) ?: DateTime::createFromFormat('Y-m-d', $r['recovered_DCPS_with_voucher_date'])) : null;
-					$m = $dt ? (int) $dt->format('n') : 4;
+					$m = (int) $r['for_month'];
+				}
+				if ($m < 1 || $m > 12) {
+					$m = 4;
 				}
 				if (!isset($byEmpMonth[$empId][$m])) {
 					$byEmpMonth[$empId][$m] = array();
@@ -1072,6 +1080,8 @@ class MisreportModel extends CI_Model
 						'file_no' => isset($r['file_no']) ? $r['file_no'] : 0,
 						'recovered_DCPS_with_voucher_no' => isset($r['recovered_DCPS_with_voucher_no']) ? $r['recovered_DCPS_with_voucher_no'] : '',
 						'recovered_DCPS_with_voucher_date' => isset($r['recovered_DCPS_with_voucher_date']) ? $r['recovered_DCPS_with_voucher_date'] : '',
+						'salary_start_date' => isset($r['salary_start_date']) ? $r['salary_start_date'] : '',
+						'salary_end_date' => isset($r['salary_end_date']) ? $r['salary_end_date'] : '',
 					);
 
 					$totals['emp_regular'] += $empRegular;
@@ -1363,6 +1373,8 @@ class MisreportModel extends CI_Model
 						'file_no' => isset($r['file_no']) ? $r['file_no'] : 0,
 						'recovered_DCPS_with_voucher_no' => isset($r['recovered_DCPS_with_voucher_no']) ? $r['recovered_DCPS_with_voucher_no'] : '',
 						'recovered_DCPS_with_voucher_date' => isset($r['recovered_DCPS_with_voucher_date']) ? $r['recovered_DCPS_with_voucher_date'] : '',
+						'salary_start_date' => isset($r['salary_start_date']) ? $r['salary_start_date'] : '',
+						'salary_end_date' => isset($r['salary_end_date']) ? $r['salary_end_date'] : '',
 					);
 
 					$totals['emp_regular'] += $empRegular;
@@ -1617,10 +1629,18 @@ class MisreportModel extends CI_Model
 		$byMonth = array();
 		if (is_array($dcpsRows)) {
 			foreach ($dcpsRows as $r) {
-				$m = (int) $r['for_month'];
+				$m = 0;
+				if (!empty($r['recovered_DCPS_with_voucher_date'])) {
+					$dt = DateTime::createFromFormat('d-m-Y', $r['recovered_DCPS_with_voucher_date']) ?: DateTime::createFromFormat('Y-m-d', $r['recovered_DCPS_with_voucher_date']);
+					if ($dt) {
+						$m = (int) $dt->format('n');
+					}
+				}
 				if ($m < 1 || $m > 12) {
-					$dt = isset($r['recovered_DCPS_with_voucher_date']) ? (DateTime::createFromFormat('d-m-Y', $r['recovered_DCPS_with_voucher_date']) ?: DateTime::createFromFormat('Y-m-d', $r['recovered_DCPS_with_voucher_date'])) : null;
-					$m = $dt ? (int) $dt->format('n') : 4;
+					$m = (int) $r['for_month'];
+				}
+				if ($m < 1 || $m > 12) {
+					$m = 4;
 				}
 				if (!isset($byMonth[$m])) {
 					$byMonth[$m] = array();
