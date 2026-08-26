@@ -948,12 +948,30 @@ class MisreportModel extends CI_Model
 					usort($monthRecords, function ($a, $b) {
 						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
 						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
-						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
-						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
+						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: (DateTime::createFromFormat('Y-m-d', $dateA) ?: (DateTime::createFromFormat('d/m/Y', $dateA) ?: null));
+						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: (DateTime::createFromFormat('Y-m-d', $dateB) ?: (DateTime::createFromFormat('d/m/Y', $dateB) ?: null));
 						$tsA = $dtA ? $dtA->getTimestamp() : 0;
 						$tsB = $dtB ? $dtB->getTimestamp() : 0;
 						if ($tsA !== $tsB) {
 							return $tsA <=> $tsB;
+						}
+						$sDateA = isset($a['salary_start_date']) ? $a['salary_start_date'] : '';
+						$sDateB = isset($b['salary_start_date']) ? $b['salary_start_date'] : '';
+						$sDtA = DateTime::createFromFormat('d-m-Y', $sDateA) ?: (DateTime::createFromFormat('Y-m-d', $sDateA) ?: (DateTime::createFromFormat('d/m/Y', $sDateA) ?: null));
+						$sDtB = DateTime::createFromFormat('d-m-Y', $sDateB) ?: (DateTime::createFromFormat('Y-m-d', $sDateB) ?: (DateTime::createFromFormat('d/m/Y', $sDateB) ?: null));
+						$sTsA = $sDtA ? $sDtA->getTimestamp() : 0;
+						$sTsB = $sDtB ? $sDtB->getTimestamp() : 0;
+						if ($sTsA !== $sTsB) {
+							return $sTsA <=> $sTsB;
+						}
+						$eDateA = isset($a['salary_end_date']) ? $a['salary_end_date'] : '';
+						$eDateB = isset($b['salary_end_date']) ? $b['salary_end_date'] : '';
+						$eDtA = DateTime::createFromFormat('d-m-Y', $eDateA) ?: (DateTime::createFromFormat('Y-m-d', $eDateA) ?: (DateTime::createFromFormat('d/m/Y', $eDateA) ?: null));
+						$eDtB = DateTime::createFromFormat('d-m-Y', $eDateB) ?: (DateTime::createFromFormat('Y-m-d', $eDateB) ?: (DateTime::createFromFormat('d/m/Y', $eDateB) ?: null));
+						$eTsA = $eDtA ? $eDtA->getTimestamp() : 0;
+						$eTsB = $eDtB ? $eDtB->getTimestamp() : 0;
+						if ($eTsA !== $eTsB) {
+							return $eTsA <=> $eTsB;
 						}
 						$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
 						$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
@@ -962,7 +980,12 @@ class MisreportModel extends CI_Model
 						}
 						$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
 						$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
-						return $fnA <=> $fnB;
+						if ($fnA !== $fnB) {
+							return $fnA <=> $fnB;
+						}
+						$idA = isset($a['id']) ? (int) $a['id'] : 0;
+						$idB = isset($b['id']) ? (int) $b['id'] : 0;
+						return $idA <=> $idB;
 					});
 				}
 
@@ -1251,12 +1274,30 @@ class MisreportModel extends CI_Model
 					usort($monthRecords, function ($a, $b) {
 						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
 						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
-						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
-						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
+						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: (DateTime::createFromFormat('Y-m-d', $dateA) ?: (DateTime::createFromFormat('d/m/Y', $dateA) ?: null));
+						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: (DateTime::createFromFormat('Y-m-d', $dateB) ?: (DateTime::createFromFormat('d/m/Y', $dateB) ?: null));
 						$tsA = $dtA ? $dtA->getTimestamp() : 0;
 						$tsB = $dtB ? $dtB->getTimestamp() : 0;
 						if ($tsA !== $tsB) {
 							return $tsA <=> $tsB;
+						}
+						$sDateA = isset($a['salary_start_date']) ? $a['salary_start_date'] : '';
+						$sDateB = isset($b['salary_start_date']) ? $b['salary_start_date'] : '';
+						$sDtA = DateTime::createFromFormat('d-m-Y', $sDateA) ?: (DateTime::createFromFormat('Y-m-d', $sDateA) ?: (DateTime::createFromFormat('d/m/Y', $sDateA) ?: null));
+						$sDtB = DateTime::createFromFormat('d-m-Y', $sDateB) ?: (DateTime::createFromFormat('Y-m-d', $sDateB) ?: (DateTime::createFromFormat('d/m/Y', $sDateB) ?: null));
+						$sTsA = $sDtA ? $sDtA->getTimestamp() : 0;
+						$sTsB = $sDtB ? $sDtB->getTimestamp() : 0;
+						if ($sTsA !== $sTsB) {
+							return $sTsA <=> $sTsB;
+						}
+						$eDateA = isset($a['salary_end_date']) ? $a['salary_end_date'] : '';
+						$eDateB = isset($b['salary_end_date']) ? $b['salary_end_date'] : '';
+						$eDtA = DateTime::createFromFormat('d-m-Y', $eDateA) ?: (DateTime::createFromFormat('Y-m-d', $eDateA) ?: (DateTime::createFromFormat('d/m/Y', $eDateA) ?: null));
+						$eDtB = DateTime::createFromFormat('d-m-Y', $eDateB) ?: (DateTime::createFromFormat('Y-m-d', $eDateB) ?: (DateTime::createFromFormat('d/m/Y', $eDateB) ?: null));
+						$eTsA = $eDtA ? $eDtA->getTimestamp() : 0;
+						$eTsB = $eDtB ? $eDtB->getTimestamp() : 0;
+						if ($eTsA !== $eTsB) {
+							return $eTsA <=> $eTsB;
 						}
 						$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
 						$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
@@ -1265,7 +1306,12 @@ class MisreportModel extends CI_Model
 						}
 						$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
 						$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
-						return $fnA <=> $fnB;
+						if ($fnA !== $fnB) {
+							return $fnA <=> $fnB;
+						}
+						$idA = isset($a['id']) ? (int) $a['id'] : 0;
+						$idB = isset($b['id']) ? (int) $b['id'] : 0;
+						return $idA <=> $idB;
 					});
 				}
 
@@ -1685,12 +1731,30 @@ class MisreportModel extends CI_Model
 				usort($monthRecords, function ($a, $b) {
 					$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
 					$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
-					$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
-					$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
+					$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: (DateTime::createFromFormat('Y-m-d', $dateA) ?: (DateTime::createFromFormat('d/m/Y', $dateA) ?: null));
+					$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: (DateTime::createFromFormat('Y-m-d', $dateB) ?: (DateTime::createFromFormat('d/m/Y', $dateB) ?: null));
 					$tsA = $dtA ? $dtA->getTimestamp() : 0;
 					$tsB = $dtB ? $dtB->getTimestamp() : 0;
 					if ($tsA !== $tsB) {
 						return $tsA <=> $tsB;
+					}
+					$sDateA = isset($a['salary_start_date']) ? $a['salary_start_date'] : '';
+					$sDateB = isset($b['salary_start_date']) ? $b['salary_start_date'] : '';
+					$sDtA = DateTime::createFromFormat('d-m-Y', $sDateA) ?: (DateTime::createFromFormat('Y-m-d', $sDateA) ?: (DateTime::createFromFormat('d/m/Y', $sDateA) ?: null));
+					$sDtB = DateTime::createFromFormat('d-m-Y', $sDateB) ?: (DateTime::createFromFormat('Y-m-d', $sDateB) ?: (DateTime::createFromFormat('d/m/Y', $sDateB) ?: null));
+					$sTsA = $sDtA ? $sDtA->getTimestamp() : 0;
+					$sTsB = $sDtB ? $sDtB->getTimestamp() : 0;
+					if ($sTsA !== $sTsB) {
+						return $sTsA <=> $sTsB;
+					}
+					$eDateA = isset($a['salary_end_date']) ? $a['salary_end_date'] : '';
+					$eDateB = isset($b['salary_end_date']) ? $b['salary_end_date'] : '';
+					$eDtA = DateTime::createFromFormat('d-m-Y', $eDateA) ?: (DateTime::createFromFormat('Y-m-d', $eDateA) ?: (DateTime::createFromFormat('d/m/Y', $eDateA) ?: null));
+					$eDtB = DateTime::createFromFormat('d-m-Y', $eDateB) ?: (DateTime::createFromFormat('Y-m-d', $eDateB) ?: (DateTime::createFromFormat('d/m/Y', $eDateB) ?: null));
+					$eTsA = $eDtA ? $eDtA->getTimestamp() : 0;
+					$eTsB = $eDtB ? $eDtB->getTimestamp() : 0;
+					if ($eTsA !== $eTsB) {
+						return $eTsA <=> $eTsB;
 					}
 					$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
 					$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
@@ -1699,7 +1763,12 @@ class MisreportModel extends CI_Model
 					}
 					$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
 					$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
-					return $fnA <=> $fnB;
+					if ($fnA !== $fnB) {
+						return $fnA <=> $fnB;
+					}
+					$idA = isset($a['id']) ? (int) $a['id'] : 0;
+					$idB = isset($b['id']) ? (int) $b['id'] : 0;
+					return $idA <=> $idB;
 				});
 			}
 
@@ -1960,12 +2029,30 @@ class MisreportModel extends CI_Model
 				usort($monthRecords, function ($a, $b) {
 					$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
 					$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
-					$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
-					$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
+					$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: (DateTime::createFromFormat('Y-m-d', $dateA) ?: (DateTime::createFromFormat('d/m/Y', $dateA) ?: null));
+					$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: (DateTime::createFromFormat('Y-m-d', $dateB) ?: (DateTime::createFromFormat('d/m/Y', $dateB) ?: null));
 					$tsA = $dtA ? $dtA->getTimestamp() : 0;
 					$tsB = $dtB ? $dtB->getTimestamp() : 0;
 					if ($tsA !== $tsB) {
 						return $tsA <=> $tsB;
+					}
+					$sDateA = isset($a['salary_start_date']) ? $a['salary_start_date'] : '';
+					$sDateB = isset($b['salary_start_date']) ? $b['salary_start_date'] : '';
+					$sDtA = DateTime::createFromFormat('d-m-Y', $sDateA) ?: (DateTime::createFromFormat('Y-m-d', $sDateA) ?: (DateTime::createFromFormat('d/m/Y', $sDateA) ?: null));
+					$sDtB = DateTime::createFromFormat('d-m-Y', $sDateB) ?: (DateTime::createFromFormat('Y-m-d', $sDateB) ?: (DateTime::createFromFormat('d/m/Y', $sDateB) ?: null));
+					$sTsA = $sDtA ? $sDtA->getTimestamp() : 0;
+					$sTsB = $sDtB ? $sDtB->getTimestamp() : 0;
+					if ($sTsA !== $sTsB) {
+						return $sTsA <=> $sTsB;
+					}
+					$eDateA = isset($a['salary_end_date']) ? $a['salary_end_date'] : '';
+					$eDateB = isset($b['salary_end_date']) ? $b['salary_end_date'] : '';
+					$eDtA = DateTime::createFromFormat('d-m-Y', $eDateA) ?: (DateTime::createFromFormat('Y-m-d', $eDateA) ?: (DateTime::createFromFormat('d/m/Y', $eDateA) ?: null));
+					$eDtB = DateTime::createFromFormat('d-m-Y', $eDateB) ?: (DateTime::createFromFormat('Y-m-d', $eDateB) ?: (DateTime::createFromFormat('d/m/Y', $eDateB) ?: null));
+					$eTsA = $eDtA ? $eDtA->getTimestamp() : 0;
+					$eTsB = $eDtB ? $eDtB->getTimestamp() : 0;
+					if ($eTsA !== $eTsB) {
+						return $eTsA <=> $eTsB;
 					}
 					$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
 					$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
@@ -1974,7 +2061,12 @@ class MisreportModel extends CI_Model
 					}
 					$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
 					$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
-					return $fnA <=> $fnB;
+					if ($fnA !== $fnB) {
+						return $fnA <=> $fnB;
+					}
+					$idA = isset($a['id']) ? (int) $a['id'] : 0;
+					$idB = isset($b['id']) ? (int) $b['id'] : 0;
+					return $idA <=> $idB;
 				});
 			}
 
