@@ -1341,21 +1341,20 @@ class MisreportModel extends CI_Model
 					$empActual = 0;
 					$nmcActual = 0;
 
-					if ($salaryType === 'Regular') {
+					if ($salaryType === 'Regular' || empty($salaryType)) {
 						$empRegular = !empty($r['emp_DCPS_contribution'])
-							? (int) $r['emp_DCPS_contribution'] : 0;
+							? (int) $r['emp_DCPS_contribution'] : $ideal;
 						$nmcRegular = !empty($r['NMC_DCPS_contribution'])
-							? (int) $r['NMC_DCPS_contribution'] : 0;
+							? (int) $r['NMC_DCPS_contribution'] : $ideal;
 						$empActual = $empRegular;
 						$nmcActual = $nmcRegular;
-					} elseif ($salaryType === 'Suplimentory') {
+					} else {
 						$empSupp = !empty($r['emp_supplimentory_contribution'])
-							? (int) $r['emp_supplimentory_contribution'] : 0;
+							? (int) $r['emp_supplimentory_contribution'] : $ideal;
 						$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
-							? (int) $r['NMC_supplimentory_DCPS_contribution'] : 0;
+							? (int) $r['NMC_supplimentory_DCPS_contribution'] : $ideal;
 						$empActual = $empSupp;
 						$nmcActual = $nmcSupp;
-
 					}
 
 					// Difference: actual collected - ideal contribution
@@ -2097,17 +2096,16 @@ class MisreportModel extends CI_Model
 					$rowLoanInst = 0;
 					$rowLoanTaken = 0;
 
-					if ($salaryType === 'Regular') {
+					if ($salaryType === 'Regular' || empty($salaryType)) {
 						$empRegular = !empty($r['emp_DCPS_contribution'])
-							? (int) $r['emp_DCPS_contribution'] : 0;
+							? (int) $r['emp_DCPS_contribution'] : $ideal;
 						$nmcRegular = !empty($r['NMC_DCPS_contribution'])
-							? (int) $r['NMC_DCPS_contribution'] : 0;
-					} elseif ($salaryType === 'Suplimentory') {
+							? (int) $r['NMC_DCPS_contribution'] : $ideal;
+					} else {
 						$empSupp = !empty($r['emp_supplimentory_contribution'])
-							? (int) $r['emp_supplimentory_contribution'] : 0;
+							? (int) $r['emp_supplimentory_contribution'] : $ideal;
 						$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
-							? (int) $r['NMC_supplimentory_DCPS_contribution'] : 0;
-
+							? (int) $r['NMC_supplimentory_DCPS_contribution'] : $ideal;
 					}
 
 
