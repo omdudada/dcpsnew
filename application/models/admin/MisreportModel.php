@@ -1212,7 +1212,8 @@ class MisreportModel extends CI_Model
 		$ecOpeningByEmp = array(); // employee contribution opening (excludes NMC portion)
 		foreach ($empIds as $empId) {
 			$openingByEmp[$empId]   = (int) $this->getProvisionalLedgerOpeningBalanceRuntime($empId, $firstYear);
-			$ecOpeningByEmp[$empId] = (int) $this->getFinalLedgerEmployeeContributionOpeningBalanceRuntime($empId, $firstYear);
+			list($unusedOpening, $ecOpening) = $this->getFinalLedgerEmployeeContributionOpeningBalanceRuntime($empId, $firstYear);
+			$ecOpeningByEmp[$empId] = (int) $ecOpening;
 		}
 
 		$_dbg_model_log = APPPATH . 'logs/final_ledger_model_debug.txt';
