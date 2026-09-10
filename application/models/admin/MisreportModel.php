@@ -2653,5 +2653,221 @@ class MisreportModel extends CI_Model
 		return $yearlyData;
 	}
 
+	public function getYearwiseFinalLedgerSummary($empId)
+	{
+		$empId = (int) $empId;
+		if ($empId <= 0) {
+			return array();
+		}
+
+		$monthsOrder = array(4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3);
+		$yearlyData = array();
+
+		// Loop through financial years from 2005 to 2014
+		for ($fy = 2005; $fy <= 2014; $fy++) {
+
+			$authResult = $this->getFinalLedgerEmployeeContributionOpeningBalanceRuntime($empId, $fy);
+			if (is_array($authResult)) {
+				list($opening, $ecOpening) = $authResult;
+			} else {
+				$opening = (int) $authResult;
+				$ecOpening = 0;
+			}
+			$opening = (int) $opening;
+			$ecOpening = (int) $ecOpening;
+
+			$data = array(
+				'emp_id' => $empId,
+				'first_year' => $fy,
+				'second_year' => $fy + 1,
+				'f_year' => $fy . "-" . ($fy + 1),
+			);
+
+			$rates = $this->getInterestRates($fy, $fy + 1);
+			if (!is_array($rates)) {
+				$rates = array();
+			}
+
+			$dcpsRows = $this->getdcpsAllDetailsForFinalLedger($data);
+
+			$byMonth = array();
+			if (is_array($dcpsRows)) {
+				foreach ($dcpsRows as $r) {
+					$m = 0;
+					if (!empty($r['recovered_DCPS_with_voucher_date'])) {
+						$dt = DateTime::createFromFormat('d-m-Y', $r['recovered_DCPS_with_voucher_date'])
+							?: (DateTime::createFromFormat('Y-m-d', $r['recovered_DCPS_with_voucher_date'])
+							?: DateTime::createFromFormat('d/m/Y', $r['recovered_DCPS_with_voucher_date']));
+						if ($dt) {
+							$m = (int) $dt->format('n');
+						}
+					}
+					if ($m < 1 || $m > 12) {
+						$m = (int) $r['for_month'];
+					}
+					if ($m < 1 || $m > 12) {
+						$m = 4;
+					}
+					if (!isset($byMonth[$m])) {
+						$byMonth[$m] = array();
+					}
+					$byMonth[$m][] = $r;
+				}
+			}
+
+			// Seed interest bases from ecOpening (matching getFinalLedgerCumulativeRows)
+			$empBase = $ecOpening;
+			$nmcBase = $ecOpening;
+
+			$sumEmp = 0;
+			$sumEmpSupp = 0;
+			$sumNmc = 0;
+			$sumNmcSupp = 0;
+			$sumLoanInst = 0;
+			$sumLoanTaken = 0;
+			$totalEmpInterest = 0;
+			$totalNmcInterest = 0;
+
+			foreach ($monthsOrder as $m) {
+				$monthRecords = isset($byMonth[$m]) ? $byMonth[$m] : array();
+				$empRegular = 0;
+				$empSupp = 0;
+				$nmcRegular = 0;
+				$nmcSupp = 0;
+				$loanInstallment = 0;
+				$loanTaken = 0;
+				$empInterest = 0;
+				$nmcInterest = 0;
+
+				$rate = (isset($rates[$m]) ? $rates[$m] : 0);
+
+				if (!empty($monthRecords) && is_array($monthRecords)) {
+					usort($monthRecords, function ($a, $b) {
+						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
+						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
+						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: (DateTime::createFromFormat('Y-m-d', $dateA) ?: (DateTime::createFromFormat('d/m/Y', $dateA) ?: null));
+						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: (DateTime::createFromFormat('Y-m-d', $dateB) ?: (DateTime::createFromFormat('d/m/Y', $dateB) ?: null));
+						$tsA = $dtA ? $dtA->getTimestamp() : 0;
+						$tsB = $dtB ? $dtB->getTimestamp() : 0;
+						if ($tsA !== $tsB) {
+							return $tsA <=> $tsB;
+						}
+						$sDateA = isset($a['salary_start_date']) ? $a['salary_start_date'] : '';
+						$sDateB = isset($b['salary_start_date']) ? $b['salary_start_date'] : '';
+						$sDtA = DateTime::createFromFormat('d-m-Y', $sDateA) ?: (DateTime::createFromFormat('Y-m-d', $sDateA) ?: (DateTime::createFromFormat('d/m/Y', $sDateA) ?: null));
+						$sDtB = DateTime::createFromFormat('d-m-Y', $sDateB) ?: (DateTime::createFromFormat('Y-m-d', $sDateB) ?: (DateTime::createFromFormat('d/m/Y', $sDateB) ?: null));
+						$sTsA = $sDtA ? $sDtA->getTimestamp() : 0;
+						$sTsB = $sDtB ? $sDtB->getTimestamp() : 0;
+						if ($sTsA !== $sTsB) {
+							return $sTsA <=> $sTsB;
+						}
+						$eDateA = isset($a['salary_end_date']) ? $a['salary_end_date'] : '';
+						$eDateB = isset($b['salary_end_date']) ? $b['salary_end_date'] : '';
+						$eDtA = DateTime::createFromFormat('d-m-Y', $eDateA) ?: (DateTime::createFromFormat('Y-m-d', $eDateA) ?: (DateTime::createFromFormat('d/m/Y', $eDateA) ?: null));
+						$eDtB = DateTime::createFromFormat('d-m-Y', $eDateB) ?: (DateTime::createFromFormat('Y-m-d', $eDateB) ?: (DateTime::createFromFormat('d/m/Y', $eDateB) ?: null));
+						$eTsA = $eDtA ? $eDtA->getTimestamp() : 0;
+						$eTsB = $eDtB ? $eDtB->getTimestamp() : 0;
+						if ($eTsA !== $eTsB) {
+							return $eTsA <=> $eTsB;
+						}
+						$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
+						$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
+						if ($vnA !== $vnB) {
+							return $vnA <=> $vnB;
+						}
+						$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
+						$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
+						return $fnA <=> $fnB;
+					});
+				}
+
+				foreach ($monthRecords as $r) {
+					// Zero-salary guard (matching getFinalLedgerCumulativeRows)
+					if ($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
+						$r = array(
+							'salary_type' => '',
+							'Ideal_contribution_of_employee_for_DCPS' => 0,
+							'emp_DCPS_contribution' => 0,
+							'emp_supplimentory_contribution' => 0,
+							'NMC_DCPS_contribution' => 0,
+							'NMC_supplimentory_DCPS_contribution' => 0,
+							'loan_installment_paid_through_salary' => 0,
+							'DCPS_loan_taken_by_an_employee' => 0,
+							'bunch_no' => '',
+						);
+					}
+
+					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
+					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
+						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
+						? (int) $r['Ideal_contribution_of_employee_for_DCPS'] : 0;
+
+					$rowEmp = 0;
+					$rowEmpSupp = 0;
+					$rowNmc = 0;
+					$rowNmcSupp = 0;
+					$rowLoanInst = 0;
+					$rowLoanTaken = 0;
+
+					if ($salaryType === 'Regular') {
+						$rowEmp = $ideal;
+						$rowNmc = $ideal;
+					} elseif ($salaryType === 'Suplimentory') {
+						$rowEmpSupp = $ideal;
+						$rowNmcSupp = $ideal;
+					}
+
+					$rowLoanInst = !empty($r['loan_installment_paid_through_salary'])
+						? (int) $r['loan_installment_paid_through_salary'] : 0;
+					$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
+						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
+
+					// Base update with $ideal > 0 guard (matching getFinalLedgerCumulativeRows)
+					$empBase = $ideal > 0 ? ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken : 0;
+					$nmcBase = $ideal > 0 ? ($nmcBase + $rowNmc + $rowNmcSupp) : 0;
+
+					$rowEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
+					$rowNmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
+
+					$empInterest += $rowEmpInterest;
+					$nmcInterest += $rowNmcInterest;
+
+					$empRegular += $rowEmp;
+					$empSupp += $rowEmpSupp;
+					$nmcRegular += $rowNmc;
+					$nmcSupp += $rowNmcSupp;
+					$loanInstallment += $rowLoanInst;
+					$loanTaken += $rowLoanTaken;
+				}
+
+				$totalEmpInterest += $empInterest;
+				$totalNmcInterest += $nmcInterest;
+				$sumEmp += $empRegular;
+				$sumEmpSupp += $empSupp;
+				$sumNmc += $nmcRegular;
+				$sumNmcSupp += $nmcSupp;
+				$sumLoanInst += $loanInstallment;
+				$sumLoanTaken += $loanTaken;
+			}
+
+			$sumInterest = ($totalEmpInterest + $totalNmcInterest);
+			$closing = ($opening
+				+ ($sumEmp + $sumEmpSupp + $sumLoanInst)
+				+ ($sumNmc + $sumNmcSupp)) - $sumLoanTaken
+				+ ($sumInterest);
+
+			$yearlyData[$fy] = array(
+				'opening_balance' => $opening,
+				'employee_contribution' => ($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken,
+				'employee_interest' => $totalEmpInterest,
+				'nmc_contribution' => ($sumNmc + $sumNmcSupp),
+				'nmc_interest' => $totalNmcInterest,
+				'closing_balance' => $closing
+			);
+		}
+
+		return $yearlyData;
+	}
+
 }
 ?>
