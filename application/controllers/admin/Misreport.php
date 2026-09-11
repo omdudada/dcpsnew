@@ -1529,6 +1529,5 @@
 			
 			$this->m_pdf->pdf->Output('Yearwise_Final_Ledger_Summary_Report.pdf', 'I');
 		}
-		
 	}
 ?>
