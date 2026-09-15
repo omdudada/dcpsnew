@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="<?php echo base_url('assets/css/bootstrap-datepicker.min.css'); ?>">
+
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
 		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/user_edit.png'); ?>" alt="Add Employee"></div>
@@ -42,7 +44,7 @@
 							    </div>
 							    <div class="form-group col-md-4">
 									<label for="inputCity">Joining Date</label>
-									<input type="text" name="wef_date" id="wef_date" class="form-control" placeholder="Joining Date">
+									<input type="text" name="wef_date" id="wef_date" class="form-control datepick" data-provide="datepicker" data-date-format="dd.mm.yyyy" data-date-autoclose="true" placeholder="Joining Date" autocomplete="off">
 							    </div>
 							    <div class="clearfix"></div>
 							    <div class="form-group col-md-4">
@@ -71,7 +73,7 @@
 							<div class="col-sm-12" style="text-align: right;">
 								<!-- <input type="hidden" name="id" value="" id="id">    -->
 								<input type="submit" class="btn btn-primary" value="Submit">
-								<!-- <a href="<?=base_url($routeUrl)?>" class="btn btn-primary"><i class="fa fa-arrow-circle-left"></i> Back</a> -->
+								<a href="<?php echo base_url('admin/emp-master'); ?>" class="btn btn-default" style="margin-left: 5px;"><i class="fa fa-arrow-circle-left"></i> Cancel</a>
 							</div>
 						</form>
 					</div>
@@ -83,8 +85,18 @@
 
 <script type="text/javascript">
 	$(document).ready(function(){
-		// $("#wef_date").datepicker({ dateFormat: "dd/mm/yy" });
-		$("#wef_date").datepicker({ format: 'dd.mm.yyyy',orientation: "bottom" }); 
-		
+		if (typeof $.fn.datepicker !== 'undefined') {
+			$('#wef_date, .datepick').datepicker({
+				format: 'dd.mm.yyyy',
+				orientation: 'bottom auto',
+				autoclose: true,
+				todayHighlight: true
+			}); 
+		}
+		$(document).on('click focus', '#wef_date, .datepick', function(){
+			if (typeof $(this).datepicker === 'function') {
+				$(this).datepicker('show');
+			}
+		});
 	});
 </script>								

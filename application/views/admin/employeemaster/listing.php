@@ -1,3 +1,7 @@
+<!-- local plugin assets -->
+<link rel="stylesheet" href="<?php echo base_url('assets/css/font-awesome.min.css'); ?>">
+<link rel="stylesheet" href="<?php echo base_url('assets/css/datatables.min.css'); ?>">
+
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
 		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/user_edit.png'); ?>" alt="Employee Master"></div>
@@ -13,7 +17,10 @@
 				<div class="box">
 					<div class="box-header with-border">
 						<h3 class="box-title">Employee Master</h3>
-						<a href="<?php echo base_url('admin/add-emp');?>" class="btn btn-primary" style="float:right;"> <i class="fa fa-plus-circle"></i> Add New</a>
+						<div style="float:right;">
+							<a href="<?php echo base_url('admin/export-emp-csv');?>" class="btn btn-success" style="margin-right: 5px;"> <i class="fa fa-file-excel-o"></i> Export CSV</a>
+							<a href="<?php echo base_url('admin/add-emp');?>" class="btn btn-primary"> <i class="fa fa-plus-circle"></i> Add New</a>
+						</div>
 					</div>
 					
 					<?php if($this->session->flashdata('success')):?>
@@ -41,22 +48,23 @@
 											<th>Employee Name</th>
 											<th>Employee ID</th>
 											<th>Joining Date</th>
-											<th>Action</th>
+											<th>Pay Center</th>
+											<th width="8%">Action</th>
 										</tr>
 									</thead>
 									<tbody>
 										<?php
 											if(!empty($results))
 											{
-												// echo "<pre>";print_r($results);die();
 												$i=1;
 												foreach($results as $row) { ?>
 												<tr role="row">
 													<td style="text-align: center;"><?=$i++?></td>
-													<td style="text-align: center;"><?php echo $row['emp_name']; ?></td>
-													<td style="text-align: center;"><?php echo $row['emp_id']; ?></td>
-													<td style="text-align: center;"><?php echo $row['joining_date']; ?></td>
-													<td style="text-align: center;"><a href="<?php echo base_url();?>admin/edit-emp/<?php echo $row['id']; ?>" title="Edit" class="btn btn-primary btn-circle"><i class="fa fa-edit"></i></a></td>
+													<td style="text-align: center;"><?php echo html_escape($row['emp_name']); ?></td>
+													<td style="text-align: center;"><?php echo html_escape($row['emp_id']); ?></td>
+													<td style="text-align: center;"><?php echo html_escape($row['joining_date']); ?></td>
+													<td style="text-align: center;"><?php echo html_escape($row['pay_center']); ?></td>
+													<td style="text-align: center;"><a href="<?php echo base_url('admin/edit-emp/'.$row['id']); ?>" title="Edit" class="btn btn-primary btn-circle"><i class="fa fa-edit"></i></a></td>
 												</tr>
 												<?php }
 											} ?>
@@ -84,6 +92,7 @@
 		</div>
 	</section>
 </div>
+<script src="<?php echo base_url('assets/js/datatables.min.js'); ?>"></script>
 <script type="text/javascript">
 	$(document).ready( function () {
 		$('#dataTables-example').DataTable();

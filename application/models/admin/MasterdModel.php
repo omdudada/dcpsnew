@@ -65,27 +65,47 @@ class MasterdModel extends CI_Model
 
 
 
+	private function _parseDateToTimestamp($dateStr){
+		if (empty($dateStr)) return null;
+		if (is_numeric($dateStr)) return (int)$dateStr;
+		$dtes = preg_split('/[.\-\/]/', trim($dateStr));
+		if (count($dtes) === 3 && checkdate((int)$dtes[1], (int)$dtes[0], (int)$dtes[2])) {
+			return mktime(0, 0, 0, (int)$dtes[1], (int)$dtes[0], (int)$dtes[2]);
+		}
+		return strtotime($dateStr) ?: time();
+	}
+
+	private function _formatDateString($dateStr){
+		if (empty($dateStr)) return '';
+		if (is_numeric($dateStr)) {
+			return date("d.m.Y", (int)$dateStr);
+		}
+		$dtes = preg_split('/[.\-\/]/', trim($dateStr));
+		if (count($dtes) === 3) {
+			return sprintf("%02d.%02d.%04d", (int)$dtes[0], (int)$dtes[1], (int)$dtes[2]);
+		}
+		return $dateStr;
+	}
+
 	public function addEmpData($postdata){
 		if($postdata){
 			$propCreatedBy = $this->session->userdata('id');
-			// echo $propCreatedBy;die();
-			// $date = $postdata['wef_date'];
-			// $dtes = explode("/",$date);
-			
-			// $epocDate = mktime(0,0,0,$dtes[1],$dtes[0],$dtes[2]);
+			$fixedPay = (isset($postdata['fixed_pay']) && $postdata['fixed_pay'] !== '' && $postdata['fixed_pay'] !== null) ? $postdata['fixed_pay'] : 0;
+			$gradePay = (isset($postdata['grade_pay']) && $postdata['grade_pay'] !== '' && $postdata['grade_pay'] !== null) ? $postdata['grade_pay'] : 0;
+			$da = (isset($postdata['da']) && $postdata['da'] !== '' && $postdata['da'] !== null) ? $postdata['da'] : 0;
+
 			$insertArray = array(
 				'emp_name' => $postdata['emp_name'],
 				'emp_id' => $postdata['emp_id'],
-				'joining_date' => $postdata['wef_date'],
+				'joining_date' => $this->_formatDateString($postdata['wef_date']),
 				'pay_center' => $postdata['pay_center'],
-				'fixed_pay' => $postdata['fixed_pay'],
-				'grade_pay' => $postdata['grade_pay'],
+				/* 'fixed_pay' => $fixedPay,
+				'grade_pay' => $gradePay,
 				'basic' => $postdata['basic'],
-				'da' => $postdata['da'],
+				'da' => $da, */
 				'created_by' => $propCreatedBy,
 				'created_date' => time()
 			);
-			// echo "<pre>";print_r($insertArray);die();
 			
 			$this->db->insert('emp_master', $insertArray);
 			$res = $this->db->insert_id();
@@ -109,40 +129,39 @@ class MasterdModel extends CI_Model
 	}
 	public function updateEmpData($postdata){
 		if($postdata){
+			$fixedPay = (isset($postdata['fixed_pay']) && $postdata['fixed_pay'] !== '' && $postdata['fixed_pay'] !== null) ? $postdata['fixed_pay'] : 0;
+			$gradePay = (isset($postdata['grade_pay']) && $postdata['grade_pay'] !== '' && $postdata['grade_pay'] !== null) ? $postdata['grade_pay'] : 0;
+			$da = (isset($postdata['da']) && $postdata['da'] !== '' && $postdata['da'] !== null) ? $postdata['da'] : 0;
+
 			$updateArray = array(
 				'emp_name' => $postdata['emp_name'],
 				'emp_id' => $postdata['emp_id'],
-				'joining_date' => $postdata['wef_date'],
+				'joining_date' => $this->_formatDateString($postdata['wef_date']),
 				'pay_center' => $postdata['pay_center'],
-				'fixed_pay' => $postdata['fixed_pay'],
-				'grade_pay' => $postdata['grade_pay'],
+				/* 'fixed_pay' => $fixedPay,
+				'grade_pay' => $gradePay,
 				'basic' => $postdata['basic'],
-				'da' => $postdata['da'],
+				'da' => $da, */
 				'last_modified' => time()
 			);
 			$this->db->where('id', $postdata['id']);
 			$this->db->update('emp_master', $updateArray);
 			if($this->db->affected_rows() > 0){
-				// echo "string Ravi 1";die();
 				return 1;
 			}
 			else {
-				// echo "string Ravi 0";die();
 				return 0;
 			}	
 		}
 	}
 
 	public function getDeductionRecord($id,$year){
-		// echo "<pre>";print($id);
-		// echo "<pre>";print($year);die();
 	    $this->db->select('md.id,md.emp_td,md.joining_date,md.emp_name,md.basic,md.da,md.grade_pay,md.for_year,md.for_month,m.month');
 		$this->db->from('master_dcps as md');
 		$this->db->join('month as m','m.id = md.for_month');
 		$this->db->where('md.emp_td',$id);
 		$this->db->where('md.for_year',$year);
 		$this->db->order_by('m.id','asc');
-		// $this->db->limit(10);
 		$query = $this->db->get();
 		if ($query) {
 			return $query->result_array();
@@ -191,20 +210,9 @@ class MasterdModel extends CI_Model
 
 	public function addGRManData($postdata){
 		if($postdata){
-			// $propCreatedBy = $this->session->userdata('id');
-			// echo $propCreatedBy;die();
-			$date1 = $postdata['gr_date'];
-			$dtes1 = explode(".",$date1);
-			$gr_date = mktime(0,0,0,$dtes1[1],$dtes1[0],$dtes1[2]);
-
-			$date2 = $postdata['gr_from_date'];
-			$dtes2 = explode(".",$date2);
-			$gr_from_date = mktime(0,0,0,$dtes2[1],$dtes2[0],$dtes2[2]);
-
-			$date3 = $postdata['gr_to_date'];
-			$dtes3 = explode(".",$date3);
-			$gr_to_date = mktime(0,0,0,$dtes3[1],$dtes3[0],$dtes3[2]);
-			
+			$gr_date = $this->_parseDateToTimestamp($postdata['gr_date']);
+			$gr_from_date = $this->_parseDateToTimestamp($postdata['gr_from_date']);
+			$gr_to_date = $this->_parseDateToTimestamp($postdata['gr_to_date']);
 
 			$insertArray = array(
 				'gr_no' => $postdata['gr_no'],
@@ -214,10 +222,8 @@ class MasterdModel extends CI_Model
 				'gr_month' => $postdata['gr_month'],
 				'gr_year' => $postdata['gr_year'],
 				'gr_percentage' => $postdata['gr_percentage'],
-				// 'dcps_per_in_gr' => $postdata['dcps_per_in_gr'],
 				'gr_by' => $postdata['gr_by']
 			);
-			// echo "<pre>";print_r($insertArray);die();
 			
 			$this->db->insert('gr_management', $insertArray);
 			$res = $this->db->insert_id();
@@ -243,18 +249,9 @@ class MasterdModel extends CI_Model
 
 	public function updateGrManagementData($postdata){
 		if($postdata){
-
-			$date1 = $postdata['gr_date'];
-			$dtes1 = explode(".",$date1);
-			$gr_date = mktime(0,0,0,$dtes1[1],$dtes1[0],$dtes1[2]);
-
-			$date2 = $postdata['gr_from_date'];
-			$dtes2 = explode(".",$date2);
-			$gr_from_date = mktime(0,0,0,$dtes2[1],$dtes2[0],$dtes2[2]);
-
-			$date3 = $postdata['gr_to_date'];
-			$dtes3 = explode(".",$date3);
-			$gr_to_date = mktime(0,0,0,$dtes3[1],$dtes3[0],$dtes3[2]);
+			$gr_date = $this->_parseDateToTimestamp($postdata['gr_date']);
+			$gr_from_date = $this->_parseDateToTimestamp($postdata['gr_from_date']);
+			$gr_to_date = $this->_parseDateToTimestamp($postdata['gr_to_date']);
 			
 			$updateArray = array(
 				'gr_no' => $postdata['gr_no'],
@@ -264,13 +261,11 @@ class MasterdModel extends CI_Model
 				'gr_month' => $postdata['gr_month'],
 				'gr_year' => $postdata['gr_year'],
 				'gr_percentage' => $postdata['gr_percentage'],
-				// 'dcps_per_in_gr' => $postdata['dcps_per_in_gr'],
 				'gr_by' => $postdata['gr_by']
 			);
 			$this->db->where('id', $postdata['id']);
 			$this->db->update('gr_management', $updateArray);
 			if($this->db->affected_rows() > 0){
-				// echo "string Ravi 1";die();
 				return 1;
 			}
 			return 0;

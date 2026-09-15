@@ -1,4 +1,8 @@
 <?php //echo "<pre>";print_r($grResults);die();?>
+<!-- local plugin assets -->
+<link rel="stylesheet" href="<?php echo base_url('assets/css/font-awesome.min.css'); ?>">
+<link rel="stylesheet" href="<?php echo base_url('assets/css/datatables.min.css'); ?>">
+
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
 	<section class="content-header">
 		<div class="heading-icon-badge"><img src="<?php echo base_url('assets/images/file.png'); ?>" alt="Gr Management"></div>
@@ -48,35 +52,45 @@
 											<th>Gr Percentage</th>
 											<!-- <th>DCPS Percentage In Gr</th> -->
 											<th>Gr By</th>
-											<th>Action</th>
+											<th width="8%">Action</th>
 										</tr>
 									</thead>
 									<tbody>
 										<?php
+											$monthNames = [
+												1 => 'January',
+												2 => 'February',
+												3 => 'March',
+												4 => 'April',
+												5 => 'May',
+												6 => 'June',
+												7 => 'July',
+												8 => 'August',
+												9 => 'September',
+												10 => 'October',
+												11 => 'November',
+												12 => 'December'
+											];
 											if(!empty($grResults))
 											{
 												// echo "<pre>";print_r($results);die();
 												$i=1;
-												foreach($grResults as $row) { ?>
+												foreach($grResults as $row) { 
+													$mNum = (int)$row['gr_month'];
+													$grMonthName = isset($monthNames[$mNum]) ? $monthNames[$mNum] : $row['gr_month'];
+												?>
 												<tr role="row">
 													<td style="text-align: center;"><?=$i++?></td>
-													<td style="text-align: center;"><?php echo $row['gr_no']; ?></td>
-													<!-- <td style="text-align: center;"><?php echo $row['gr_date']; ?></td> -->
-													<td style="text-align: center;"><?php $grDate = date("d.m.Y", substr($row['gr_date'], 0, 10));
-														echo $grDate; ?>
-													</td>
-													<td style="text-align: center;"><?php $grFromDate = date("d.m.Y", substr($row['gr_from_date'], 0, 10));
-														echo $grFromDate; ?>
-													</td>
-													<td style="text-align: center;"><?php $grToDate = date("d.m.Y", substr($row['gr_to_date'], 0, 10));
-														echo $grToDate; ?>
-													</td>
-													<td style="text-align: center;"><?php echo $row['gr_month']; ?></td>
-													<td style="text-align: center;"><?php echo $row['gr_year']; ?></td>
-													<td style="text-align: center;"><?php echo $row['gr_percentage']; ?></td>
-													<!-- <td style="text-align: center;"><?php echo $row['dcps_per_in_gr']; ?></td> -->
-													<td style="text-align: center;"><?php echo $row['gr_by']; ?></td>
-													<td style="text-align: center;"><a href="<?php echo base_url();?>admin/edit-gr-management/<?php echo $row['id']; ?>" title="Edit" class="btn btn-primary btn-circle"><i class="fa fa-edit"></i></a></td>
+													<td style="text-align: center;"><?php echo html_escape($row['gr_no']); ?></td>
+													<td style="text-align: center;"><?php $grDate = is_numeric($row['gr_date']) ? date("d.m.Y", (int)$row['gr_date']) : $row['gr_date']; echo html_escape($grDate); ?></td>
+													<td style="text-align: center;"><?php $grFromDate = is_numeric($row['gr_from_date']) ? date("d.m.Y", (int)$row['gr_from_date']) : $row['gr_from_date']; echo html_escape($grFromDate); ?></td>
+													<td style="text-align: center;"><?php $grToDate = is_numeric($row['gr_to_date']) ? date("d.m.Y", (int)$row['gr_to_date']) : $row['gr_to_date']; echo html_escape($grToDate); ?></td>
+													<td style="text-align: center;"><?php echo html_escape($grMonthName); ?></td>
+													<td style="text-align: center;"><?php echo html_escape($row['gr_year']); ?></td>
+													<td style="text-align: center;"><?php echo html_escape($row['gr_percentage']); ?></td>
+													<!-- <td style="text-align: center;"><?php echo html_escape($row['dcps_per_in_gr']); ?></td> -->
+													<td style="text-align: center;"><?php echo html_escape($row['gr_by']); ?></td>
+													<td style="text-align: center;"><a href="<?php echo base_url('admin/edit-gr-management/'.$row['id']); ?>" title="Edit" class="btn btn-primary btn-circle"><i class="fa fa-edit"></i></a></td>
 												</tr>
 												<?php }
 											} ?>
@@ -104,8 +118,12 @@
 		</div>
 	</section>
 </div>
+<script src="<?php echo base_url('assets/js/datatables.min.js'); ?>"></script>
 <script type="text/javascript">
 	$(document).ready( function () {
+		if ($.fn.DataTable.isDataTable('#dataTables-example')) {
+			$('#dataTables-example').DataTable().destroy();
+		}
 		$('#dataTables-example').DataTable();
 	});
 </script>

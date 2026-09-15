@@ -62,6 +62,7 @@ $route['admin/master-record'] = 'admin/report/masterReocrd';
 $route['admin/view-employee-data/(:any)'] = 'admin/report/viewEmployeeData/$1';
 
 $route['admin/emp-master'] = 'admin/masterdata/empmaster';
+$route['admin/export-emp-csv'] = 'admin/masterdata/exportEmpCsv';
 $route['admin/add-emp'] = 'admin/masterdata/addEmp';
 $route['admin/edit-emp/(:any)'] = 'admin/masterdata/editEmp/$1';
 

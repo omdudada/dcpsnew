@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($title) ? $title : 'DCPS - Nashik Municipal Corporation'; ?></title>
     <link rel="stylesheet" href="<?php echo base_url('assets/custom/css/style.css'); ?>">
-    <!-- jQuery -->
+    <link rel="stylesheet" href="<?php echo base_url('assets/css/font-awesome.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo base_url('assets/css/bootstrap-datepicker.min.css'); ?>">
+    <!-- jQuery & Bootstrap & Datepicker -->
     <script src="<?php echo base_url('assets/js/jquery.js'); ?>"></script>
+    <script src="<?php echo base_url('assets/js/bootstrap.min.js'); ?>"></script>
+    <script src="<?php echo base_url('assets/js/bootstrap-datepicker.min.js'); ?>"></script>
     <script src="<?php echo base_url('assets/js/sweetalert.min.js'); ?>"></script>
 </head>
 <body>
@@ -32,6 +36,19 @@
 <nav class="main-nav">
     <a href="<?php echo base_url('admin/dashboard'); ?>">Home</a>
     <a href="<?php echo base_url('admin/add-edit-master-record'); ?>">Add Master</a>
+
+    <?php 
+    $isAdmin = ($this->session->userdata('username') === 'admin' || $this->session->userdata('level') == 1 || in_array(strtolower((string)$this->session->userdata('user_role')), ['1', 'admin']));
+    if ($isAdmin): 
+    ?>
+    <div class="dropdown">
+        <a href="#">Admin Master &#9660;</a>
+        <ul class="dropdown-menu">
+            <li><a href="<?php echo base_url('admin/emp-master'); ?>">Employee Master</a></li>
+            <li><a href="<?php echo base_url('admin/gr-management'); ?>">GR Management</a></li>
+        </ul>
+    </div>
+    <?php endif; ?>
 
     <div class="dropdown">
         <a href="#">Deduction Record &#9660;</a>

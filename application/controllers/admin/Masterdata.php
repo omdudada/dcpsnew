@@ -27,14 +27,68 @@ class Masterdata extends CI_Controller {
 	}
 	
 
+	private function _checkAdminAccess(){
+		$username = $this->session->userdata('username');
+		$level = $this->session->userdata('level');
+		$role = strtolower((string)$this->session->userdata('user_role'));
+
+		$isAdmin = ($username === 'admin' || $level == 1 || in_array($role, ['1', 'admin']));
+		if (!$isAdmin) {
+			$this->session->set_flashdata('fail', 'Access Denied. Only Admin users can access this page.');
+			redirect('admin/dashboard');
+			exit;
+		}
+	}
+
 	public function empMaster(){
+		$this->_checkAdminAccess();
 		$data['results'] = $this->mModel->getEmpMasterData();
 		$this->load->view('admin/common/header');
 		$this->load->view('admin/employeemaster/listing',$data);
 		
 	}
-	public function addEmp(){
+
+	public function exportEmpCsv(){
+		$this->_checkAdminAccess();
+		$results = $this->mModel->getEmpMasterData();
 		
+		$filename = 'Employee_Master_' . date('Ymd_His') . '.csv';
+		
+		$this->output
+			->set_content_type('text/csv')
+			->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+			->set_header('Pragma: no-cache')
+			->set_header('Expires: 0');
+
+		$out = fopen('php://output', 'w');
+		
+		$headers = ['Sr. No.', 'Employee Name', 'Employee ID', 'Joining Date', 'Pay Center', 'Fixed Pay', 'Grade Pay', 'Basic', 'DA'];
+		fputcsv($out, $headers);
+		
+		if (!empty($results)) {
+			$i = 1;
+			foreach ($results as $r) {
+				$line = [
+					$i++,
+					isset($r['emp_name']) ? $r['emp_name'] : '',
+					isset($r['emp_id']) ? $r['emp_id'] : '',
+					isset($r['joining_date']) ? $r['joining_date'] : '',
+					isset($r['pay_center']) ? $r['pay_center'] : '',
+					isset($r['fixed_pay']) ? $r['fixed_pay'] : '',
+					isset($r['grade_pay']) ? $r['grade_pay'] : '',
+					isset($r['basic']) ? $r['basic'] : '',
+					isset($r['da']) ? $r['da'] : ''
+				];
+				fputcsv($out, $line);
+			}
+		} else {
+			fputcsv($out, ['No employee records found']);
+		}
+		
+		fclose($out);
+	}
+	public function addEmp(){
+		$this->_checkAdminAccess();
 		$postdata = $this->input->post();
 		
 		if ($postdata) {
@@ -51,7 +105,7 @@ class Masterdata extends CI_Controller {
 		}
 	}
 	public function editEmp($id){
-		
+		$this->_checkAdminAccess();
 		$postdata = $this->input->post();
 		
 		if ($postdata) {
@@ -105,7 +159,7 @@ class Masterdata extends CI_Controller {
 	}
 
 	public function grManagement(){
-		
+		$this->_checkAdminAccess();
 		$grData['grResults'] = $this->mModel->getGrManagementData();
 		$this->load->view('admin/common/header');
 		$this->load->view('admin/grmanagement/listing',$grData);
@@ -113,7 +167,7 @@ class Masterdata extends CI_Controller {
 	}
 
 	public function addGrManagement(){
-		
+		$this->_checkAdminAccess();
 		$postdata = $this->input->post();
 		
 		if ($postdata) {
@@ -125,14 +179,15 @@ class Masterdata extends CI_Controller {
 				redirect('admin/gr-management');	
 			}
 		}else{
-			
+			$data['month'] = $this->mModel->getMonthData();
+			$data['year'] = $this->mModel->getYearData();
 			$this->load->view('admin/common/header');
-			$this->load->view('admin/grmanagement/add_gr_management_form');
+			$this->load->view('admin/grmanagement/add_gr_management_form', $data);
 		}
 	}
 
 	public function editGrManagementData($id){
-		
+		$this->_checkAdminAccess();
 		$postdata = $this->input->post();
 		
 		if ($postdata) {
@@ -144,11 +199,12 @@ class Masterdata extends CI_Controller {
 				redirect('admin/gr-management');	
 			}
 		}else{
-			
+			$data['month'] = $this->mModel->getMonthData();
+			$data['year'] = $this->mModel->getYearData();
 			$data['results'] = $this->mModel->getAllGrManagementData($id);
 			// echo "<pre>";print_r($res);die();
 			$this->load->view('admin/common/header');
-			$this->load->view('admin/grmanagement/edit_gr_management_form',$data);
+			$this->load->view('admin/grmanagement/edit_gr_management_form', $data);
 		}
 	}
 
