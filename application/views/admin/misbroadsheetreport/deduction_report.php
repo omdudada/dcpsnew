@@ -317,12 +317,12 @@
                 <div class="box">
                     <div class="box-header with-border">
                         <?php
-                		    if(!isset($urlAry['option']) && $urlAry['option'] != "print"){ 
+                		    if(!isset($urlAry['option']) || (isset($urlAry['option']) && $urlAry['option'] != "print")){ 
 							?>
                             <h3 class="box-title">Deduction Report</h3>
-                			<?php if(!empty($this->input->post('year'))){ ?>
-                				<a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfDeductionReport();">Print</a>
-                				<?php /*<a class="btn btn-success" style="float:right;" href="javascript:void(0);" onclick="exportExcelDeductionReport();">Export Excel</a> */ ?>
+                			<?php if(!empty($ownerDetails)){ ?>
+                				<a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfDeductionReport();"><i class="fa fa-print"></i> Print PDF</a>
+                				<a class="btn btn-success" style="float:right;" href="javascript:void(0);" onclick="exportExcelDeductionReport();"><i class="fa fa-file-excel-o"></i> Export Excel</a>
                 			<?php } ?>
 							<?php
 							}
@@ -418,6 +418,7 @@
     									<label for="inputState" class=""></label>
     									<input type="submit" class="btn btn-primary" id="search" value="Search" style="margin: 25px 0px 0px 10px">
 									</div>
+									<input type="hidden" name="page" id="page_num" value="<?= isset($currentPage) ? $currentPage : 1; ?>">
 									<?php 
 									}
 								?>
@@ -427,11 +428,37 @@
 							<?php
 							    if(!empty($ownerDetails) && $ownerDetails){
 									foreach ($ownerDetails as $ownerDetail) { 
+										$empId = $ownerDetail['emp_id'];
+
+										$financialYears = [];
+										if (!empty($searchData['first_year'])) {
+											$financialYears[] = (int)$searchData['first_year'];
+										} else {
+											if (isset($dcpsDetails[$empId])) {
+												foreach ($dcpsDetails[$empId] as $calYear => $monthsData) {
+													foreach ($monthsData as $mNo => $recs) {
+														$fyStart = ($mNo >= 4 && $mNo <= 12) ? (int)$calYear : (int)$calYear - 1;
+														if (!in_array($fyStart, $financialYears)) {
+															$financialYears[] = $fyStart;
+														}
+													}
+												}
+												sort($financialYears);
+											}
+										}
+
+										if (empty($financialYears)) {
+											$financialYears[] = isset($searchData['f_year']) ? (int)$searchData['f_year'] : (int)date('Y') - 1;
+										}
+
+										foreach ($financialYears as $fyStart) {
+											$firstYear = $fyStart;
+											$secondYear = $fyStart + 1;
+											$fYearLabel = $firstYear . '-' . $secondYear;
 									?>
-									<div class="searchTable new-page print-wrapper" id="print-wrapper">
+									<div class="searchTable new-page print-wrapper" id="print-wrapper" style="margin-bottom: 30px;">
 										
 										<table class="<?=(!(isset($urlAry['option']) && $urlAry['option'] == "print"))?'table table-striped table-bordered table-hover':'';?>" cellspacing="0" width="100%">
-											<?/*<table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">*/ ?>
 											<thead class="bg-primary123">
 												<tr>
 													<th style="text-align:center;" colspan="18">
@@ -446,7 +473,7 @@
 												<tr>
 													<th style="text-align:center;" colspan="18">
 														परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरण
-													(<?= $searchData['f_year']; ?>)                                                </th>
+													(<?= $fYearLabel; ?>)                                                </th>
 												</tr>
 												<tr>
 													<th colspan="3">कर्मचारी क्रमांक</th>
@@ -461,7 +488,6 @@
 													<td colspan ="2"><?= !empty($ownerDetail['pay_center']) ? $ownerDetail['pay_center'] : ''; ?></td>
 													<th colspan="1">हुद्दा</th>
 													<td><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
-													<!--<th colspan="2">सुरुवातीची शिल्लक</th>-->
 													<td colspan="6"></td>
 												</tr>
 												<tr>
@@ -487,38 +513,18 @@
 											<tbody>
                                                 <?php
                                                     $totalBasic = $totalGradePay = $totalDA = $totalTotalSalary = $totalIdealContribution = $totalEmpSupContri = $totalDifference = 0;
-
-                                                    // Month-wise summary of कर्मचारी अंशदानातील फरक (difference)
-                                                    // Keyed by "MonthName Year", preserving encounter order.
                                                     $monthSummary = [];
-
-                                                    $empId = $ownerDetail['emp_id'];
                                                     
                                                     if (isset($dcpsDetails[$empId])) {
                                                         // First Year: April to December
                                                         for ($monthNo = 4; $monthNo <= 12; $monthNo++) {
-                                                            /*$year = $searchData['first_year'];
-															$records = isset($dcpsDetails[$empId][$year][$monthNo]) ? $dcpsDetails[$empId][$year][$monthNo] : [];*/
-                                                            
-															
-                                                            
-															if (!empty($searchData['first_year'])) {
-																$year = $searchData['first_year'];
-																} else {
-																$yearKeys = isset($dcpsDetails[$empId]) ? array_keys($dcpsDetails[$empId]) : [];
-																
-																$year = !empty($yearKeys) ? reset($yearKeys) : null;
-															}
-															//echo $year; exit;
+                                                            $year = $firstYear;
 															
 															$records = isset($dcpsDetails[$empId][$year][$monthNo])
 															? $dcpsDetails[$empId][$year][$monthNo]
 															: [];
 															
-                                                            // If records exist, loop through and display each
                                                             if (!empty($records)) {
-                                                                //echo "<pre>Before=>"; print_r($records); 
-                                                                // 🔹 Sort by joining_date ASC
                                                                 usort($records, function ($a, $b) {
                                                                     $dateA = DateTime::createFromFormat('d-m-Y', $a['recovered_DCPS_with_voucher_date']);
                                                                     $dateB = DateTime::createFromFormat('d-m-Y', $b['recovered_DCPS_with_voucher_date']);
@@ -526,9 +532,8 @@
                                                                     if ($dateA == $dateB) return 0;
                                                                     return ($dateA < $dateB) ? -1 : 1;
 																});
-                                                                $rowspan = count($records); // Count of rows for rowspan
+                                                                $rowspan = count($records);
                                                                 $firstRow = true;
-                                                                //echo "<br/><pre>After=>"; print_r($records); exit;
 																foreach ($records as $row) {
 																	
                                                                     $basic = (float)(isset($row['basic']) && $row['basic'] !== '' ? $row['basic'] : 0);
@@ -555,7 +560,6 @@
 																	
                                                                     $difference = $emp_sup_contri - $ideal_contri;
 																	
-                                                                    /* Safe totals initialization */
                                                                     $totalBasic = (float)(isset($totalBasic) ? $totalBasic : 0);
                                                                     $totalGradePay = (float)(isset($totalGradePay) ? $totalGradePay : 0);
                                                                     $totalDA = (float)(isset($totalDA) ? $totalDA : 0);
@@ -564,7 +568,6 @@
                                                                     $totalEmpSupContri = (float)(isset($totalEmpSupContri) ? $totalEmpSupContri : 0);
                                                                     $totalDifference = (float)(isset($totalDifference) ? $totalDifference : 0);
 																	
-                                                                    /* Totals */
                                                                     $totalBasic += ($row['is_deleted'] != 3) ? $basic : 0;
 																	$totalGradePay += ($row['is_deleted'] != 3) ? $grade_pay : 0;
 																	$totalDA += ($row['is_deleted'] != 3) ? $da : 0;
@@ -584,7 +587,6 @@
                                                                         
 																	?>
 																	<?php
-																			/* Month-wise summary accumulation (कर्मचारी अंशदानातील फरक) */
 																			if ($row['is_deleted'] != 3) {
 																				$sumKey = $monthName . ' ' . $year;
 																				if (!isset($monthSummary[$sumKey])) {
@@ -626,7 +628,6 @@
 																<?php
 																}
 																} else {
-                                                                // No record, render zero-filled or blank row
                                                                 $monthName = isset($months[$monthNo]) ? $months[$monthNo] : $monthNo;
 															?>
 															<tr>
@@ -656,16 +657,10 @@
 														
                                                         // Second Year: January to March
                                                         for ($monthNo = 1; $monthNo <= 3; $monthNo++) {
-                                                            $year = !empty($searchData['second_year']) 
-															? $searchData['second_year'] 
-															: (isset($yearKeys[1]) ? $yearKeys[1] + 1 : null);
+                                                            $year = $secondYear;
                                                             $records = isset($dcpsDetails[$empId][$year][$monthNo]) ? $dcpsDetails[$empId][$year][$monthNo] : [];
                                                             
-                                                            //echo "<pre>"; print_r($records); echo "</pre>"; exit;
-															
-                                                            // If records exist, loop through and display each
                                                             if (!empty($records)) {
-                                                                //echo "<pre>"; print_r($records); echo "</pre>"; exit;
                                                                 usort($records, function ($a, $b) {
                                                                     $dateA = DateTime::createFromFormat('d-m-Y', $a['recovered_DCPS_with_voucher_date']);
                                                                     $dateB = DateTime::createFromFormat('d-m-Y', $b['recovered_DCPS_with_voucher_date']);
@@ -673,7 +668,7 @@
                                                                     if ($dateA == $dateB) return 0;
                                                                     return ($dateA < $dateB) ? -1 : 1;
 																});
-                                                                $rowspan = count($records); // Count of rows for rowspan
+                                                                $rowspan = count($records);
                                                                 $firstRow = true;
                                                                 foreach ($records as $row) {
                                                                     $basic = (float)(isset($row['basic']) && $row['basic'] !== '' ? $row['basic'] : 0);
@@ -698,7 +693,6 @@
 																	
 																	$difference = $emp_sup_contri - $ideal_contri;
 																	
-																	/* Initialize totals safely */
 																	$totalBasic = (float)(isset($totalBasic) ? $totalBasic : 0);
 																	$totalGradePay = (float)(isset($totalGradePay) ? $totalGradePay : 0);
 																	$totalDA = (float)(isset($totalDA) ? $totalDA : 0);
@@ -706,8 +700,6 @@
 																	$totalIdealContribution = (float)(isset($totalIdealContribution) ? $totalIdealContribution : 0);
 																	$totalEmpSupContri = (float)(isset($totalEmpSupContri) ? $totalEmpSupContri : 0);
 																	$totalDifference = (float)(isset($totalDifference) ? $totalDifference : 0);
-																	
-																	/* Add values */
 																	
 																	$totalBasic += ($row['is_deleted'] != 3) ? $basic : 0;
 																	$totalGradePay += ($row['is_deleted'] != 3) ? $grade_pay : 0;
@@ -728,7 +720,6 @@
                                                                         
 																	?>
 																	<?php
-																			/* Month-wise summary accumulation (कर्मचारी अंशदानातील फरक) */
 																			if ($row['is_deleted'] != 3) {
 																				$sumKey = $monthName . ' ' . $year;
 																				if (!isset($monthSummary[$sumKey])) {
@@ -770,7 +761,6 @@
 																<?php
 																}
 																} else {
-                                                                // No record, render zero-filled or blank row
                                                                 $monthName = isset($months[$monthNo]) ? $months[$monthNo] : $monthNo;
 															?>
 															<tr>
@@ -800,7 +790,7 @@
 												?>
 												
 												<tr>
-													<td colspan="5"><strong>एकूण <?= $searchData['f_year']; ?></strong></td>
+													<td colspan="5"><strong>एकूण <?= $fYearLabel; ?></strong></td>
 													<td class="clsRight"><strong><?= $totalBasic; ?></strong></td>
 													<td class="clsRight"><strong><?= $totalGradePay; ?></strong></td>
 													<td class="clsRight"><strong><?= $totalDA; ?></strong></td>
@@ -891,10 +881,37 @@
 															</td>
 														</tr>
 													</table>
+									</div>
+									<br/>
 									<?php 
-									}
+										} // end foreach ($financialYears)
+									} // end foreach ($ownerDetails)
 								} 
 							?>
+							
+							<?php if (!empty($totalPages) && $totalPages > 1) { ?>
+							<div class="pagination-wrapper text-center" style="margin: 20px 0; clear: both; text-align: center;">
+								<ul class="pagination" style="display:inline-flex; vertical-align: middle; margin: 5px 0;">
+									<?php if ($currentPage > 1) { ?>
+										<li><a href="javascript:void(0)" onclick="goToPage(<?= $currentPage - 1 ?>)">&laquo; Prev</a></li>
+									<?php } ?>
+									<?php
+									$startPage = max(1, $currentPage - 4);
+									$endPage = min($totalPages, $currentPage + 4);
+									for ($p = $startPage; $p <= $endPage; $p++) {
+										$activeClass = ($p == $currentPage) ? 'class="active"' : '';
+										echo '<li '.$activeClass.'><a href="javascript:void(0)" onclick="goToPage('.$p.')">'.$p.'</a></li>';
+									}
+									?>
+									<?php if ($currentPage < $totalPages) { ?>
+										<li><a href="javascript:void(0)" onclick="goToPage(<?= $currentPage + 1 ?>)">Next &raquo;</a></li>
+									<?php } ?>
+								</ul>
+								<div style="font-size: 13px; color: #555; margin-top: 5px;">
+									Showing employees <strong><?= (($currentPage - 1) * $perPage + 1) ?></strong> to <strong><?= min($currentPage * $perPage, $totalEmployees) ?></strong> of <strong><?= $totalEmployees ?></strong> total employees
+								</div>
+							</div>
+							<?php } ?>
 							
 							<div class="clearfix"></div>
 							
@@ -1017,5 +1034,10 @@
 			frm.action = oldAction;
 			frm.target = oldTarget;
 		}, 500);
+	}
+
+	function goToPage(p) {
+		$('#page_num').val(p);
+		document.getElementById('typicaltypes').submit();
 	}
 </script>

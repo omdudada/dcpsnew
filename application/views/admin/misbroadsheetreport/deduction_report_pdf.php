@@ -140,7 +140,7 @@ $months = [
 </head>
 <body>
 <?php } ?>
-    <?php if(!empty($ownerDetails) && !empty($dcpsDetails) && !empty($searchData['f_year'])){ ?>
+    <?php if(!empty($ownerDetails) && !empty($dcpsDetails)){ ?>
         <?php 
         $total_employees = count($ownerDetails);
         $emp_count = 0;
@@ -149,9 +149,36 @@ $months = [
             if(empty($dcpsDetails[$empId])){
                 continue;
             }
-            $emp_count++;
-            $isLastInChunk = ($emp_count == $total_employees);
-            $hasPageBreak = !$isLastInChunk || !empty($force_page_break_last);
+
+            $financialYears = [];
+            if (!empty($searchData['first_year'])) {
+                $financialYears[] = (int)$searchData['first_year'];
+            } else {
+                if (isset($dcpsDetails[$empId])) {
+                    foreach ($dcpsDetails[$empId] as $calYear => $monthsData) {
+                        foreach ($monthsData as $mNo => $recs) {
+                            $fyStart = ($mNo >= 4 && $mNo <= 12) ? (int)$calYear : (int)$calYear - 1;
+                            if (!in_array($fyStart, $financialYears)) {
+                                $financialYears[] = $fyStart;
+                            }
+                        }
+                    }
+                    sort($financialYears);
+                }
+            }
+
+            if (empty($financialYears)) {
+                $financialYears[] = isset($searchData['f_year']) ? (int)$searchData['f_year'] : (int)date('Y') - 1;
+            }
+
+            foreach ($financialYears as $fyStart) {
+                $firstYear = $fyStart;
+                $secondYear = $fyStart + 1;
+                $fYearLabel = $firstYear . '-' . $secondYear;
+
+                $emp_count++;
+                $isLastInChunk = ($emp_count == $total_employees);
+                $hasPageBreak = !$isLastInChunk || !empty($force_page_break_last);
         ?>
             <div class="searchTable <?= $hasPageBreak ? 'new-page' : ''; ?>" style="margin-top:15px;">
                 <table cellspacing="0" width="100%">
@@ -170,7 +197,7 @@ $months = [
                         <tr>
                             <th style="text-align:center;" colspan="17">
                                 परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरण
-                                (<?= $searchData['f_year']; ?>)
+                                (<?= $fYearLabel; ?>)
                             </th>
                         </tr>
                         <tr>
@@ -216,12 +243,7 @@ $months = [
                             if (isset($dcpsDetails[$empId])) {
                                 // First Year: April to December
                                 for ($monthNo = 4; $monthNo <= 12; $monthNo++) {
-                                    if (!empty($searchData['first_year'])) {
-                                        $year = $searchData['first_year'];
-                                    } else {
-                                        $yearKeys = isset($dcpsDetails[$empId]) ? array_keys($dcpsDetails[$empId]) : [];
-                                        $year = !empty($yearKeys) ? reset($yearKeys) : null;
-                                    }
+                                    $year = $firstYear;
                                     
                                     $records = isset($dcpsDetails[$empId][$year][$monthNo])
                                     ? $dcpsDetails[$empId][$year][$monthNo]
@@ -358,9 +380,7 @@ $months = [
                                 
                                 // Second Year: January to March
                                 for ($monthNo = 1; $monthNo <= 3; $monthNo++) {
-                                    $year = !empty($searchData['second_year']) 
-                                    ? $searchData['second_year'] 
-                                    : (isset($yearKeys[1]) ? $yearKeys[1] + 1 : null);
+                                    $year = $secondYear;
                                     $records = isset($dcpsDetails[$empId][$year][$monthNo]) ? $dcpsDetails[$empId][$year][$monthNo] : [];
                                     
                                     if (!empty($records)) {
@@ -491,9 +511,8 @@ $months = [
                                 }
                             }
                         ?>
-                        
                         <tr>
-                            <td colspan="5"><strong>एकूण <?= $searchData['f_year']; ?></strong></td>
+                            <td colspan="5"><strong>एकूण <?= $fYearLabel; ?></strong></td>
                             <td class="clsRight"><strong><?= $totalBasic; ?></strong></td>
                             <td class="clsRight"><strong><?= $totalGradePay; ?></strong></td>
                             <td class="clsRight"><strong><?= $totalDA; ?></strong></td>
@@ -582,9 +601,10 @@ $months = [
                 </table>
             </div>
         <?php 
-        }
-    } 
-    ?>
+            } // end foreach ($financialYears)
+    } // end foreach ($ownerDetails)
+} // end if (!empty($ownerDetails)...)
+?>
 <?php if (empty($is_chunk)) { ?>
 </body>
 </html>

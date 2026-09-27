@@ -540,7 +540,7 @@ class MisreportModel extends CI_Model
 			}*/
 
 			// **Order By condition added here**
-			$sql .= " ORDER BY mst.pay_center ASC, CAST(mst.emp_td AS UNSIGNED) ASC";
+			$sql .= " ORDER BY mst.pay_center ASC, CAST(mst.emp_td AS UNSIGNED) ASC, CAST(mst.for_year AS UNSIGNED) ASC, CAST(mst.for_month AS UNSIGNED) ASC";
 
 			// Execute the query
 			$query = $this->db->query($sql);
