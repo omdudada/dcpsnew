@@ -1056,10 +1056,10 @@ class MisreportModel extends CI_Model
 
 					$totalDeposit = ($empRegular + $empSupp + $loanInstallment) + ($nmcRegular + $nmcSupp);
 
-					// ── Update bases PER RECORD ──────────────────────────────────
-					$empBase = $ideal > 0 ? ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken : 0;
-					$nmcBase = $ideal > 0 ? ($nmcBase + $nmcRegular + $nmcSupp) : 0;
-					$totalBase = $ideal > 0 ? ($totalBase + $totalDeposit) - $loanTaken : 0;
+					// ── Update bases PER RECORD (continuous carry-forward) ─────────
+					$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
+					$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
+					$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
 
 					// ── Interest calculated on updated base AFTER EACH RECORD ────
 					$rowEmpInterest = round((($empBase * $rate) / 100 / 12), 0);
@@ -1827,9 +1827,9 @@ class MisreportModel extends CI_Model
 					$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
 						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
 
-					// ── Update bases PER RECORD ──────────────────────────────────────
-					$empBase = $ideal > 0 ? ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken : 0;
-					$nmcBase = $ideal > 0 ? ($nmcBase + $rowNmc + $rowNmcSupp) : 0;
+					// ── Update bases PER RECORD (continuous carry-forward) ─────────
+					$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
+					$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
 
 					// ── Interest calculated on updated base after EACH record ────────
 					//echo "<br/>empId=>".$empId.", firstYear=>".$fyStart.", Month=>".$m.", SalaryType=>".$salaryType.", EmpBase=>".$empBase.", NMCBase=>".$nmcBase.", Rate=>".$rate;
@@ -2605,9 +2605,9 @@ class MisreportModel extends CI_Model
 					$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
 						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
 
-					// Base update with $ideal > 0 guard (matching getFinalLedgerCumulativeRows)
-					$empBase = $ideal > 0 ? ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken : 0;
-					$nmcBase = $ideal > 0 ? ($nmcBase + $rowNmc + $rowNmcSupp) : 0;
+					// Base update (continuous carry-forward)
+					$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
+					$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
 
 					$rowEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
 					$rowNmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
