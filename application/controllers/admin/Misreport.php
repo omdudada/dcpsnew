@@ -642,7 +642,7 @@
 			ini_set('memory_limit', '2048M');
 			set_time_limit(1800);
 			//echo 14; exit;
-			$postData = $this->input->post();
+			$postData = array_merge($this->input->get(), $this->input->post());
 			
 			$data['urlAry'] = array();
 			$notice_number = 1;
@@ -657,9 +657,9 @@
 					$searchData['emp_name'] = trim($searchData['emp_name']);
 				$searchData['emp_id'] = trim($searchData['emp_id']);*/
 				$searchData = $postData;
-				$searchData['pay_center'] = $postData['pay_center'];
-				$searchData['emp_id'] = $postData['emp_id'];
-				if($postData['year']){
+				$searchData['pay_center'] = isset($postData['pay_center']) ? $postData['pay_center'] : '';
+				$searchData['emp_id'] = isset($postData['emp_id']) ? $postData['emp_id'] : '';
+				if(!empty($postData['year'])){
 					$searchData['first_year'] = $postData['year']; 
 					$searchData['second_year'] = ($postData['year']+1); 
 					$searchData['f_year'] = $searchData['first_year']."-".$searchData['second_year'];
@@ -795,7 +795,7 @@
 			ini_set('memory_limit', '2048M');
 			set_time_limit(1800);
 
-			$postData = $this->input->post();
+			$postData = array_merge($this->input->get(), $this->input->post());
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
 			
@@ -992,12 +992,12 @@
 				}
 			}
 
-			if(empty($searchData['emp_id']) && empty($searchData['pay_center']) && empty($searchData['first_year']) && !empty($validOwners)){
+			if(empty($searchData['emp_id']) && !empty($validOwners)){
 				$totalOwners = count($validOwners);
 				$page = !empty($postData['page']) ? (int)$postData['page'] : 1;
 				if($page < 1) $page = 1;
 				$perPage = 10;
-				if($totalOwners > $perPage){
+				if($totalOwners > $perPage && empty($postData['download_all'])){
 					$validOwners = array_slice($validOwners, ($page - 1) * $perPage, $perPage, true);
 				}
 			}

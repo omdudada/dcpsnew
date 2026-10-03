@@ -343,7 +343,7 @@
                     <?php endif; ?>
                     <div class="box-body ">
                         <?php //echo "<pre>";print_r($hospitals);die(); ?>
-                        <form action="" method="post" name="typicaltypes" id="typicaltypes" enctype="multipart/form-data" >
+                        <form action="<?= base_url('admin/misreport/deduction_report'); ?>" method="get" name="typicaltypes" id="typicaltypes" enctype="multipart/form-data" >
 							<div class="form-row no-print">
 							    
 								<?php
@@ -408,15 +408,15 @@
 									</div>
                                     <div class="form-group col-md-2">
     									<label for="inputCity">Voucher No.</label>
-    									<input type="text" name="voucher_no" id="voucher_no" class="form-control" placeholder="Voucher No." value="<?=$this->input->post("voucher_no");?>">
+    									<input type="text" name="voucher_no" id="voucher_no" class="form-control" placeholder="Voucher No." value="<?=$this->input->get_post("voucher_no");?>">
 									</div>
                                     <div class="form-group col-md-2">
     									<label for="inputCity">Voucher Date</label>
-    									<input type="text" name="voucher_date" id="voucher_date" class="form-control" placeholder="Voucher Date" value="<?=$this->input->post("voucher_date");?>">
+    									<input type="text" name="voucher_date" id="voucher_date" class="form-control" placeholder="Voucher Date" value="<?=$this->input->get_post("voucher_date");?>">
 									</div>
     							    <div class="col-sm-1">
     									<label for="inputState" class=""></label>
-    									<input type="submit" class="btn btn-primary" id="search" value="Search" style="margin: 25px 0px 0px 10px">
+    									<input type="submit" class="btn btn-primary" id="search" value="Search" style="margin: 25px 0px 0px 10px" onclick="$('#page_num').val(1);">
 									</div>
 									<input type="hidden" name="page" id="page_num" value="<?= isset($currentPage) ? $currentPage : 1; ?>">
 									<?php 
@@ -889,22 +889,36 @@
 								} 
 							?>
 							
-							<?php if (!empty($totalPages) && $totalPages > 1) { ?>
+							<?php if (!empty($totalPages) && $totalPages > 1) { 
+								$getParams = array_merge($this->input->get(), $this->input->post());
+								if(isset($searchData) && is_array($searchData)){
+									foreach(['pay_center', 'emp_id', 'year', 'from_month', 'to_month', 'voucher_no', 'voucher_date'] as $k){
+										if(isset($searchData[$k]) && $searchData[$k] !== '') {
+											$getParams[$k] = $searchData[$k];
+										}
+									}
+								}
+								$buildPageUrl = function($pageNum) use ($getParams) {
+									$p = $getParams;
+									$p['page'] = $pageNum;
+									return base_url('admin/misreport/deduction_report') . '?' . http_build_query($p);
+								};
+							?>
 							<div class="pagination-wrapper text-center" style="margin: 20px 0; clear: both; text-align: center;">
 								<ul class="pagination" style="display:inline-flex; vertical-align: middle; margin: 5px 0;">
 									<?php if ($currentPage > 1) { ?>
-										<li><a href="javascript:void(0)" onclick="goToPage(<?= $currentPage - 1 ?>)">&laquo; Prev</a></li>
+										<li><a href="<?= htmlspecialchars($buildPageUrl($currentPage - 1)) ?>" onclick="goToPage(<?= $currentPage - 1 ?>); return false;">&laquo; Prev</a></li>
 									<?php } ?>
 									<?php
 									$startPage = max(1, $currentPage - 4);
 									$endPage = min($totalPages, $currentPage + 4);
 									for ($p = $startPage; $p <= $endPage; $p++) {
 										$activeClass = ($p == $currentPage) ? 'class="active"' : '';
-										echo '<li '.$activeClass.'><a href="javascript:void(0)" onclick="goToPage('.$p.')">'.$p.'</a></li>';
+										echo '<li '.$activeClass.'><a href="'.htmlspecialchars($buildPageUrl($p)).'" onclick="goToPage('.$p.'); return false;">'.$p.'</a></li>';
 									}
 									?>
 									<?php if ($currentPage < $totalPages) { ?>
-										<li><a href="javascript:void(0)" onclick="goToPage(<?= $currentPage + 1 ?>)">Next &raquo;</a></li>
+										<li><a href="<?= htmlspecialchars($buildPageUrl($currentPage + 1)) ?>" onclick="goToPage(<?= $currentPage + 1 ?>); return false;">Next &raquo;</a></li>
 									<?php } ?>
 								</ul>
 								<div style="font-size: 13px; color: #555; margin-top: 5px;">
@@ -943,21 +957,21 @@
         $('#employee, #pay_center').select2();
 		
         // Set pay center value (must be set before calling getEmployeeDetails)
-        <?php if($this->input->post('pay_center')) { ?>
-            $('#pay_center').val('<?= $this->input->post('pay_center'); ?>').trigger('change');
+        <?php if($this->input->get_post('pay_center')) { ?>
+            $('#pay_center').val('<?= $this->input->get_post('pay_center'); ?>').trigger('change');
 		<?php } ?>
         
-        <?php if($this->input->post('from_month')) { ?>
-            $('#from_month').val('<?= $this->input->post('from_month'); ?>').trigger('change');
+        <?php if($this->input->get_post('from_month')) { ?>
+            $('#from_month').val('<?= $this->input->get_post('from_month'); ?>').trigger('change');
 		<?php } ?>
         
-        <?php if($this->input->post('to_month')) { ?>
-            $('#to_month').val('<?= $this->input->post('to_month'); ?>').trigger('change');
+        <?php if($this->input->get_post('to_month')) { ?>
+            $('#to_month').val('<?= $this->input->get_post('to_month'); ?>').trigger('change');
 		<?php } ?>
 		
         // Set year if needed
-        <?php if($this->input->post('year')){?>
-            $('#year').val('<?= $this->input->post('year'); ?>');
+        <?php if($this->input->get_post('year')){?>
+            $('#year').val('<?= $this->input->get_post('year'); ?>');
 		<?php } ?>
 		
         // On change, fetch employee details
@@ -969,7 +983,7 @@
         function getEmployeeDetails() {
             
             var payCenter = $("#pay_center").val();
-            var selectedEmpId = '<?= $this->input->post('emp_id') ?>'; 
+            var selectedEmpId = '<?= $this->input->get_post('emp_id') ?>'; 
             $('#employee').val(selectedEmpId).trigger('change');
 			
             return true;
@@ -1013,12 +1027,15 @@
 		if(!frm) return;
 		var oldAction = frm.action;
 		var oldTarget = frm.target;
+		var oldMethod = frm.method;
 		frm.action = "<?=base_url();?>admin/misreport/generate_deduction_report_mpdf";
 		frm.target = "_blank";
+		frm.method = "post";
 		frm.submit();
 		setTimeout(function(){
 			frm.action = oldAction;
 			frm.target = oldTarget;
+			frm.method = oldMethod;
 		}, 500);
 	}
 
@@ -1027,17 +1044,27 @@
 		if(!frm) return;
 		var oldAction = frm.action;
 		var oldTarget = frm.target;
+		var oldMethod = frm.method;
 		frm.action = "<?=base_url();?>admin/misreport/deduction_report/option/excel";
 		frm.target = "_blank";
+		frm.method = "post";
 		frm.submit();
 		setTimeout(function(){
 			frm.action = oldAction;
 			frm.target = oldTarget;
+			frm.method = oldMethod;
 		}, 500);
 	}
 
 	function goToPage(p) {
 		$('#page_num').val(p);
-		document.getElementById('typicaltypes').submit();
+		var frm = document.getElementById('typicaltypes');
+		if(frm) {
+			frm.submit();
+		} else {
+			var url = new URL(window.location.href);
+			url.searchParams.set('page', p);
+			window.location.href = url.toString();
+		}
 	}
 </script>
