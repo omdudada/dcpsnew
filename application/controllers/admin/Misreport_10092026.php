@@ -266,14 +266,13 @@
 				
 				$dcpsDetails = $this->mrModel->getdcpsDetailsNewFinalLedger($searchData);
 				
-				if(!empty($dcpsDetails) && $searchData['emp_id'] == 9719){
-				    //echo $this->db->last_query(); exit;
-					echo "<pre>"; print_r($dcpsDetails); exit;
+				if(!empty($dcpsDetails)){
+					//echo "<pre>"; print_r($dcpsDetails); exit;
 				}
 				
 				$processedEmpTDs = [];
 				foreach ($dcpsDetails as $dcpsDetail) {
-					$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_month']][] = $dcpsDetail;
+					$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_month']] = $dcpsDetail;
 					if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
 						$data['ownerDetails'][$dcpsDetail['emp_td']] = [
                         'emp_id' => $dcpsDetail['emp_td'],
@@ -312,9 +311,7 @@
 			}
 			
 			$this->load->view('admin/common/header');
-			if($searchData['emp_id'] == 9719){
-			    //echo "<pre>"; print_r($data); exit; 
-			}
+			//echo "<pre>"; print_r($data); exit;
 			$this->load->view('admin/misbroadsheetreport/final_ledger_report',$data);
 		}
 		
@@ -639,8 +636,6 @@
 		
 		public function deduction_report()
 		{
-			ini_set('memory_limit', '2048M');
-			set_time_limit(1800);
 			//echo 14; exit;
 			$postData = $this->input->post();
 			
@@ -716,21 +711,6 @@
 					
 				}
 				
-				if(!empty($data['ownerDetails'])){
-					$totalEmployees = count($data['ownerDetails']);
-					$page = $this->input->get_post('page') ? (int)$this->input->get_post('page') : 1;
-					if($page < 1) $page = 1;
-					$perPage = 10;
-					
-					if(empty($searchData['emp_id']) && $totalEmployees > $perPage && !(isset($urlAry['option']) && in_array($urlAry['option'], ["print", "csv", "excel"]))){
-						$data['totalEmployees'] = $totalEmployees;
-						$data['perPage'] = $perPage;
-						$data['currentPage'] = $page;
-						$data['totalPages'] = ceil($totalEmployees / $perPage);
-						$data['ownerDetails'] = array_slice($data['ownerDetails'], ($page - 1) * $perPage, $perPage, true);
-					}
-				}
-				
 				
 				//echo "<pre>"; print_r($data); exit;
 				
@@ -748,11 +728,9 @@
 				
 				$interestDetails = $this->mrModel->getYearlyInterestNew($searchData);
 				
-				if (is_array($interestDetails) && !empty($interestDetails)) {
-					foreach ($interestDetails as $interestDetail) {
-						// Grouping data into dcpsDetails based on emp_td and for_month
-						$data['interestDetail'][$interestDetail['employee_id']] = $interestDetail;
-					}
+				foreach ($interestDetails as $interestDetail) {
+					// Grouping data into dcpsDetails based on emp_td and for_month
+					$data['interestDetail'][$interestDetail['employee_id']] = $interestDetail;
 				}
 				//echo $this->db->last_query(); exit;
 				//echo "<pre>"; print_r($data['interestDetail']); exit;
@@ -802,52 +780,55 @@
 			$searchData = array();
 			if($postData){
 				$searchData = $postData;
-				$searchData['pay_center'] = isset($postData['pay_center']) ? $postData['pay_center'] : '';
-				$searchData['emp_id'] = isset($postData['emp_id']) ? $postData['emp_id'] : '';
-				if(!empty($postData['year'])){
+				$searchData['pay_center'] = $postData['pay_center'];
+				$searchData['emp_id'] = $postData['emp_id'];
+				if($postData['year']){
 					$searchData['first_year'] = $postData['year']; 
 					$searchData['second_year'] = ($postData['year']+1); 
 					$searchData['f_year'] = $searchData['first_year']."-".$searchData['second_year'];
 				}
 			}
 			
-			$data['searchData'] = $searchData;
-			
-			$dcpsDetails = $this->mrModel->getdcpsAllDetailsForDeduction($searchData);
-			
-			$processedEmpTDs = [];
-			if(!empty($dcpsDetails)){
-				foreach ($dcpsDetails as $dcpsDetail) {
-					$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_year']][$dcpsDetail['for_month']][] = $dcpsDetail;
-					if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
-						$data['ownerDetails'][$dcpsDetail['emp_td']] = [
-                        'emp_id' => $dcpsDetail['emp_td'],
-                        'designation_name' => $dcpsDetail['designation_name'],
-                        'emp_name' => $dcpsDetail['emp_name'],
-                        'joining_date' => $dcpsDetail['joining_date'],
-                        'pay_center' => $dcpsDetail['pay_center'],
-                        'fixed_pay' => $dcpsDetail['fixed_pay'],
-						];
-						$processedEmpTDs[] = $dcpsDetail['emp_td'];
+			if(is_array($searchData) && !empty($searchData)){		    
+				$data['searchData'] = $searchData;
+				
+				$dcpsDetails = $this->mrModel->getdcpsAllDetailsForDeduction($searchData);
+				
+				$processedEmpTDs = [];
+				if(!empty($dcpsDetails)){
+					foreach ($dcpsDetails as $dcpsDetail) {
+						$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_year']][$dcpsDetail['for_month']][] = $dcpsDetail;
+						if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
+							$data['ownerDetails'][$dcpsDetail['emp_td']] = [
+	                        'emp_id' => $dcpsDetail['emp_td'],
+	                        'designation_name' => $dcpsDetail['designation_name'],
+	                        'emp_name' => $dcpsDetail['emp_name'],
+	                        'joining_date' => $dcpsDetail['joining_date'],
+	                        'pay_center' => $dcpsDetail['pay_center'],
+	                        'fixed_pay' => $dcpsDetail['fixed_pay'],
+							];
+							$processedEmpTDs[] = $dcpsDetail['emp_td'];
+						}
 					}
 				}
-			}
-			
-			if(isset($searchData['first_year']) && isset($searchData['second_year'])){
-				$data['interestRates'] = $this->mrModel->getInterestRates($searchData['first_year'], $searchData['second_year']);
-				$searchData['f_year'] = $searchData['first_year'];
-			} else {
-				$currentYear = date('Y');
-				$financialYear = $currentYear - 1;
-				$data['interestRates'] = $this->mrModel->getInterestRates($financialYear, $currentYear);
-				$searchData['f_year'] = $financialYear;
-			}
-			
-			$interestDetails = $this->mrModel->getYearlyInterestNew($searchData);
-			if (is_array($interestDetails) && !empty($interestDetails)) {
+				
+				if(isset($searchData['first_year']) && isset($searchData['second_year'])){
+					$data['interestRates'] = $this->mrModel->getInterestRates($searchData['first_year'], $searchData['second_year']);
+					$searchData['f_year'] = $searchData['first_year'];
+					} else {
+					$currentYear = date('Y');
+					$financialYear = $currentYear - 1;
+					$data['interestRates'] = $this->mrModel->getInterestRates($financialYear, $currentYear);
+					$searchData['f_year'] = $financialYear;
+				}
+				
+				$interestDetails = $this->mrModel->getYearlyInterestNew($searchData);
+				
 				foreach ($interestDetails as $interestDetail) {
 					$data['interestDetail'][$interestDetail['employee_id']] = $interestDetail;
 				}
+			} else {
+				show_404();
 			}
 
 			$config = [
@@ -989,16 +970,6 @@
 					if(!empty($data['dcpsDetails'][$empId])){
 						$validOwners[$empId] = $ownerDetail;
 					}
-				}
-			}
-
-			if(empty($searchData['emp_id']) && empty($searchData['pay_center']) && empty($searchData['first_year']) && !empty($validOwners)){
-				$totalOwners = count($validOwners);
-				$page = !empty($postData['page']) ? (int)$postData['page'] : 1;
-				if($page < 1) $page = 1;
-				$perPage = 10;
-				if($totalOwners > $perPage){
-					$validOwners = array_slice($validOwners, ($page - 1) * $perPage, $perPage, true);
 				}
 			}
 
@@ -1558,5 +1529,6 @@
 			
 			$this->m_pdf->pdf->Output('Yearwise_Final_Ledger_Summary_Report.pdf', 'I');
 		}
+		
 	}
 ?>

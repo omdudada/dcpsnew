@@ -265,8 +265,6 @@ class MisreportModel extends CI_Model
 				dd.designation_name, 
 				em.emp_name, 
 				mst.salary_type,
-				mst.recovered_DCPS_with_voucher_no, 
-				mst.recovered_DCPS_with_voucher_date,
 				em.joining_date, 
 				mst.pay_center, 
 				SUM(mst.`Ideal_contribution_of_employee_for_DCPS`) AS ideal_contribution, 
@@ -1031,25 +1029,10 @@ class MisreportModel extends CI_Model
 					$loanInstallment = 0;
 					$loanTaken = 0;
 
-					if ($salaryType === 'Regular') {
-						/*$empRegular = !empty($r['emp_DCPS_contribution'])
-						? (int)$r['emp_DCPS_contribution'] : $ideal;
-						$nmcRegular = !empty($r['NMC_DCPS_contribution'])
-						? (int)$r['NMC_DCPS_contribution'] : $ideal;
-						} elseif ($salaryType === 'Suplimentory') {
-						$empSupp = !empty($r['emp_supplimentory_contribution'])
-						? (int)$r['emp_supplimentory_contribution'] : $ideal;
-						$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
-						? (int)$r['NMC_supplimentory_DCPS_contribution'] : $ideal;*/
-
-
-						$empRegular = $ideal;
-						$nmcRegular = $ideal;
-					} elseif ($salaryType === 'Suplimentory') {
-						$empSupp = $ideal;
-						$nmcSupp = $ideal;
-
-					}
+					$empRegular = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
+					$empSupp    = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
+					$nmcRegular = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : ($empRegular > 0 ? $empRegular : 0);
+					$nmcSupp    = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : ($empSupp > 0 ? $empSupp : 0);
 
 					$loanInstallment = !empty($r['loan_installment_paid_through_salary'])
 						? (int) $r['loan_installment_paid_through_salary'] : 0;
@@ -1058,7 +1041,7 @@ class MisreportModel extends CI_Model
 
 					$totalDeposit = ($empRegular + $empSupp + $loanInstallment) + ($nmcRegular + $nmcSupp);
 
-					// ── Update bases PER RECORD (continuous carry-forward) ─────────
+					// ── Update bases PER RECORD ──────────────────────────────────
 					$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
 					$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
 					$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
@@ -1804,32 +1787,17 @@ class MisreportModel extends CI_Model
 					$rowLoanInst = 0;
 					$rowLoanTaken = 0;
 
-					if ($salaryType === 'Regular') {
-						/*$rowEmp  = !empty($r['emp_DCPS_contribution'])
-						? (int)$r['emp_DCPS_contribution'] : $ideal;
-						$rowNmc  = !empty($r['NMC_DCPS_contribution'])
-						? (int)$r['NMC_DCPS_contribution'] : $ideal;
-						} elseif ($salaryType === 'Suplimentory') {
-						$rowEmpSupp = !empty($r['emp_supplimentory_contribution'])
-						? (int)$r['emp_supplimentory_contribution'] : $ideal;
-						$rowNmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
-						? (int)$r['NMC_supplimentory_DCPS_contribution'] : $ideal;*/
-
-						$rowEmp = $ideal;
-						$rowNmc = $ideal;
-					} elseif ($salaryType === 'Suplimentory') {
-						$rowEmpSupp = $ideal;
-						$rowNmcSupp = $ideal;
-					}
-
-
+					$rowEmp     = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
+					$rowEmpSupp = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
+					$rowNmc     = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : ($rowEmp > 0 ? $rowEmp : 0);
+					$rowNmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : ($rowEmpSupp > 0 ? $rowEmpSupp : 0);
 
 					$rowLoanInst = !empty($r['loan_installment_paid_through_salary'])
 						? (int) $r['loan_installment_paid_through_salary'] : 0;
 					$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
 						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
 
-					// ── Update bases PER RECORD (continuous carry-forward) ─────────
+					// ── Update bases PER RECORD ──────────────────────────────────────
 					$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
 					$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
 
@@ -2594,20 +2562,17 @@ class MisreportModel extends CI_Model
 					$rowLoanInst = 0;
 					$rowLoanTaken = 0;
 
-					if ($salaryType === 'Regular') {
-						$rowEmp = $ideal;
-						$rowNmc = $ideal;
-					} elseif ($salaryType === 'Suplimentory') {
-						$rowEmpSupp = $ideal;
-						$rowNmcSupp = $ideal;
-					}
+					$rowEmp     = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
+					$rowEmpSupp = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
+					$rowNmc     = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : ($rowEmp > 0 ? $rowEmp : 0);
+					$rowNmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : ($rowEmpSupp > 0 ? $rowEmpSupp : 0);
 
 					$rowLoanInst = !empty($r['loan_installment_paid_through_salary'])
 						? (int) $r['loan_installment_paid_through_salary'] : 0;
 					$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
 						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
 
-					// Base update (continuous carry-forward)
+					// Base update
 					$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
 					$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
 

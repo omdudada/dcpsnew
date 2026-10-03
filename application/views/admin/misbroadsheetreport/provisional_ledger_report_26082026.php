@@ -1,4 +1,3 @@
-<?php //echo 1; exit; ?>
 <style type="text/css">
     .no-print { }
     <?php if(isset($urlAry['option']) && in_array($urlAry['option'], array('print','excel'), true)){ ?>
@@ -132,8 +131,8 @@
 
 <div class="content-wrapper" style="min-height: 970.3px; height: auto !important;">
     <section class="content-header">
-        <div class="clsHeading"><img src="<?php echo base_url('assets/images/final_ledger.jpg'); ?>" alt="Final Ledger Report"></div>
-        <h1>Final Ledger Report</h1>
+        <div class="clsHeading"><img src="<?php echo base_url('assets/images/final_ledger.jpg'); ?>" alt="Provisional Ledger Report"></div>
+        <h1>Provisional Ledger Report</h1>
     </section>
 
 	<section class="content" style="height: auto !important; min-height: 0px !important;">
@@ -141,10 +140,10 @@
             <div class="col-lg-12">
                 <div class="box">
                     <div class="box-header with-border no-print">
-                        <h3 class="box-title">Final Ledger Report</h3>
+                        <h3 class="box-title">Provisional Ledger Report</h3>
                         <?php if(!empty($this->input->post('year'))){ ?>
                             <a class="btn btn-primary" style="float:right; margin-left:8px;" href="javascript:void(0);" onclick="printPdfReport();">Print</a>
-                            <?php /*<a class="btn btn-success" style="float:right;" href="<?=base_url();?>admin/misreport/final_ledger_report/year/<?=$this->input->post('year');?>/option/excel">Export Excel</a> */ ?>
+                            <a class="btn btn-success" style="float:right;" href="<?=base_url();?>admin/misreport/provisional_ledger_report/year/<?=$this->input->post('year');?>/option/excel">Export Excel</a>
                         <?php } ?>
 					</div>
 
@@ -165,7 +164,6 @@
 							     	<select id="employee" name="emp_id" class="form-control" >
 							       		<option name="emp_id" selected value="">Select Employee Name / Employee Id</option>
 										<?php if(!empty($employeeData)){ 
-										    //echo "<pre>"; print_r($employeeData); exit; 
 										    foreach($employeeData as $row){ ?>
 											    <option value="<?=$row['emp_id'];?>"><?=$row['emp_name'];?> (<?=$row['emp_id'];?>)
 											    </option>
@@ -219,41 +217,28 @@
                                 $empId = (int)$ownerDetail['emp_id'];
                                 if(empty($finalLedger[$empId])){ continue; }
                                 $ledger = $finalLedger[$empId];
-                                //echo "<Pre>"; print_r($ledger); exit;
                                 $opening = (int)$ledger['opening_balance'];
                                 
                                 $tot = $ledger['totals'];
                                 $closing = (($opening) + ($tot['emp_regular']+$tot['emp_supp']+$tot['loan_installment']) + ($tot['nmc_regular']+$tot['nmc_supp'])) - $tot['loan_taken'] + $tot['total_interest'];
 
-                                // NEW (additive): Employee Contribution opening/closing — independent of $opening/$closing
                                 $employeeContributionOpening = isset($ledger['ec_opening_balance']) ? (int)$ledger['ec_opening_balance'] : 0;
                                 $employeeContributionClosing = $employeeContributionOpening + (int)$tot['emp_regular'] + (int)$tot['emp_interest'];
-
-                                // ===== DEBUG VIEW: per-employee header =====
-                                /*$_dbg_view_log = APPPATH . 'logs/final_ledger_view_debug.txt';
-                                file_put_contents($_dbg_view_log,
-                                    "\n" . str_repeat('#', 80) . "\n" .
-                                    "[VIEW] FY: " . htmlspecialchars((string)$searchData['f_year']) . "  EmpId: {$empId}  Emp Name: " . (!empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : 'N/A') . "\n" .
-                                    "[VIEW] Previous Year Closing / Current Year Opening: {$opening}\n" .
-                                    str_repeat('-', 80) . "\n",
-                                    FILE_APPEND
-                                );*/
-                                // ===== END DEBUG =====
                             ?>
                                 <div class="searchTable new-page" style="margin-top:15px;">
                                     <table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
                                         <thead>
                                             <tr>
-                                                <th style="text-align:center;" colspan="23">नाशिक महानगरपालिका,नाशिक</th>
+                                                <th style="text-align:center;" colspan="21">नाशिक महानगरपालिका,नाशिक</th>
                                             </tr>
                                             <tr>
-                                                <th style="text-align:center;" colspan="23">परिभाषित अंशदान निवृत्ती वेतन योजना - वार्षिक विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
+                                                <th style="text-align:center;" colspan="21">परिभाषित अंशदान निवृत्ती वेतन योजना - तात्पुरते विवरणपत्र (<?= $searchData['f_year']; ?>)</th>
                                             </tr>
                                             <tr>
                                                 <th>कर्मचारी क्रमांक</th>
                                                 <td><span class="emp-pill"><?= !empty($ownerDetail['emp_id']) ? $ownerDetail['emp_id'] : ''; ?></span></td>
                                                 <th>कर्मचारी नाव</th>
-                                                <td colspan="10"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
+                                                <td colspan="8"><?= !empty($ownerDetail['emp_name']) ? $ownerDetail['emp_name'] : ''; ?></td>
                                                 <th colspan="3">सुरवातीची शिल्लक</th>
                                                 <td colspan="7" style="text-align:right;"><?= _n0($opening); ?></td>
                                             </tr>
@@ -263,7 +248,7 @@
                                                 <th>पे सेंटर</th>
                                                 <td><?= !empty($ownerDetail['pay_center']) ? $ownerDetail['pay_center'] : ''; ?></td>
                                                 <th>हुद्दा</th>
-                                                <td colspan="18"><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
+                                                <td colspan="16"><?= !empty($ownerDetail['designation_name']) ? $ownerDetail['designation_name'] : ''; ?></td>
                                             </tr>
                                             <tr>
                                                 <th rowspan="2">महिना</th>
@@ -271,8 +256,6 @@
                                                 <th rowspan="2">फाईल क्रमांक</th>
                                                 <th rowspan="2">प्रमाणक क्रमांक</th>
                                                 <th rowspan="2">प्रमाणक दिनांक</th>
-                                                <th rowspan="2">वेतन कालावधी पासून</th>
-                                                <th rowspan="2">वेतन कालावधी पर्यंत</th>
                                                 
                                                 <th colspan="3">कर्मचारी वर्गणी</th>
                                                 <th colspan="3">मनपा वर्गणी</th>
@@ -321,7 +304,6 @@
                                                 $lastRowShown = null;
 
                                                 $fltRows = array();
-                                                //echo "<pre>"; print_r($ledger); exit;
                                                 foreach ($ledger['rows'] as $row) {
                                                     $m = (int) $row['month'];
                                                     if ($fromMonth !== null && $toMonth !== null) {
@@ -378,38 +360,10 @@
                                                 $monthText = $months[$m] . ' ' . $row['year'];
                                                 $rateLabel = !empty($row['rate']) ? ('व्याज दर ' . number_format($row['rate'], 2) . '%') : '';
 
-                                                // ===== DEBUG VIEW: per-row =====
-                                                $_dbg_view_month_names = array(1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
-                                                    7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December');
-                                                /*$_dbg_view_month_label = isset($_dbg_view_month_names[$m]) ? $_dbg_view_month_names[$m] : $m;
-                                                file_put_contents($_dbg_view_log,
-                                                    "[VIEW-ROW] FY: " . htmlspecialchars((string)$searchData['f_year']) .
-                                                    "  EmpId: {$empId}  Month: {$_dbg_view_month_label} ({$m})  Year: {$row['year']}" .
-                                                    "  Opening(FY): {$opening}" .
-                                                    "  Emp Regular: {$row['emp_regular']}" .
-                                                    "  Emp Supp: {$row['emp_supp']}" .
-                                                    "  NMC Regular: {$row['nmc_regular']}" .
-                                                    "  NMC Supp: {$row['nmc_supp']}" .
-                                                    "  Loan Installment: {$row['loan_installment']}" .
-                                                    "  Loan Taken: {$row['loan_taken']}" .
-                                                    "  Emp Base: {$row['emp_base']}" .
-                                                    "  NMC Base: {$row['nmc_base']}" .
-                                                    "  Total Base: {$row['total_base']}" .
-                                                    "  Emp Interest: {$row['emp_interest']}" .
-                                                    "  NMC Interest: {$row['nmc_interest']}" .
-                                                    "  Total Interest: {$row['total_interest']}" .
-                                                    "  Rate: " . (!empty($row['rate']) ? $row['rate'] : '0') .
-                                                    "  Monthly Closing (EmpBase+NmcBase): " . ((int)$row['emp_base'] + (int)$row['nmc_base']) . "\n",
-                                                    FILE_APPEND
-                                                );*/
-                                                // ===== END DEBUG =====
-
                                                 $bunchDisp = (isset($row['bunch_no']) && $row['bunch_no'] !== '' && $row['bunch_no'] !== null) ? htmlspecialchars((string) $row['bunch_no']) : '';
                                                 $fileDisp = (isset($row['file_no']) && $row['file_no'] !== '' && $row['file_no'] !== null) ? htmlspecialchars((string) $row['file_no']) : '';
                                                 $voucherNo = isset($row['recovered_DCPS_with_voucher_no']) ? trim((string) $row['recovered_DCPS_with_voucher_no']) : '';
                                                 $voucherDt = isset($row['recovered_DCPS_with_voucher_date']) ? trim((string) $row['recovered_DCPS_with_voucher_date']) : '';
-                                                $salaryStart = isset($row['salary_start_date']) ? trim((string) $row['salary_start_date']) : '';
-                                                $salaryEnd = isset($row['salary_end_date']) ? trim((string) $row['salary_end_date']) : '';
                                                 $rsMonth = isset($monthRowspan[$i]) ? (int) $monthRowspan[$i] : 1;
                                             ?>
                                                 <tr>
@@ -420,8 +374,6 @@
                                                     <td class="clsCenter"><?= $fileDisp; ?></td>
                                                     <td class="clsCenter"><?= $voucherNo !== '' ? htmlspecialchars($voucherNo) : ''; ?></td>
                                                     <td class="clsCenter"><?= $voucherDt !== '' ? htmlspecialchars($voucherDt) : ''; ?></td>
-                                                    <td class="clsCenter"><?= $salaryStart !== '' ? htmlspecialchars($salaryStart) : ''; ?></td>
-                                                    <td class="clsCenter"><?= $salaryEnd !== '' ? htmlspecialchars($salaryEnd) : ''; ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_regular']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_supp']); ?></td>
                                                     <td style="text-align:right; font-weight:600;"><?= _n0((int)$row['emp_regular'] + (int)$row['emp_supp']); ?></td>
@@ -430,18 +382,18 @@
                                                     <td style="text-align:right; font-weight:600;"><?= _n0((int)$row['nmc_regular'] + (int)$row['nmc_supp']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['loan_installment']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['total_deposit']); ?></td>
-                                                    <td style="text-align:right;"><?= _n0(($row['total_deposit']>0 )?$row['loan_taken']:0); ?></td>
-                                                    <td style="text-align:right;"><?= _n0(($row['total_deposit']>0 )?$row['emp_base']:0); ?></td>
-                                                    <td style="text-align:right;"><?= _n0(($row['total_deposit']>0 )?$row['nmc_base']:0); ?></td>
-                                                    <td style="text-align:right;"><?= _n0(($row['total_deposit']>0 )?$row['total_base']:0); ?></td>
-                                                    <td style="text-align:right; font-weight:600;"><?= _n0(($row['total_deposit']>0 )?$row['emp_interest']:0); ?></td>
-                                                    <td style="text-align:right; font-weight:600;"><?= _n0(($row['total_deposit']>0 )?$row['nmc_interest']:0); ?></td>
-                                                    <td style="text-align:right; font-weight:600;"><?= _n0(($row['total_deposit']>0 )?$row['total_interest']:0); ?></td>
+                                                    <td style="text-align:right;"><?= _n0($row['loan_taken']); ?></td>
+                                                    <td style="text-align:right;"><?= _n0($row['emp_base']); ?></td>
+                                                    <td style="text-align:right;"><?= _n0($row['nmc_base']); ?></td>
+                                                    <td style="text-align:right;"><?= _n0($row['total_base']); ?></td>
+                                                    <td style="text-align:right; font-weight:600;"><?= _n0($row['emp_interest']); ?></td>
+                                                    <td style="text-align:right; font-weight:600;"><?= _n0($row['nmc_interest']); ?></td>
+                                                    <td style="text-align:right; font-weight:600;"><?= _n0($row['total_interest']); ?></td>
                                                     <td><?= htmlspecialchars($rateLabel); ?></td>
                                                 </tr>
                                             <?php } ?>
                                             <tr>
-                                                <td colspan="7" style="text-align:center;"><strong>एकुण <?= htmlspecialchars((string) $searchData['f_year']); ?></strong></td>
+                                                <td colspan="5" style="text-align:center;"><strong>एकुण <?= htmlspecialchars((string) $searchData['f_year']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_regular']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_supp']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_regular'] + $totShow['emp_supp']); ?></strong></td>
@@ -457,36 +409,6 @@
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_interest']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['nmc_interest']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['total_interest']); ?></strong></td>
-
-                                                <?php
-                                                // ===== DEBUG VIEW: totals row + final closing =====
-                                                /*file_put_contents($_dbg_view_log,
-                                                    "[VIEW-TOTALS] FY: " . htmlspecialchars((string)$searchData['f_year']) . "  EmpId: {$empId}" .
-                                                    "  Total Emp Regular: {$totShow['emp_regular']}" .
-                                                    "  Total Emp Supp: {$totShow['emp_supp']}" .
-                                                    "  Total NMC Regular: {$totShow['nmc_regular']}" .
-                                                    "  Total NMC Supp: {$totShow['nmc_supp']}" .
-                                                    "  Total Loan Inst: {$totShow['loan_installment']}" .
-                                                    "  Total Loan Taken: {$totShow['loan_taken']}" .
-                                                    "  Total Emp Interest: {$totShow['emp_interest']}" .
-                                                    "  Total NMC Interest: {$totShow['nmc_interest']}" .
-                                                    "  Total Interest: {$totShow['total_interest']}" . "\n",
-                                                    FILE_APPEND
-                                                );
-                                                file_put_contents($_dbg_view_log,
-                                                    "[VIEW-CLOSING] FY: " . htmlspecialchars((string)$searchData['f_year']) . "  EmpId: {$empId}" .
-                                                    "  Opening: {$opening}" .
-                                                    "  Total Emp Contrib: " . ($tot['emp_regular']+$tot['emp_supp']) .
-                                                    "  Total NMC Contrib: " . ($tot['nmc_regular']+$tot['nmc_supp']) .
-                                                    "  Total Loan Inst: {$tot['loan_installment']}" .
-                                                    "  Total Loan Taken: {$tot['loan_taken']}" .
-                                                    "  Total Interest: {$tot['total_interest']}" .
-                                                    "  >>> FINAL CLOSING (view): {$closing}\n" .
-                                                    str_repeat('#', 80) . "\n",
-                                                    FILE_APPEND
-                                                );*/
-                                                // ===== END DEBUG =====
-                                                ?>
                                                 <td></td>
                                             </tr>
 
@@ -588,16 +510,6 @@
                                                         <td class="fls-desc">मार्च <?= $fyMarchYear ? htmlspecialchars((string) $fyMarchYear) : ''; ?> अखेर शिल्लक (6-7+10)</td>
                                                         <td class="fls-amt" style="font-weight:700;"><?= _nf($closing); ?></td>
                                                     </tr>
-                                                    <!--<tr>
-                                                        <td class="fls-num">12</td>
-                                                        <td class="fls-desc">कर्मचारी वर्गणी सुरुवातीची शिल्लक</td>
-                                                        <td class="fls-amt"><?= _nf($employeeContributionOpening); ?></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fls-num">13</td>
-                                                        <td class="fls-desc">कर्मचारी वर्गणी अखेर शिल्लक (कर्मचारी वर्गणी + व्याज)</td>
-                                                        <td class="fls-amt" style="font-weight:700;"><?= _nf($employeeContributionClosing); ?></td>
-                                                    </tr>-->
                                                 </table>
                                                 <table class="final-ledger-sign-row" cellspacing="0">
                                                     <tr>
@@ -675,7 +587,7 @@
         if(!frm) return;
         var oldAction = frm.action;
         var oldTarget = frm.target;
-        frm.action = "<?=base_url();?>admin/misreport/generate_final_ledger_report_mpdf";
+        frm.action = "<?=base_url();?>admin/misreport/generate_provisional_ledger_report_mpdf";
         frm.target = "_blank";
         frm.submit();
         setTimeout(function(){

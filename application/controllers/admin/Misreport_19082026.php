@@ -220,7 +220,7 @@
 			
 			// Excel export: output as .xls (HTML table) for compatibility.
 			if(isset($urlAry['option']) && $urlAry['option'] === "excel"){
-				$filename = "provisional_ledger_report_".date("Ymd_His").".xls";
+				$filename = "final_ledger_report_".date("Ymd_His").".xls";
 				header("Content-Type: application/vnd.ms-excel; charset=utf-8");
 				header("Content-Disposition: attachment; filename=".$filename);
 				header("Pragma: no-cache");
@@ -264,16 +264,15 @@
 			if(is_array($searchData)){		    
 				$data['searchData'] = $searchData;
 				
-				$dcpsDetails = $this->mrModel->getdcpsDetailsNewFinalLedger($searchData);
+				$dcpsDetails = $this->mrModel->getdcpsDetailsNew($searchData);
 				
-				if(!empty($dcpsDetails) && $searchData['emp_id'] == 9719){
-				    //echo $this->db->last_query(); exit;
-					echo "<pre>"; print_r($dcpsDetails); exit;
+				if(!empty($dcpsDetails)){
+					//echo "<pre>"; print_r($dcpsDetails); exit;
 				}
 				
 				$processedEmpTDs = [];
 				foreach ($dcpsDetails as $dcpsDetail) {
-					$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_month']][] = $dcpsDetail;
+					$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_month']] = $dcpsDetail;
 					if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
 						$data['ownerDetails'][$dcpsDetail['emp_td']] = [
                         'emp_id' => $dcpsDetail['emp_td'],
@@ -312,18 +311,12 @@
 			}
 			
 			$this->load->view('admin/common/header');
-			if($searchData['emp_id'] == 9719){
-			    //echo "<pre>"; print_r($data); exit; 
-			}
+			//echo "<pre>"; print_r($data); exit;
 			$this->load->view('admin/misbroadsheetreport/final_ledger_report',$data);
 		}
 		
 		public function generate_final_ledger_report_mpdf()
 		{
-			ini_set('pcre.backtrack_limit', '50000000');
-			ini_set('memory_limit', '2048M');
-			set_time_limit(1800);
-
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
@@ -342,7 +335,7 @@
 			if(is_array($searchData) && !empty($searchData)){		    
 				$data['searchData'] = $searchData;
 				
-				$dcpsDetails = $this->mrModel->getdcpsDetailsNewFinalLedger($searchData);
+				$dcpsDetails = $this->mrModel->getdcpsDetailsNew($searchData);
 				
 				$processedEmpTDs = [];
 				if(!empty($dcpsDetails)){
@@ -436,10 +429,6 @@
 
 		public function generate_provisional_ledger_report_mpdf()
 		{
-			ini_set('pcre.backtrack_limit', '50000000');
-			ini_set('memory_limit', '2048M');
-			set_time_limit(1800);
-
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
@@ -484,32 +473,24 @@
 			}
 			
 			$config = [
-				'mode'             => 'utf-8',
-				'format'           => 'Legal-L',
-				'margin_left'      => 15,
-				'margin_right'     => 15,
-				'margin_top'       => 15,
-				'margin_bottom'    => 20,
-				'margin_header'    => 0,
-				'margin_footer'    => 10,
-				'autoScriptToLang' => true,
-				'autoLangToFont'   => true,
+            'mode'             => 'utf-8',
+            'format'           => 'A4-L',
+            'margin_left'      => 8,
+            'margin_right'     => 8,
+            'margin_top'       => 10,
+            'margin_bottom'    => 10,
+            'margin_header'    => 0,
+            'margin_footer'    => 0,
+            'autoScriptToLang' => true,
+            'autoLangToFont'   => true,
 			];
-
+			
 			$this->load->library('m_pdf', $config);
-
+			
 			$this->m_pdf->pdf->SetTitle('Provisional Ledger Report');
 			$this->m_pdf->pdf->SetAuthor('NMC');
 			$this->m_pdf->pdf->SetCreator('Pension System');
-
-			$this->m_pdf->pdf->SetFooter('||पृष्ठ {PAGENO} / {nb}||');
-
-			$this->m_pdf->pdf->AddPage();
-
-			$this->m_pdf->pdf->SetHTMLFooter('
-				<div style="text-align:right">Page No. {PAGENO} / {nb}</div>
-			');
-
+			
 			$html = $this->load->view('admin/misbroadsheetreport/provisional_ledger_report_pdf', $data, TRUE);
 			
 			$this->m_pdf->pdf->WriteHTML($html);
@@ -639,8 +620,6 @@
 		
 		public function deduction_report()
 		{
-			ini_set('memory_limit', '2048M');
-			set_time_limit(1800);
 			//echo 14; exit;
 			$postData = $this->input->post();
 			
@@ -716,21 +695,6 @@
 					
 				}
 				
-				if(!empty($data['ownerDetails'])){
-					$totalEmployees = count($data['ownerDetails']);
-					$page = $this->input->get_post('page') ? (int)$this->input->get_post('page') : 1;
-					if($page < 1) $page = 1;
-					$perPage = 10;
-					
-					if(empty($searchData['emp_id']) && $totalEmployees > $perPage && !(isset($urlAry['option']) && in_array($urlAry['option'], ["print", "csv", "excel"]))){
-						$data['totalEmployees'] = $totalEmployees;
-						$data['perPage'] = $perPage;
-						$data['currentPage'] = $page;
-						$data['totalPages'] = ceil($totalEmployees / $perPage);
-						$data['ownerDetails'] = array_slice($data['ownerDetails'], ($page - 1) * $perPage, $perPage, true);
-					}
-				}
-				
 				
 				//echo "<pre>"; print_r($data); exit;
 				
@@ -748,11 +712,9 @@
 				
 				$interestDetails = $this->mrModel->getYearlyInterestNew($searchData);
 				
-				if (is_array($interestDetails) && !empty($interestDetails)) {
-					foreach ($interestDetails as $interestDetail) {
-						// Grouping data into dcpsDetails based on emp_td and for_month
-						$data['interestDetail'][$interestDetail['employee_id']] = $interestDetail;
-					}
+				foreach ($interestDetails as $interestDetail) {
+					// Grouping data into dcpsDetails based on emp_td and for_month
+					$data['interestDetail'][$interestDetail['employee_id']] = $interestDetail;
 				}
 				//echo $this->db->last_query(); exit;
 				//echo "<pre>"; print_r($data['interestDetail']); exit;
@@ -791,10 +753,6 @@
 		
 		public function generate_deduction_report_mpdf()
 		{
-			ini_set('pcre.backtrack_limit', '50000000');
-			ini_set('memory_limit', '2048M');
-			set_time_limit(1800);
-
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
@@ -802,53 +760,82 @@
 			$searchData = array();
 			if($postData){
 				$searchData = $postData;
-				$searchData['pay_center'] = isset($postData['pay_center']) ? $postData['pay_center'] : '';
-				$searchData['emp_id'] = isset($postData['emp_id']) ? $postData['emp_id'] : '';
-				if(!empty($postData['year'])){
+				$searchData['pay_center'] = $postData['pay_center'];
+				$searchData['emp_id'] = $postData['emp_id'];
+				if($postData['year']){
 					$searchData['first_year'] = $postData['year']; 
 					$searchData['second_year'] = ($postData['year']+1); 
 					$searchData['f_year'] = $searchData['first_year']."-".$searchData['second_year'];
 				}
 			}
 			
-			$data['searchData'] = $searchData;
-			
-			$dcpsDetails = $this->mrModel->getdcpsAllDetailsForDeduction($searchData);
-			
-			$processedEmpTDs = [];
-			if(!empty($dcpsDetails)){
-				foreach ($dcpsDetails as $dcpsDetail) {
-					$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_year']][$dcpsDetail['for_month']][] = $dcpsDetail;
-					if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
-						$data['ownerDetails'][$dcpsDetail['emp_td']] = [
-                        'emp_id' => $dcpsDetail['emp_td'],
-                        'designation_name' => $dcpsDetail['designation_name'],
-                        'emp_name' => $dcpsDetail['emp_name'],
-                        'joining_date' => $dcpsDetail['joining_date'],
-                        'pay_center' => $dcpsDetail['pay_center'],
-                        'fixed_pay' => $dcpsDetail['fixed_pay'],
-						];
-						$processedEmpTDs[] = $dcpsDetail['emp_td'];
+			if(is_array($searchData) && !empty($searchData)){		    
+				$data['searchData'] = $searchData;
+				
+				$dcpsDetails = $this->mrModel->getdcpsAllDetailsForDeduction($searchData);
+				
+				$processedEmpTDs = [];
+				if(!empty($dcpsDetails)){
+					foreach ($dcpsDetails as $dcpsDetail) {
+						$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_year']][$dcpsDetail['for_month']][] = $dcpsDetail;
+						if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
+							$data['ownerDetails'][$dcpsDetail['emp_td']] = [
+	                        'emp_id' => $dcpsDetail['emp_td'],
+	                        'designation_name' => $dcpsDetail['designation_name'],
+	                        'emp_name' => $dcpsDetail['emp_name'],
+	                        'joining_date' => $dcpsDetail['joining_date'],
+	                        'pay_center' => $dcpsDetail['pay_center'],
+	                        'fixed_pay' => $dcpsDetail['fixed_pay'],
+							];
+							$processedEmpTDs[] = $dcpsDetail['emp_td'];
+						}
 					}
 				}
-			}
-			
-			if(isset($searchData['first_year']) && isset($searchData['second_year'])){
-				$data['interestRates'] = $this->mrModel->getInterestRates($searchData['first_year'], $searchData['second_year']);
-				$searchData['f_year'] = $searchData['first_year'];
-			} else {
-				$currentYear = date('Y');
-				$financialYear = $currentYear - 1;
-				$data['interestRates'] = $this->mrModel->getInterestRates($financialYear, $currentYear);
-				$searchData['f_year'] = $financialYear;
-			}
-			
-			$interestDetails = $this->mrModel->getYearlyInterestNew($searchData);
-			if (is_array($interestDetails) && !empty($interestDetails)) {
+				
+				if(isset($searchData['first_year']) && isset($searchData['second_year'])){
+					$data['interestRates'] = $this->mrModel->getInterestRates($searchData['first_year'], $searchData['second_year']);
+					$searchData['f_year'] = $searchData['first_year'];
+					} else {
+					$currentYear = date('Y');
+					$financialYear = $currentYear - 1;
+					$data['interestRates'] = $this->mrModel->getInterestRates($financialYear, $currentYear);
+					$searchData['f_year'] = $financialYear;
+				}
+				
+				$interestDetails = $this->mrModel->getYearlyInterestNew($searchData);
+				
 				foreach ($interestDetails as $interestDetail) {
 					$data['interestDetail'][$interestDetail['employee_id']] = $interestDetail;
 				}
+				} else {
+				show_404();
 			}
+			
+			/*$config = [
+	        'mode' => 'utf-8',
+	        'format' => 'A4',
+	        'margin_left' => 15,
+	        'margin_right' => 15,
+	        'margin_top' => 15,
+	        'margin_bottom' => 15,
+	        'margin_header' => 0,
+	        'margin_footer' => 0,
+	        'autoScriptToLang' => true,
+	        'autoLangToFont' => true,
+			];
+			
+			$this->load->library('m_pdf', $config);
+			
+			$this->m_pdf->pdf->SetTitle('Deduction Report');
+			$this->m_pdf->pdf->SetAuthor('NMC');
+			$this->m_pdf->pdf->SetCreator('Pension System');
+			$this->m_pdf->pdf->AddPage('L', [355.6, 215.9]);
+			
+			$html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $data, TRUE);
+			
+			$this->m_pdf->pdf->WriteHTML($html);
+			
+			$this->m_pdf->pdf->Output('Deduction_Report.pdf', 'I');*/
 
 			$config = [
 				'mode'             => 'utf-8',
@@ -869,160 +856,24 @@
 			$this->m_pdf->pdf->SetAuthor('NMC');
 			$this->m_pdf->pdf->SetCreator('Pension System');
 
+			// ── Page number footer ──────────────────────────────────────
+			$this->m_pdf->pdf->SetFooter('||पृष्ठ {PAGENO} / {nb}||');
+			// {PAGENO} = current page, {nb} = total pages
+			// Format: left | center | right  (pipe-separated)
+			// Above puts it in the center. Change position as needed:
+			// Left:   'पृष्ठ {PAGENO} / {nb}||'
+			// Right:  '||पृष्ठ {PAGENO} / {nb}'
+
+			// ── Must call AddPage first, then SetHTMLFooter ──
+			$this->m_pdf->pdf->AddPage();
+
 			$this->m_pdf->pdf->SetHTMLFooter('
 				<div style="text-align:right">Page No. {PAGENO} / {nb}</div>
 			');
 
-			// Write CSS styles once to avoid repeating in every chunk
-			$css = '
-				body {
-					font-family: "freesans", sans-serif;
-					margin: 0;
-					padding: 0;
-				}
-				table {
-					width: 100%;
-					border-collapse: collapse;
-					font-size: 11px;
-					margin-bottom: 0px;
-				}
-				th, td {
-					border: 1px solid #000;
-					padding: 4px;
-					text-align: center;
-					word-wrap: break-word;
-					white-space: normal;
-				}
-				th {
-					font-weight: bold;
-				}
-				table td.clsCenter, table th.clsCenter {
-					text-align: center;
-					vertical-align: middle;
-				}
-				table td.clsRight, table th.clsRight {
-					text-align: right;
-					vertical-align: middle;
-				}
-				table td.clsLeft {
-					text-align: left;
-					vertical-align: middle;
-				}
-				.final-ledger-bottom-wrap {
-					width: 100%;
-					margin-top: 16px;
-					border-collapse: collapse;
-					table-layout: fixed;
-				}
-				.final-ledger-bottom-wrap td {
-					vertical-align: top;
-					border: 1px solid #000;
-					padding: 10px;
-				}
-				.final-ledger-summary-wrap {
-					width: 62%;
-				}
-				.final-ledger-summary-table {
-					width: 100%;
-					border-collapse: collapse;
-				}
-				.final-ledger-summary-table th,
-				.final-ledger-summary-table td {
-					border: 1px solid #000 !important;
-					padding: 4px 6px !important;
-					font-size: 10px;
-					vertical-align: middle;
-				}
-				.final-ledger-summary-table th {
-					text-align: center;
-					font-weight: bold;
-				}
-				.final-ledger-summary-table .fls-month {
-					text-align: center;
-				}
-				.final-ledger-summary-table .fls-amt {
-					text-align: right;
-					white-space: nowrap;
-				}
-				.final-ledger-cert-box {
-					width: 100%;
-					font-size: 13px;
-					line-height: 1.45;
-					text-align: justify;
-				}
-				.final-ledger-cert-box strong {
-					display: block;
-					text-align: center;
-					margin-bottom: 10px;
-					font-size: 14px;
-				}
-				.final-ledger-cert-signs {
-					margin-top: 20px;
-					padding-top: 8px;
-				}
-				.final-ledger-sign-line {
-					border-top: 1px solid #000;
-					margin-top: 36px;
-					padding-top: 6px;
-					text-align: center;
-					font-size: 12px;
-					line-height: 1.35;
-				}
-				.final-ledger-cert-signs .final-ledger-sign-line:first-child {
-					margin-top: 16px;
-				}
-				.new-page {
-					page-break-after: always;
-				}
-				.deduction-report-header {
-					text-align: center;
-					margin-bottom: 10px;
-					font-weight: bold;
-				}
-			';
-			$this->m_pdf->pdf->WriteHTML($css, \Mpdf\HTMLParserMode::HEADER_CSS);
+			$html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $data, TRUE);
 
-			// Filter only owners with actual deduction data
-			$validOwners = [];
-			if(!empty($data['ownerDetails'])){
-				foreach ($data['ownerDetails'] as $empId => $ownerDetail) {
-					if(!empty($data['dcpsDetails'][$empId])){
-						$validOwners[$empId] = $ownerDetail;
-					}
-				}
-			}
-
-			if(empty($searchData['emp_id']) && empty($searchData['pay_center']) && empty($searchData['first_year']) && !empty($validOwners)){
-				$totalOwners = count($validOwners);
-				$page = !empty($postData['page']) ? (int)$postData['page'] : 1;
-				if($page < 1) $page = 1;
-				$perPage = 10;
-				if($totalOwners > $perPage){
-					$validOwners = array_slice($validOwners, ($page - 1) * $perPage, $perPage, true);
-				}
-			}
-
-			if(!empty($validOwners)){
-				$chunkSize = 10; // Process in chunks of 10 employees to avoid pcre.backtrack_limit
-				$ownerChunks = array_chunk($validOwners, $chunkSize, true);
-				$totalChunks = count($ownerChunks);
-				$chunkIdx = 0;
-
-				foreach ($ownerChunks as $chunk) {
-					$chunkIdx++;
-					$chunkData = $data;
-					$chunkData['ownerDetails'] = $chunk;
-					$chunkData['is_chunk'] = true;
-					$chunkData['force_page_break_last'] = ($chunkIdx < $totalChunks);
-
-					$html = $this->load->view('admin/misbroadsheetreport/deduction_report_pdf', $chunkData, TRUE);
-					$this->m_pdf->pdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
-				}
-			} else {
-				$html = '<div style="text-align:center; padding:50px; font-size:16px;">माहिती उपलब्ध नाही (No Data Available)</div>';
-				$this->m_pdf->pdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
-			}
-
+			$this->m_pdf->pdf->WriteHTML($html);
 			$this->m_pdf->pdf->Output('Deduction_Report.pdf', 'I');
 		}
 		
@@ -1258,10 +1109,6 @@
 		
 		public function generate_excess_report_mpdf()
 		{
-			ini_set('pcre.backtrack_limit', '50000000');
-			ini_set('memory_limit', '2048M');
-			set_time_limit(1800);
-
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
@@ -1383,10 +1230,6 @@
 		
 		public function generate_yearwise_summary_report_mpdf()
 		{
-			ini_set('pcre.backtrack_limit', '50000000');
-			ini_set('memory_limit', '2048M');
-			set_time_limit(1800);
-
 			$postData = $this->input->post();
 			$data['urlAry'] = array();
 			$urlAry = $this->uri->uri_to_assoc(4);
@@ -1443,120 +1286,6 @@
 			$this->m_pdf->pdf->Output('Yearwise_Ledger_Summary_Report.pdf', 'I');
 		}
 		
-		public function yearwise_final_ledger_summary_report()
-		{
-			$postData = $this->input->post();
-			
-			$data['urlAry'] = array();
-			$urlAry = $this->uri->uri_to_assoc(4);
-			
-			$searchData = array();
-			if($postData){
-				$searchData = $postData;
-				$searchData['pay_center'] = $postData['pay_center'];
-				$searchData['emp_id'] = $postData['emp_id'];
-			}
-			
-			if(isset($urlAry['option']) && in_array($urlAry['option'], ["print", "csv", "excel"])){ 
-				$data['urlAry'] = $urlAry;
-			}
-			
-			if(is_array($searchData) && !empty($searchData['emp_id'])){
-				$data['searchData'] = $searchData;
-				
-				// Fetch the single employee master details
-				$empDetails = $this->mrModel->gerMasterDetails($searchData['emp_id']);
-				if(!empty($empDetails)){
-					$data['ownerDetails'][$searchData['emp_id']] = [
-						'emp_id' => $empDetails[0]['emp_id'],
-						'designation_name' => $empDetails[0]['designation_name'],
-						'emp_name' => $empDetails[0]['emp_name'],
-						'joining_date' => $empDetails[0]['joining_date'],
-						'pay_center' => $empDetails[0]['pay_center'],
-					];
-				}
-				
-				// Fetch year-wise final ledger summary values for the employee (based on voucher date)
-				$data['yearwiseSummary'] = $this->mrModel->getYearwiseFinalLedgerSummary($searchData['emp_id']);
-			}
-			$data['paycenterData'] = $this->mrModel->getPayCenterData();
-			$data['employeeData'] = $this->mrModel->gerMasterDetails();
-			
-			if(isset($urlAry['option']) && $urlAry['option'] == "excel"){
-				$filename = "yearwise_final_ledger_summary_report_".date("Ymd_His").".xls";
-				header("Content-Type: application/vnd.ms-excel; charset=utf-8");
-				header("Content-Disposition: attachment; filename=".$filename);
-				header("Pragma: no-cache");
-				header("Expires: 0");
-				
-				echo $this->load->view('admin/misbroadsheetreport/yearwise_final_ledger_summary_report_pdf', $data, true);
-				exit;
-			}
-
-			$this->load->view('admin/common/header');
-			$this->load->view('admin/misbroadsheetreport/yearwise_final_ledger_summary_report', $data);
-		}
-		
-		public function generate_yearwise_final_ledger_summary_report_mpdf()
-		{
-			ini_set('pcre.backtrack_limit', '50000000');
-			ini_set('memory_limit', '2048M');
-			set_time_limit(1800);
-
-			$postData = $this->input->post();
-			$data['urlAry'] = array();
-			$urlAry = $this->uri->uri_to_assoc(4);
-			
-			$searchData = array();
-			if($postData){
-				$searchData = $postData;
-				$searchData['pay_center'] = $postData['pay_center'];
-				$searchData['emp_id'] = $postData['emp_id'];
-			}
-			
-			if(is_array($searchData) && !empty($searchData['emp_id'])){		    
-				$data['searchData'] = $searchData;
-				
-				$empDetails = $this->mrModel->gerMasterDetails($searchData['emp_id']);
-				if(!empty($empDetails)){
-					$data['ownerDetails'][$searchData['emp_id']] = [
-						'emp_id' => $empDetails[0]['emp_id'],
-						'designation_name' => $empDetails[0]['designation_name'],
-						'emp_name' => $empDetails[0]['emp_name'],
-						'joining_date' => $empDetails[0]['joining_date'],
-						'pay_center' => $empDetails[0]['pay_center'],
-					];
-				}
-				
-				$data['yearwiseSummary'] = $this->mrModel->getYearwiseFinalLedgerSummary($searchData['emp_id']);
-			} else {
-				show_404();
-			}
-			
-			$config = [
-				'mode' => 'utf-8',
-				'format' => 'A4',
-				'margin_left' => 15,
-				'margin_right' => 15,
-				'margin_top' => 15,
-				'margin_bottom' => 15,
-				'margin_header' => 0,
-				'margin_footer' => 0,
-				'autoScriptToLang' => true,
-				'autoLangToFont' => true,
-			];
-			
-			$this->load->library('m_pdf', $config);
-			
-			$this->m_pdf->pdf->SetTitle('Year-wise Final Ledger Summary Report');
-			$this->m_pdf->pdf->SetAuthor('NMC');
-			$this->m_pdf->pdf->SetCreator('Pension System');
-			
-			$html = $this->load->view('admin/misbroadsheetreport/yearwise_final_ledger_summary_report_pdf', $data, TRUE);
-			
-			$this->m_pdf->pdf->WriteHTML($html);
-			
-			$this->m_pdf->pdf->Output('Yearwise_Final_Ledger_Summary_Report.pdf', 'I');
-		}
 	}
+	
 ?>

@@ -249,120 +249,10 @@ class MisreportModel extends CI_Model
 			// Execute the query
 			$query = $this->db->query($sql);
 
-			if ($query) {
-				return $query->result_array();
-			}
-			return 0;
-		}
-		return 0;
-	}
+			// Debugging (optional, remove for production)
+			//echo "<br/>" . $sql;   exit;
 
-	public function getdcpsDetailsNewFinalLedger($data)
-	{
-		if (!empty($data)) {
-			$sql = "SELECT 
-				mst.`emp_td`, 
-				dd.designation_name, 
-				em.emp_name, 
-				mst.salary_type,
-				mst.recovered_DCPS_with_voucher_no, 
-				mst.recovered_DCPS_with_voucher_date,
-				em.joining_date, 
-				mst.pay_center, 
-				SUM(mst.`Ideal_contribution_of_employee_for_DCPS`) AS ideal_contribution, 
-				SUM(mst.`emp_DCPS_contribution`) AS emp_DCPS_contribution, 
-				SUM(mst.emp_DCPS_supplimentory_contribution) AS emp_DCPS_supplimentory_contribution, 
-				SUM(mst.`NMC_DCPS_contribution`) AS NMC_DCPS_contribution, 
-				SUM(mst.NMC_supplimentory_DCPS_contribution) AS NMC_supplimentory_DCPS_contribution,
-				(
-				SUM(mst.`emp_DCPS_contribution`) + 
-				SUM(mst.emp_DCPS_supplimentory_contribution) + 
-				SUM(mst.`NMC_DCPS_contribution`) + 
-				SUM(mst.NMC_supplimentory_DCPS_contribution) + 
-				SUM(mst.loan_installment_paid_through_salary)
-				) AS total_contribution, 
-				SUM(mst.`loan_installment_paid_through_salary`) AS loan_installment_paid_through_salary, 
-				SUM(mst.`DCPS_loan_taken_by_an_employee`) AS DCPS_loan_taken_by_an_employee, 
-				mst.`for_month`, 
-				mst.`for_year` 
-				FROM 
-				`dpt_master_dcps` AS mst 
-				LEFT JOIN 
-				dpt_emp_master AS em 
-				ON 
-				em.emp_id = mst.emp_td 
-				LEFT JOIN 
-				dpt_designation AS dd 
-				ON 
-				dd.id = mst.designation_id 	
-				WHERE 
-				mst.is_deleted = 0 and mst.emp_td > 0 ";
-
-			if (isset($data['emp_id']) && $data['emp_id'] != "") {
-				$sql .= " AND mst.`emp_td` = " . (int) $data['emp_id'];
-			}
-
-			if (isset($data['voucher_date']) && $data['voucher_date'] != "") {
-				$sql .= " AND mst.`recovered_DCPS_with_voucher_date` = " . $this->db->escape($data['voucher_date']);
-			}
-
-			if (isset($data['voucher_no']) && $data['voucher_no'] != "") {
-				$sql .= " AND mst.`recovered_DCPS_with_voucher_no` = " . $this->db->escape($data['voucher_no']);
-			}
-
-			$fyStart = 0;
-			$fyEnd = 0;
-			if (isset($data['first_year']) && $data['first_year'] != "" && isset($data['second_year']) && $data['second_year'] != "") {
-				$fyStart = (int) $data['first_year'];
-				$fyEnd = (int) $data['second_year'];
-			} elseif (isset($data['first_year']) && $data['first_year'] != "") {
-				$fyStart = (int) $data['first_year'];
-				$fyEnd = $fyStart + 1;
-			} elseif (isset($data['second_year']) && $data['second_year'] != "") {
-				$fyEnd = (int) $data['second_year'];
-				$fyStart = $fyEnd - 1;
-			}
-
-			if ($fyStart > 0 && $fyEnd > 0) {
-				$startDate = sprintf('%04d-04-01', $fyStart);
-				$endDate   = sprintf('%04d-03-31', $fyEnd);
-				$sql .= " AND (
-					(
-						mst.`recovered_DCPS_with_voucher_date` IS NOT NULL 
-						AND mst.`recovered_DCPS_with_voucher_date` != '' 
-						AND COALESCE(
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d-%m-%Y'),
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%Y-%m-%d'),
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d/%m/%Y')
-						) >= '{$startDate}' 
-						AND COALESCE(
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d-%m-%Y'),
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%Y-%m-%d'),
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d/%m/%Y')
-						) <= '{$endDate}'
-					)
-					OR
-					(
-						(mst.`recovered_DCPS_with_voucher_date` IS NULL OR mst.`recovered_DCPS_with_voucher_date` = '')
-						AND (
-							(mst.`for_month` >= 4 AND mst.`for_month` <= 12 AND mst.`for_year` = {$fyStart})
-							OR
-							(mst.`for_month` >= 1 AND mst.`for_month` <= 3 AND mst.`for_year` = {$fyEnd})
-						)
-					)
-				) ";
-			}
-
-			if (isset($data['emp_id']) && $data['emp_id'] != "") {
-				$sql .= " GROUP BY mst.for_month, mst.emp_td, mst.for_year";
-			} else {
-				$sql .= " GROUP BY mst.emp_td, mst.for_month, mst.for_year";
-			}
-
-			$sql .= " ORDER BY mst.pay_center ASC, mst.emp_td ASC";
-
-			$query = $this->db->query($sql);
-
+			// Return results
 			if ($query) {
 				return $query->result_array();
 			}
@@ -398,47 +288,16 @@ class MisreportModel extends CI_Model
 			$sql .= " AND mst.`emp_td` = " . (int) $data['emp_id'];
 		}
 
-		$fyStart = 0;
-		$fyEnd = 0;
 		if (isset($data['first_year']) && $data['first_year'] != "" && isset($data['second_year']) && $data['second_year'] != "") {
-			$fyStart = (int) $data['first_year'];
-			$fyEnd = (int) $data['second_year'];
-		} elseif (isset($data['first_year']) && $data['first_year'] != "") {
-			$fyStart = (int) $data['first_year'];
-			$fyEnd = $fyStart + 1;
-		} elseif (isset($data['second_year']) && $data['second_year'] != "") {
-			$fyEnd = (int) $data['second_year'];
-			$fyStart = $fyEnd - 1;
-		}
-
-		if ($fyStart > 0 && $fyEnd > 0) {
-			$startDate = sprintf('%04d-04-01', $fyStart);
-			$endDate   = sprintf('%04d-03-31', $fyEnd);
 			$sql .= " AND (
-				(
-					mst.`recovered_DCPS_with_voucher_date` IS NOT NULL 
-					AND mst.`recovered_DCPS_with_voucher_date` != '' 
-					AND COALESCE(
-						STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d-%m-%Y'),
-						STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%Y-%m-%d'),
-						STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d/%m/%Y')
-					) >= '{$startDate}' 
-					AND COALESCE(
-						STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d-%m-%Y'),
-						STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%Y-%m-%d'),
-						STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d/%m/%Y')
-					) <= '{$endDate}'
-				)
-				OR
-				(
-					(mst.`recovered_DCPS_with_voucher_date` IS NULL OR mst.`recovered_DCPS_with_voucher_date` = '')
-					AND (
-						(mst.`for_month` >= 4 AND mst.`for_month` <= 12 AND mst.`for_year` = {$fyStart})
-						OR
-						(mst.`for_month` >= 1 AND mst.`for_month` <= 3 AND mst.`for_year` = {$fyEnd})
-					)
-				)
-			) ";
+                (mst.`for_month` >= 4 AND mst.`for_month` <= 12 AND mst.`for_year` = " . (int) $data['first_year'] . ") 
+                OR 
+                (mst.`for_month` >= 1 AND mst.`for_month` <= 3 AND mst.`for_year` = " . (int) $data['second_year'] . ")
+				)";
+		} elseif (isset($data['first_year']) && $data['first_year'] != "") {
+			$sql .= " AND mst.`for_month` >= 4 AND mst.`for_month` <= 12 AND mst.`for_year` = " . (int) $data['first_year'];
+		} elseif (isset($data['second_year']) && $data['second_year'] != "") {
+			$sql .= " AND mst.`for_month` >= 1 AND mst.`for_month` <= 3 AND mst.`for_year` = " . (int) $data['second_year'];
 		}
 
 		// Additional hardcoded filter
@@ -542,7 +401,7 @@ class MisreportModel extends CI_Model
 			}*/
 
 			// **Order By condition added here**
-			$sql .= " ORDER BY mst.pay_center ASC, CAST(mst.emp_td AS UNSIGNED) ASC, CAST(mst.for_year AS UNSIGNED) ASC, CAST(mst.for_month AS UNSIGNED) ASC";
+			$sql .= " ORDER BY mst.pay_center ASC, CAST(mst.emp_td AS UNSIGNED) ASC";
 
 			// Execute the query
 			$query = $this->db->query($sql);
@@ -647,118 +506,13 @@ class MisreportModel extends CI_Model
 			// Execute the query
 			$query = $this->db->query($sql);
 
+			// Debugging (optional, remove for production)
+			//echo "<br/>" . $sql;   exit;
+
+			// Return results
 			if ($query) {
 				return $query->result_array();
 			}
-		}
-		return 0;
-	}
-
-	public function getdcpsAllDetailsForFinalLedger($data)
-	{
-		if (!empty($data)) {
-			$sql = "SELECT 
-				mst.*, 
-				dd.designation_name, 
-				em.emp_name, 
-				em.joining_date
-				FROM 
-				`dpt_master_dcps` AS mst 
-				LEFT JOIN 
-				dpt_emp_master AS em 
-				ON 
-				em.emp_id = mst.emp_td 
-				LEFT JOIN 
-				dpt_designation AS dd 
-				ON 
-				dd.id = mst.designation_id 	
-				WHERE 
-				mst.is_deleted in (0) and mst.emp_td > 0 ";
-
-			if (isset($data['pay_center']) && $data['pay_center'] != "") {
-				$sql .= " AND mst.`pay_center` = " . $data['pay_center'];
-			}
-
-			if (isset($data['emp_id']) && $data['emp_id'] != "") {
-				$sql .= " AND mst.`emp_td` = " . (int) $data['emp_id'];
-			}
-
-			if (isset($data['voucher_date']) && $data['voucher_date'] != "") {
-				$sql .= " AND mst.`recovered_DCPS_with_voucher_date` = " . $this->db->escape($data['voucher_date']);
-			}
-
-			if (isset($data['voucher_no']) && $data['voucher_no'] != "") {
-				$sql .= " AND mst.`recovered_DCPS_with_voucher_no` = " . $this->db->escape($data['voucher_no']);
-			}
-
-			if (isset($data['from_month']) && $data['from_month'] != "" && isset($data['to_month']) && $data['to_month'] != "") {
-				$sql .= " AND mst.`for_month` >= " . (int) $data['from_month'];
-				$sql .= " AND mst.`for_month` <= " . (int) $data['to_month'];
-			} else {
-				if (isset($data['from_month']) && $data['from_month'] != "") {
-					$sql .= " AND mst.`for_month` = " . (int) $data['from_month'];
-				} elseif (isset($data['to_month']) && $data['to_month'] != "") {
-					$sql .= " AND mst.`for_month` = " . (int) $data['to_month'];
-				}
-			}
-
-			$fyStart = 0;
-			$fyEnd = 0;
-			if (isset($data['first_year']) && $data['first_year'] != "" && isset($data['second_year']) && $data['second_year'] != "") {
-				$fyStart = (int) $data['first_year'];
-				$fyEnd = (int) $data['second_year'];
-			} elseif (isset($data['first_year']) && $data['first_year'] != "") {
-				$fyStart = (int) $data['first_year'];
-				$fyEnd = $fyStart + 1;
-			} elseif (isset($data['second_year']) && $data['second_year'] != "") {
-				$fyEnd = (int) $data['second_year'];
-				$fyStart = $fyEnd - 1;
-			}
-
-			if ($fyStart > 0 && $fyEnd > 0) {
-				$startDate = sprintf('%04d-04-01', $fyStart);
-				$endDate   = sprintf('%04d-03-31', $fyEnd);
-				$sql .= " AND (
-					(
-						mst.`recovered_DCPS_with_voucher_date` IS NOT NULL 
-						AND mst.`recovered_DCPS_with_voucher_date` != '' 
-						AND COALESCE(
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d-%m-%Y'),
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%Y-%m-%d'),
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d/%m/%Y')
-						) >= '{$startDate}' 
-						AND COALESCE(
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d-%m-%Y'),
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%Y-%m-%d'),
-							STR_TO_DATE(mst.`recovered_DCPS_with_voucher_date`, '%d/%m/%Y')
-						) <= '{$endDate}'
-					)
-					OR
-					(
-						(mst.`recovered_DCPS_with_voucher_date` IS NULL OR mst.`recovered_DCPS_with_voucher_date` = '')
-						AND (
-							(mst.`for_month` >= 4 AND mst.`for_month` <= 12 AND mst.`for_year` = {$fyStart})
-							OR
-							(mst.`for_month` >= 1 AND mst.`for_month` <= 3 AND mst.`for_year` = {$fyEnd})
-						)
-					)
-				) ";
-			}
-
-			if (isset($data['first_year']) && $data['first_year'] != "" && isset($data['from_month']) && $data['from_month'] != "" && isset($data['to_month']) && $data['to_month'] != "") {
-				$sql .= " ORDER BY mst.recovered_DCPS_with_voucher_date DESC, mst.recovered_DCPS_with_voucher_no ASC, mst.file_no ASC";
-			} elseif ((isset($data['first_year']) && $data['first_year'] != "" && (!isset($data['from_month']) || $data['from_month'] == "") && (!isset($data['to_month']) || $data['to_month'] == "")) || (isset($data['second_year']) && $data['second_year'] != "" && (!isset($data['from_month']) || $data['from_month'] == "") && (!isset($data['to_month']) || $data['to_month'] == ""))) {
-				$sql .= " ORDER BY (CASE WHEN MONTH(em.joining_date) >= 4 THEN MONTH(em.joining_date) - 3 ELSE MONTH(em.joining_date) + 9 END) ASC, em.joining_date ASC, mst.pay_center ASC, CAST(mst.emp_td AS UNSIGNED) ASC";
-			} else {
-				$sql .= " ORDER BY mst.pay_center ASC, CAST(mst.emp_td AS UNSIGNED) ASC";
-			}
-
-			$query = $this->db->query($sql);
-
-			if ($query) {
-				return $query->result_array();
-			}
-			return 0;
 		}
 		return 0;
 	}
@@ -855,26 +609,14 @@ class MisreportModel extends CI_Model
 			$rates = array();
 		}
 
-		$dcpsRows = $this->getdcpsAllDetailsForFinalLedger($data);
+		$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
 
 		$byEmpMonth = array();
 		$empIds = array();
 		if (is_array($dcpsRows)) {
 			foreach ($dcpsRows as $r) {
 				$empId = (int) $r['emp_td'];
-				$m = 0;
-				if (!empty($r['recovered_DCPS_with_voucher_date'])) {
-					$dt = DateTime::createFromFormat('d-m-Y', $r['recovered_DCPS_with_voucher_date']) ?: (DateTime::createFromFormat('Y-m-d', $r['recovered_DCPS_with_voucher_date']) ?: DateTime::createFromFormat('d/m/Y', $r['recovered_DCPS_with_voucher_date']));
-					if ($dt) {
-						$m = (int) $dt->format('n');
-					}
-				}
-				if ($m < 1 || $m > 12) {
-					$m = (int) $r['for_month'];
-				}
-				if ($m < 1 || $m > 12) {
-					$m = 4;
-				}
+				$m = (int) $r['for_month'];
 				if (!isset($byEmpMonth[$empId][$m])) {
 					$byEmpMonth[$empId][$m] = array();
 				}
@@ -950,30 +692,12 @@ class MisreportModel extends CI_Model
 					usort($monthRecords, function ($a, $b) {
 						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
 						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
-						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: (DateTime::createFromFormat('Y-m-d', $dateA) ?: (DateTime::createFromFormat('d/m/Y', $dateA) ?: null));
-						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: (DateTime::createFromFormat('Y-m-d', $dateB) ?: (DateTime::createFromFormat('d/m/Y', $dateB) ?: null));
+						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
+						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
 						$tsA = $dtA ? $dtA->getTimestamp() : 0;
 						$tsB = $dtB ? $dtB->getTimestamp() : 0;
 						if ($tsA !== $tsB) {
 							return $tsA <=> $tsB;
-						}
-						$sDateA = isset($a['salary_start_date']) ? $a['salary_start_date'] : '';
-						$sDateB = isset($b['salary_start_date']) ? $b['salary_start_date'] : '';
-						$sDtA = DateTime::createFromFormat('d-m-Y', $sDateA) ?: (DateTime::createFromFormat('Y-m-d', $sDateA) ?: (DateTime::createFromFormat('d/m/Y', $sDateA) ?: null));
-						$sDtB = DateTime::createFromFormat('d-m-Y', $sDateB) ?: (DateTime::createFromFormat('Y-m-d', $sDateB) ?: (DateTime::createFromFormat('d/m/Y', $sDateB) ?: null));
-						$sTsA = $sDtA ? $sDtA->getTimestamp() : 0;
-						$sTsB = $sDtB ? $sDtB->getTimestamp() : 0;
-						if ($sTsA !== $sTsB) {
-							return $sTsA <=> $sTsB;
-						}
-						$eDateA = isset($a['salary_end_date']) ? $a['salary_end_date'] : '';
-						$eDateB = isset($b['salary_end_date']) ? $b['salary_end_date'] : '';
-						$eDtA = DateTime::createFromFormat('d-m-Y', $eDateA) ?: (DateTime::createFromFormat('Y-m-d', $eDateA) ?: (DateTime::createFromFormat('d/m/Y', $eDateA) ?: null));
-						$eDtB = DateTime::createFromFormat('d-m-Y', $eDateB) ?: (DateTime::createFromFormat('Y-m-d', $eDateB) ?: (DateTime::createFromFormat('d/m/Y', $eDateB) ?: null));
-						$eTsA = $eDtA ? $eDtA->getTimestamp() : 0;
-						$eTsB = $eDtB ? $eDtB->getTimestamp() : 0;
-						if ($eTsA !== $eTsB) {
-							return $eTsA <=> $eTsB;
 						}
 						$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
 						$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
@@ -982,17 +706,12 @@ class MisreportModel extends CI_Model
 						}
 						$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
 						$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
-						if ($fnA !== $fnB) {
-							return $fnA <=> $fnB;
-						}
-						$idA = isset($a['id']) ? (int) $a['id'] : 0;
-						$idB = isset($b['id']) ? (int) $b['id'] : 0;
-						return $idA <=> $idB;
+						return $fnA <=> $fnB;
 					});
 				}
 
 				if (empty($monthRecords)) {
-					$monthRecords = array(array());					
+					$monthRecords = array(array());
 				}
 				//echo "<pre>Line No. 715=>"; print_r($rates); exit;
 				$rate = isset($rates[$m]) ?  $rates[$m] : 0;
@@ -1003,22 +722,8 @@ class MisreportModel extends CI_Model
 				$monthNmcInterest = 0;
 
 				
-				//echo "<pre>Line No. 724=>"; print_r($monthRecords); exit;
-				foreach ($monthRecords as $r) {		
-					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
-						$r = array(
-							'salary_type' => '',
-							'Ideal_contribution_of_employee_for_DCPS' => 0,
-							'emp_DCPS_contribution' => 0,
-							'emp_supplimentory_contribution' => 0,
-							'NMC_DCPS_contribution' => 0,
-							'NMC_supplimentory_DCPS_contribution' => 0,
-							'loan_installment_paid_through_salary' => 0,
-							'DCPS_loan_taken_by_an_employee' => 0,
-							'bunch_no' => '',
-						);
-					}
-					
+
+				foreach ($monthRecords as $r) {
 					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
 					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
 						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
@@ -1058,7 +763,7 @@ class MisreportModel extends CI_Model
 
 					$totalDeposit = ($empRegular + $empSupp + $loanInstallment) + ($nmcRegular + $nmcSupp);
 
-					// ── Update bases PER RECORD (continuous carry-forward) ─────────
+					// ── Update bases PER RECORD ──────────────────────────────────
 					$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
 					$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
 					$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
@@ -1105,8 +810,6 @@ class MisreportModel extends CI_Model
 						'file_no' => isset($r['file_no']) ? $r['file_no'] : 0,
 						'recovered_DCPS_with_voucher_no' => isset($r['recovered_DCPS_with_voucher_no']) ? $r['recovered_DCPS_with_voucher_no'] : '',
 						'recovered_DCPS_with_voucher_date' => isset($r['recovered_DCPS_with_voucher_date']) ? $r['recovered_DCPS_with_voucher_date'] : '',
-						'salary_start_date' => isset($r['salary_start_date']) ? $r['salary_start_date'] : '',
-						'salary_end_date' => isset($r['salary_end_date']) ? $r['salary_end_date'] : '',
 					);
 
 					$totals['emp_regular'] += $empRegular;
@@ -1197,10 +900,6 @@ class MisreportModel extends CI_Model
 			foreach ($dcpsRows as $r) {
 				$empId = (int) $r['emp_td'];
 				$m = (int) $r['for_month'];
-				if ($m < 1 || $m > 12) {
-					$dt = isset($r['recovered_DCPS_with_voucher_date']) ? (DateTime::createFromFormat('d-m-Y', $r['recovered_DCPS_with_voucher_date']) ?: DateTime::createFromFormat('Y-m-d', $r['recovered_DCPS_with_voucher_date'])) : null;
-					$m = $dt ? (int) $dt->format('n') : 4;
-				}
 				if (!isset($byEmpMonth[$empId][$m])) {
 					$byEmpMonth[$empId][$m] = array();
 				}
@@ -1214,8 +913,7 @@ class MisreportModel extends CI_Model
 		$ecOpeningByEmp = array(); // employee contribution opening (excludes NMC portion)
 		foreach ($empIds as $empId) {
 			$openingByEmp[$empId]   = (int) $this->getProvisionalLedgerOpeningBalanceRuntime($empId, $firstYear);
-			list($unusedOpening, $ecOpening) = $this->getFinalLedgerEmployeeContributionOpeningBalanceRuntime($empId, $firstYear);
-			$ecOpeningByEmp[$empId] = (int) $ecOpening;
+			$ecOpeningByEmp[$empId] = (int) $this->getFinalLedgerEmployeeContributionOpeningBalanceRuntime($empId, $firstYear);
 		}
 
 		$_dbg_model_log = APPPATH . 'logs/final_ledger_model_debug.txt';
@@ -1277,30 +975,12 @@ class MisreportModel extends CI_Model
 					usort($monthRecords, function ($a, $b) {
 						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
 						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
-						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: (DateTime::createFromFormat('Y-m-d', $dateA) ?: (DateTime::createFromFormat('d/m/Y', $dateA) ?: null));
-						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: (DateTime::createFromFormat('Y-m-d', $dateB) ?: (DateTime::createFromFormat('d/m/Y', $dateB) ?: null));
+						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
+						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
 						$tsA = $dtA ? $dtA->getTimestamp() : 0;
 						$tsB = $dtB ? $dtB->getTimestamp() : 0;
 						if ($tsA !== $tsB) {
 							return $tsA <=> $tsB;
-						}
-						$sDateA = isset($a['salary_start_date']) ? $a['salary_start_date'] : '';
-						$sDateB = isset($b['salary_start_date']) ? $b['salary_start_date'] : '';
-						$sDtA = DateTime::createFromFormat('d-m-Y', $sDateA) ?: (DateTime::createFromFormat('Y-m-d', $sDateA) ?: (DateTime::createFromFormat('d/m/Y', $sDateA) ?: null));
-						$sDtB = DateTime::createFromFormat('d-m-Y', $sDateB) ?: (DateTime::createFromFormat('Y-m-d', $sDateB) ?: (DateTime::createFromFormat('d/m/Y', $sDateB) ?: null));
-						$sTsA = $sDtA ? $sDtA->getTimestamp() : 0;
-						$sTsB = $sDtB ? $sDtB->getTimestamp() : 0;
-						if ($sTsA !== $sTsB) {
-							return $sTsA <=> $sTsB;
-						}
-						$eDateA = isset($a['salary_end_date']) ? $a['salary_end_date'] : '';
-						$eDateB = isset($b['salary_end_date']) ? $b['salary_end_date'] : '';
-						$eDtA = DateTime::createFromFormat('d-m-Y', $eDateA) ?: (DateTime::createFromFormat('Y-m-d', $eDateA) ?: (DateTime::createFromFormat('d/m/Y', $eDateA) ?: null));
-						$eDtB = DateTime::createFromFormat('d-m-Y', $eDateB) ?: (DateTime::createFromFormat('Y-m-d', $eDateB) ?: (DateTime::createFromFormat('d/m/Y', $eDateB) ?: null));
-						$eTsA = $eDtA ? $eDtA->getTimestamp() : 0;
-						$eTsB = $eDtB ? $eDtB->getTimestamp() : 0;
-						if ($eTsA !== $eTsB) {
-							return $eTsA <=> $eTsB;
 						}
 						$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
 						$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
@@ -1309,12 +989,7 @@ class MisreportModel extends CI_Model
 						}
 						$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
 						$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
-						if ($fnA !== $fnB) {
-							return $fnA <=> $fnB;
-						}
-						$idA = isset($a['id']) ? (int) $a['id'] : 0;
-						$idB = isset($b['id']) ? (int) $b['id'] : 0;
-						return $idA <=> $idB;
+						return $fnA <=> $fnB;
 					});
 				}
 
@@ -1344,20 +1019,21 @@ class MisreportModel extends CI_Model
 					$empActual = 0;
 					$nmcActual = 0;
 
-					if ($salaryType === 'Regular' || empty($salaryType)) {
+					if ($salaryType === 'Regular') {
 						$empRegular = !empty($r['emp_DCPS_contribution'])
-							? (int) $r['emp_DCPS_contribution'] : $ideal;
+							? (int) $r['emp_DCPS_contribution'] : 0;
 						$nmcRegular = !empty($r['NMC_DCPS_contribution'])
-							? (int) $r['NMC_DCPS_contribution'] : $ideal;
+							? (int) $r['NMC_DCPS_contribution'] : 0;
 						$empActual = $empRegular;
 						$nmcActual = $nmcRegular;
-					} else {
+					} elseif ($salaryType === 'Suplimentory') {
 						$empSupp = !empty($r['emp_supplimentory_contribution'])
-							? (int) $r['emp_supplimentory_contribution'] : $ideal;
+							? (int) $r['emp_supplimentory_contribution'] : 0;
 						$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
-							? (int) $r['NMC_supplimentory_DCPS_contribution'] : $ideal;
+							? (int) $r['NMC_supplimentory_DCPS_contribution'] : 0;
 						$empActual = $empSupp;
 						$nmcActual = $nmcSupp;
+
 					}
 
 					// Difference: actual collected - ideal contribution
@@ -1421,8 +1097,6 @@ class MisreportModel extends CI_Model
 						'file_no' => isset($r['file_no']) ? $r['file_no'] : 0,
 						'recovered_DCPS_with_voucher_no' => isset($r['recovered_DCPS_with_voucher_no']) ? $r['recovered_DCPS_with_voucher_no'] : '',
 						'recovered_DCPS_with_voucher_date' => isset($r['recovered_DCPS_with_voucher_date']) ? $r['recovered_DCPS_with_voucher_date'] : '',
-						'salary_start_date' => isset($r['salary_start_date']) ? $r['salary_start_date'] : '',
-						'salary_end_date' => isset($r['salary_end_date']) ? $r['salary_end_date'] : '',
 					);
 
 					$totals['emp_regular'] += $empRegular;
@@ -1672,24 +1346,12 @@ class MisreportModel extends CI_Model
 		}
 		//echo "<pre>".$data['first_year']."-".$data['second_year']; print_r($rates); echo "</pre><br>";
 
-		$dcpsRows = $this->getdcpsAllDetailsForFinalLedger($data);
+		$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
 
 		$byMonth = array();
 		if (is_array($dcpsRows)) {
 			foreach ($dcpsRows as $r) {
-				$m = 0;
-				if (!empty($r['recovered_DCPS_with_voucher_date'])) {
-					$dt = DateTime::createFromFormat('d-m-Y', $r['recovered_DCPS_with_voucher_date']) ?: (DateTime::createFromFormat('Y-m-d', $r['recovered_DCPS_with_voucher_date']) ?: DateTime::createFromFormat('d/m/Y', $r['recovered_DCPS_with_voucher_date']));
-					if ($dt) {
-						$m = (int) $dt->format('n');
-					}
-				}
-				if ($m < 1 || $m > 12) {
-					$m = (int) $r['for_month'];
-				}
-				if ($m < 1 || $m > 12) {
-					$m = 4;
-				}
+				$m = (int) $r['for_month'];
 				if (!isset($byMonth[$m])) {
 					$byMonth[$m] = array();
 				}
@@ -1733,30 +1395,12 @@ class MisreportModel extends CI_Model
 				usort($monthRecords, function ($a, $b) {
 					$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
 					$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
-					$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: (DateTime::createFromFormat('Y-m-d', $dateA) ?: (DateTime::createFromFormat('d/m/Y', $dateA) ?: null));
-					$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: (DateTime::createFromFormat('Y-m-d', $dateB) ?: (DateTime::createFromFormat('d/m/Y', $dateB) ?: null));
+					$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
+					$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
 					$tsA = $dtA ? $dtA->getTimestamp() : 0;
 					$tsB = $dtB ? $dtB->getTimestamp() : 0;
 					if ($tsA !== $tsB) {
 						return $tsA <=> $tsB;
-					}
-					$sDateA = isset($a['salary_start_date']) ? $a['salary_start_date'] : '';
-					$sDateB = isset($b['salary_start_date']) ? $b['salary_start_date'] : '';
-					$sDtA = DateTime::createFromFormat('d-m-Y', $sDateA) ?: (DateTime::createFromFormat('Y-m-d', $sDateA) ?: (DateTime::createFromFormat('d/m/Y', $sDateA) ?: null));
-					$sDtB = DateTime::createFromFormat('d-m-Y', $sDateB) ?: (DateTime::createFromFormat('Y-m-d', $sDateB) ?: (DateTime::createFromFormat('d/m/Y', $sDateB) ?: null));
-					$sTsA = $sDtA ? $sDtA->getTimestamp() : 0;
-					$sTsB = $sDtB ? $sDtB->getTimestamp() : 0;
-					if ($sTsA !== $sTsB) {
-						return $sTsA <=> $sTsB;
-					}
-					$eDateA = isset($a['salary_end_date']) ? $a['salary_end_date'] : '';
-					$eDateB = isset($b['salary_end_date']) ? $b['salary_end_date'] : '';
-					$eDtA = DateTime::createFromFormat('d-m-Y', $eDateA) ?: (DateTime::createFromFormat('Y-m-d', $eDateA) ?: (DateTime::createFromFormat('d/m/Y', $eDateA) ?: null));
-					$eDtB = DateTime::createFromFormat('d-m-Y', $eDateB) ?: (DateTime::createFromFormat('Y-m-d', $eDateB) ?: (DateTime::createFromFormat('d/m/Y', $eDateB) ?: null));
-					$eTsA = $eDtA ? $eDtA->getTimestamp() : 0;
-					$eTsB = $eDtB ? $eDtB->getTimestamp() : 0;
-					if ($eTsA !== $eTsB) {
-						return $eTsA <=> $eTsB;
 					}
 					$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
 					$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
@@ -1765,33 +1409,12 @@ class MisreportModel extends CI_Model
 					}
 					$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
 					$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
-					if ($fnA !== $fnB) {
-						return $fnA <=> $fnB;
-					}
-					$idA = isset($a['id']) ? (int) $a['id'] : 0;
-					$idB = isset($b['id']) ? (int) $b['id'] : 0;
-					return $idA <=> $idB;
+					return $fnA <=> $fnB;
 				});
 			}
 
-			if (empty($monthRecords)) {
-				$monthRecords = array(array());
-			}
-
-			foreach ($monthRecords as $r) {
-					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
-						$r = array(
-							'salary_type' => '',
-							'Ideal_contribution_of_employee_for_DCPS' => 0,
-							'emp_DCPS_contribution' => 0,
-							'emp_supplimentory_contribution' => 0,
-							'NMC_DCPS_contribution' => 0,
-							'NMC_supplimentory_DCPS_contribution' => 0,
-							'loan_installment_paid_through_salary' => 0,
-							'DCPS_loan_taken_by_an_employee' => 0,
-							'bunch_no' => '',
-						);
-					}
+			if (!empty($monthRecords)) {
+				foreach ($monthRecords as $r) {
 					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
 					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
 						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
@@ -1829,7 +1452,7 @@ class MisreportModel extends CI_Model
 					$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
 						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
 
-					// ── Update bases PER RECORD (continuous carry-forward) ─────────
+					// ── Update bases PER RECORD ──────────────────────────────────────
 					$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
 					$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
 
@@ -1878,11 +1501,11 @@ class MisreportModel extends CI_Model
 					FILE_APPEND
 					);*/
 				}
-			/*} else {
+			} else {
 				// No records this month — still compute interest on carry-forward base
 				$empInterest = round((($empBase * $rate) / 100), 0) / 12;
 				$nmcInterest = round((($nmcBase * $rate) / 100), 0) / 12;
-			}*/
+			}
 
 			// ── Month-level debug log ────────────────────────────────────────────────
 			$_dbg_month_names = array(
@@ -1988,10 +1611,6 @@ class MisreportModel extends CI_Model
 		if (is_array($dcpsRows)) {
 			foreach ($dcpsRows as $r) {
 				$m = (int) $r['for_month'];
-				if ($m < 1 || $m > 12) {
-					$dt = isset($r['recovered_DCPS_with_voucher_date']) ? (DateTime::createFromFormat('d-m-Y', $r['recovered_DCPS_with_voucher_date']) ?: DateTime::createFromFormat('Y-m-d', $r['recovered_DCPS_with_voucher_date'])) : null;
-					$m = $dt ? (int) $dt->format('n') : 4;
-				}
 				if (!isset($byMonth[$m])) {
 					$byMonth[$m] = array();
 				}
@@ -2034,30 +1653,12 @@ class MisreportModel extends CI_Model
 				usort($monthRecords, function ($a, $b) {
 					$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
 					$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
-					$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: (DateTime::createFromFormat('Y-m-d', $dateA) ?: (DateTime::createFromFormat('d/m/Y', $dateA) ?: null));
-					$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: (DateTime::createFromFormat('Y-m-d', $dateB) ?: (DateTime::createFromFormat('d/m/Y', $dateB) ?: null));
+					$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
+					$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
 					$tsA = $dtA ? $dtA->getTimestamp() : 0;
 					$tsB = $dtB ? $dtB->getTimestamp() : 0;
 					if ($tsA !== $tsB) {
 						return $tsA <=> $tsB;
-					}
-					$sDateA = isset($a['salary_start_date']) ? $a['salary_start_date'] : '';
-					$sDateB = isset($b['salary_start_date']) ? $b['salary_start_date'] : '';
-					$sDtA = DateTime::createFromFormat('d-m-Y', $sDateA) ?: (DateTime::createFromFormat('Y-m-d', $sDateA) ?: (DateTime::createFromFormat('d/m/Y', $sDateA) ?: null));
-					$sDtB = DateTime::createFromFormat('d-m-Y', $sDateB) ?: (DateTime::createFromFormat('Y-m-d', $sDateB) ?: (DateTime::createFromFormat('d/m/Y', $sDateB) ?: null));
-					$sTsA = $sDtA ? $sDtA->getTimestamp() : 0;
-					$sTsB = $sDtB ? $sDtB->getTimestamp() : 0;
-					if ($sTsA !== $sTsB) {
-						return $sTsA <=> $sTsB;
-					}
-					$eDateA = isset($a['salary_end_date']) ? $a['salary_end_date'] : '';
-					$eDateB = isset($b['salary_end_date']) ? $b['salary_end_date'] : '';
-					$eDtA = DateTime::createFromFormat('d-m-Y', $eDateA) ?: (DateTime::createFromFormat('Y-m-d', $eDateA) ?: (DateTime::createFromFormat('d/m/Y', $eDateA) ?: null));
-					$eDtB = DateTime::createFromFormat('d-m-Y', $eDateB) ?: (DateTime::createFromFormat('Y-m-d', $eDateB) ?: (DateTime::createFromFormat('d/m/Y', $eDateB) ?: null));
-					$eTsA = $eDtA ? $eDtA->getTimestamp() : 0;
-					$eTsB = $eDtB ? $eDtB->getTimestamp() : 0;
-					if ($eTsA !== $eTsB) {
-						return $eTsA <=> $eTsB;
 					}
 					$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
 					$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
@@ -2066,30 +1667,12 @@ class MisreportModel extends CI_Model
 					}
 					$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
 					$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
-					if ($fnA !== $fnB) {
-						return $fnA <=> $fnB;
-					}
-					$idA = isset($a['id']) ? (int) $a['id'] : 0;
-					$idB = isset($b['id']) ? (int) $b['id'] : 0;
-					return $idA <=> $idB;
+					return $fnA <=> $fnB;
 				});
 			}
 
 			if (!empty($monthRecords)) {
 				foreach ($monthRecords as $r) {
-					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
-						$r = array(
-							'salary_type' => '',
-							'Ideal_contribution_of_employee_for_DCPS' => 0,
-							'emp_DCPS_contribution' => 0,
-							'emp_supplimentory_contribution' => 0,
-							'NMC_DCPS_contribution' => 0,
-							'NMC_supplimentory_DCPS_contribution' => 0,
-							'loan_installment_paid_through_salary' => 0,
-							'DCPS_loan_taken_by_an_employee' => 0,
-							'bunch_no' => '',
-						);
-					}
 					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
 					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
 						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
@@ -2102,16 +1685,17 @@ class MisreportModel extends CI_Model
 					$rowLoanInst = 0;
 					$rowLoanTaken = 0;
 
-					if ($salaryType === 'Regular' || empty($salaryType)) {
+					if ($salaryType === 'Regular') {
 						$empRegular = !empty($r['emp_DCPS_contribution'])
-							? (int) $r['emp_DCPS_contribution'] : $ideal;
+							? (int) $r['emp_DCPS_contribution'] : 0;
 						$nmcRegular = !empty($r['NMC_DCPS_contribution'])
-							? (int) $r['NMC_DCPS_contribution'] : $ideal;
-					} else {
+							? (int) $r['NMC_DCPS_contribution'] : 0;
+					} elseif ($salaryType === 'Suplimentory') {
 						$empSupp = !empty($r['emp_supplimentory_contribution'])
-							? (int) $r['emp_supplimentory_contribution'] : $ideal;
+							? (int) $r['emp_supplimentory_contribution'] : 0;
 						$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
-							? (int) $r['NMC_supplimentory_DCPS_contribution'] : $ideal;
+							? (int) $r['NMC_supplimentory_DCPS_contribution'] : 0;
+
 					}
 
 
@@ -2122,8 +1706,8 @@ class MisreportModel extends CI_Model
 						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
 
 					// ── Update bases PER RECORD ──────────────────────────────────────
-					$empBase = $ideal > 0 ? ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken : 0;
-					$nmcBase = $ideal > 0 ? ($nmcBase + $rowNmc + $rowNmcSupp) : 0;
+					$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
+					$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
 
 					// ── Interest calculated on updated base after EACH record ────────
 					$rowEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
@@ -2462,263 +2046,8 @@ class MisreportModel extends CI_Model
 		return $summary['monthly_details'];
 	}
 
-	public function getYearwiseLedgerSummary($empId)
-	{
-		$empId = (int) $empId;
-		if ($empId <= 0) {
-			return array();
-		}
 
-		$monthsOrder = array(4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3);
-		$yearlyData = array();
 
-		// Fetch initial opening balance for starting year 2005
-		$authResult = $this->getFinalLedgerEmployeeContributionOpeningBalanceRuntime($empId, 2005);
-		if (is_array($authResult)) {
-			list($currentOpening, $currentEcOpening) = $authResult;
-		} else {
-			$currentOpening = (int) $authResult;
-			$currentEcOpening = 0;
-		}
-		$currentOpening = (int) $currentOpening;
-		$currentEcOpening = (int) $currentEcOpening;
-
-		// Loop through financial years from 2005 to 2014
-		for ($fy = 2005; $fy <= 2014; $fy++) {
-
-			$opening = $currentOpening;
-			$ecOpening = $currentEcOpening;
-
-			$data = array(
-				'emp_id' => $empId,
-				'first_year' => $fy,
-				'second_year' => $fy + 1,
-				'f_year' => $fy . "-" . ($fy + 1),
-			);
-
-			$rates = $this->getInterestRates($fy, $fy + 1);
-			if (!is_array($rates)) {
-				$rates = array();
-			}
-
-			$dcpsRows = $this->getdcpsAllDetailsForLedger($data);
-
-			$byMonth = array();
-			if (is_array($dcpsRows)) {
-				foreach ($dcpsRows as $r) {
-					$m = (int) $r['for_month'];
-					if (!isset($byMonth[$m])) {
-						$byMonth[$m] = array();
-					}
-					$byMonth[$m][] = $r;
-				}
-			}
-
-			// Seed interest bases from ecOpening (matching getFinalLedgerCumulativeRows)
-			$empBase = $ecOpening;
-			$nmcBase = $ecOpening;
-
-			$sumEmp = 0;
-			$sumEmpSupp = 0;
-			$sumNmc = 0;
-			$sumNmcSupp = 0;
-			$sumLoanInst = 0;
-			$sumLoanTaken = 0;
-			$totalEmpInterest = 0;
-			$totalNmcInterest = 0;
-
-			foreach ($monthsOrder as $m) {
-				$monthRecords = isset($byMonth[$m]) ? $byMonth[$m] : array();
-				$empRegular = 0;
-				$empSupp = 0;
-				$nmcRegular = 0;
-				$nmcSupp = 0;
-				$loanInstallment = 0;
-				$loanTaken = 0;
-				$empInterest = 0;
-				$nmcInterest = 0;
-
-				$rate = (isset($rates[$m]) ? $rates[$m] : 0);
-
-				if (!empty($monthRecords) && is_array($monthRecords)) {
-					usort($monthRecords, function ($a, $b) {
-						$dateA = isset($a['recovered_DCPS_with_voucher_date']) ? $a['recovered_DCPS_with_voucher_date'] : '';
-						$dateB = isset($b['recovered_DCPS_with_voucher_date']) ? $b['recovered_DCPS_with_voucher_date'] : '';
-						$dtA = DateTime::createFromFormat('d-m-Y', $dateA) ?: null;
-						$dtB = DateTime::createFromFormat('d-m-Y', $dateB) ?: null;
-						$tsA = $dtA ? $dtA->getTimestamp() : 0;
-						$tsB = $dtB ? $dtB->getTimestamp() : 0;
-						if ($tsA !== $tsB) {
-							return $tsA <=> $tsB;
-						}
-						$vnA = isset($a['recovered_DCPS_with_voucher_no']) ? (string) $a['recovered_DCPS_with_voucher_no'] : '';
-						$vnB = isset($b['recovered_DCPS_with_voucher_no']) ? (string) $b['recovered_DCPS_with_voucher_no'] : '';
-						if ($vnA !== $vnB) {
-							return $vnA <=> $vnB;
-						}
-						$fnA = isset($a['file_no']) ? (string) $a['file_no'] : '';
-						$fnB = isset($b['file_no']) ? (string) $b['file_no'] : '';
-						return $fnA <=> $fnB;
-					});
-				}
-
-				if (empty($monthRecords)) {
-					$monthRecords = array(array());
-				}
-
-				foreach ($monthRecords as $r) {
-					// Zero-salary guard (matching getFinalLedgerCumulativeRows)
-					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
-						$r = array(
-							'salary_type' => '',
-							'Ideal_contribution_of_employee_for_DCPS' => 0,
-							'emp_DCPS_contribution' => 0,
-							'emp_supplimentory_contribution' => 0,
-							'NMC_DCPS_contribution' => 0,
-							'NMC_supplimentory_DCPS_contribution' => 0,
-							'loan_installment_paid_through_salary' => 0,
-							'DCPS_loan_taken_by_an_employee' => 0,
-							'bunch_no' => '',
-						);
-					}
-					
-					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
-					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
-						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
-						? (int) $r['Ideal_contribution_of_employee_for_DCPS'] : 0;
-
-					$rowEmp = 0;
-					$rowEmpSupp = 0;
-					$rowNmc = 0;
-					$rowNmcSupp = 0;
-					$rowLoanInst = 0;
-					$rowLoanTaken = 0;
-
-					if ($salaryType === 'Regular') {
-						$rowEmp = $ideal;
-						$rowNmc = $ideal;
-					} elseif ($salaryType === 'Suplimentory') {
-						$rowEmpSupp = $ideal;
-						$rowNmcSupp = $ideal;
-					}
-
-					$rowLoanInst = !empty($r['loan_installment_paid_through_salary'])
-						? (int) $r['loan_installment_paid_through_salary'] : 0;
-					$rowLoanTaken = !empty($r['DCPS_loan_taken_by_an_employee'])
-						? (int) $r['DCPS_loan_taken_by_an_employee'] : 0;
-
-					// Base update (continuous carry-forward)
-					$empBase = ($empBase + $rowEmp + $rowEmpSupp + $rowLoanInst) - $rowLoanTaken;
-					$nmcBase = ($nmcBase + $rowNmc + $rowNmcSupp);
-
-					$rowEmpInterest = round((($empBase * $rate) / 100) / 12, 0);
-					$rowNmcInterest = round((($nmcBase * $rate) / 100) / 12, 0);
-
-					$empInterest += $rowEmpInterest;
-					$nmcInterest += $rowNmcInterest;
-
-					$empRegular += $rowEmp;
-					$empSupp += $rowEmpSupp;
-					$nmcRegular += $rowNmc;
-					$nmcSupp += $rowNmcSupp;
-					$loanInstallment += $rowLoanInst;
-					$loanTaken += $rowLoanTaken;
-				}
-
-				$totalEmpInterest += $empInterest;
-				$totalNmcInterest += $nmcInterest;
-				$sumEmp += $empRegular;
-				$sumEmpSupp += $empSupp;
-				$sumNmc += $nmcRegular;
-				$sumNmcSupp += $nmcSupp;
-				$sumLoanInst += $loanInstallment;
-				$sumLoanTaken += $loanTaken;
-			}
-
-			$sumInterest = ($totalEmpInterest + $totalNmcInterest);
-			$closing = ($opening
-				+ ($sumEmp + $sumEmpSupp + $sumLoanInst)
-				+ ($sumNmc + $sumNmcSupp)) - $sumLoanTaken
-				+ ($sumInterest);
-
-			$yearlyData[$fy] = array(
-				'opening_balance' => $opening,
-				'employee_contribution' => ($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken,
-				'employee_interest' => $totalEmpInterest,
-				'nmc_contribution' => ($sumNmc + $sumNmcSupp),
-				'nmc_interest' => $totalNmcInterest,
-				'closing_balance' => $closing
-			);
-
-			// Seamlessly carry forward closing balance to next financial year's opening balance
-			$currentOpening = $closing;
-			$currentEcOpening = (int) (($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken + $totalEmpInterest);
-		}
-
-		return $yearlyData;
-	}
-
-	public function getYearwiseFinalLedgerSummary($empId)
-	{
-		$empId = (int) $empId;
-		if ($empId <= 0) {
-			return array();
-		}
-
-		$yearlyData = array();
-
-		// Loop through financial years from 2005 to 2014
-		for ($fy = 2005; $fy <= 2014; $fy++) {
-			$searchData = array(
-				'emp_id' => $empId,
-				'first_year' => $fy,
-				'second_year' => $fy + 1,
-				'f_year' => $fy . "-" . ($fy + 1),
-			);
-
-			$cumulRes = $this->getFinalLedgerCumulativeRows($searchData);
-
-			if (!empty($cumulRes[$empId])) {
-				$empData = $cumulRes[$empId];
-				$tot = isset($empData['totals']) ? $empData['totals'] : array();
-
-				$opening = isset($empData['opening_balance']) ? (int) $empData['opening_balance'] : 0;
-				$empRegular = isset($tot['emp_regular']) ? (int) $tot['emp_regular'] : 0;
-				$empSupp = isset($tot['emp_supp']) ? (int) $tot['emp_supp'] : 0;
-				$loanInst = isset($tot['loan_installment']) ? (int) $tot['loan_installment'] : 0;
-				$loanTaken = isset($tot['loan_taken']) ? (int) $tot['loan_taken'] : 0;
-				$nmcRegular = isset($tot['nmc_regular']) ? (int) $tot['nmc_regular'] : 0;
-				$nmcSupp = isset($tot['nmc_supp']) ? (int) $tot['nmc_supp'] : 0;
-				$empInterest = isset($tot['emp_interest']) ? (int) $tot['emp_interest'] : 0;
-				$nmcInterest = isset($tot['nmc_interest']) ? (int) $tot['nmc_interest'] : 0;
-				$totalInterest = isset($tot['total_interest']) ? (int) $tot['total_interest'] : ($empInterest + $nmcInterest);
-
-				$empContrib = ($empRegular + $empSupp + $loanInst) - $loanTaken;
-				$nmcContrib = ($nmcRegular + $nmcSupp);
-				$closing = $opening + $empContrib + $nmcContrib + $totalInterest;
-
-				$yearlyData[$fy] = array(
-					'opening_balance' => $opening,
-					'employee_contribution' => $empContrib,
-					'employee_interest' => $empInterest,
-					'nmc_contribution' => $nmcContrib,
-					'nmc_interest' => $nmcInterest,
-					'closing_balance' => $closing
-				);
-			} else {
-				$yearlyData[$fy] = array(
-					'opening_balance' => 0,
-					'employee_contribution' => 0,
-					'employee_interest' => 0,
-					'nmc_contribution' => 0,
-					'nmc_interest' => 0,
-					'closing_balance' => 0
-				);
-			}
-		}
-
-		return $yearlyData;
-	}
 
 }
 ?>
