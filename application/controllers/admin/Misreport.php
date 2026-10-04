@@ -268,12 +268,22 @@
 				
 				if(!empty($dcpsDetails) && $searchData['emp_id'] == 9719){
 				    //echo $this->db->last_query(); exit;
-					echo "<pre>"; print_r($dcpsDetails); exit;
+					//echo "<pre>"; print_r($dcpsDetails); exit;
 				}
 				
 				$processedEmpTDs = [];
 				foreach ($dcpsDetails as $dcpsDetail) {
-					$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_month']][] = $dcpsDetail;
+				    $voucherDate = DateTime::createFromFormat(
+                        'd-m-Y',
+                        $dcpsDetail['recovered_DCPS_with_voucher_date']
+                    );
+                
+                    $voucherMonth = $voucherDate ? $voucherDate->format('m') : null;
+                
+                    // If you want integer month: 8 instead of 08
+                    $voucherMonth = $voucherDate ? (int)$voucherDate->format('m') : null;
+					//$data['dcpsDetails'][$dcpsDetail['emp_td']][$voucherMonth][] = $dcpsDetail;
+					$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_month']] = $dcpsDetail;
 					if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
 						$data['ownerDetails'][$dcpsDetail['emp_td']] = [
                         'emp_id' => $dcpsDetail['emp_td'],
