@@ -831,8 +831,34 @@ class MisreportModel extends CI_Model
 	 * - Opening balance is added only once at FY start and is part of Employee + Total bases.
 	 * - Monthly interest is calculated on the running bases:
 	 *   interest = ROUND((base * rate%) / 12, 0)
-	 * - Interest is NOT added back into the base for subsequent months (no compounding).
 	 */
+	private function _getRecoveredSalaryPeriods($empId = 0)
+	{
+		$this->db->select('salary_start_date, salary_end_date, emp_DCPS_contribution, emp_DCPS_supplimentory_contribution');
+		$this->db->from('dpt_master_dcps');
+		if (!empty($empId)) {
+			$this->db->where('emp_td', $empId);
+		}
+		$this->db->where('is_deleted', 0);
+		$query = $this->db->get();
+		$recoveredPeriods = array();
+		if ($query) {
+			$rows = $query->result_array();
+			foreach ($rows as $r) {
+				$empActual = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
+				$empSuppActual = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
+				if ($empActual > 0 || $empSuppActual > 0) {
+					$sDate = trim(isset($r['salary_start_date']) ? $r['salary_start_date'] : '');
+					$eDate = trim(isset($r['salary_end_date']) ? $r['salary_end_date'] : '');
+					if ($sDate !== '' && $eDate !== '' && $sDate !== 'No Date') {
+						$key = $sDate . '_' . $eDate;
+						$recoveredPeriods[$key] = true;
+					}
+				}
+			}
+		}
+		return $recoveredPeriods;
+	}
 
 	public function getFinalLedgerCumulativeRows($data = array())
 	{
@@ -914,14 +940,7 @@ class MisreportModel extends CI_Model
 		$out = array();
 		foreach ($empIds as $empId) {
 			$opening = isset($ecOpeningByEmp[$empId]) ? (int) $ecOpeningByEmp[$empId] : 0;
-
-			/*file_put_contents($_dbg_model_log,
-			"\n" . str_repeat('*', 80) . "\n" .
-			"[MODEL-CUMUL] getFinalLedgerCumulativeRows  FY: {$fYear}  EmpId: {$empId}" .
-			"  Current Year Opening (from previous FY closing): {$opening}\n" .
-			str_repeat('*', 80) . "\n",
-			FILE_APPEND
-			);*/
+			$recoveredPeriods = $this->_getRecoveredSalaryPeriods($empId);
 
 			$empBase = (int) $opening;
 			$nmcBase = (int) $opening;
@@ -994,23 +1013,19 @@ class MisreportModel extends CI_Model
 				if (empty($monthRecords)) {
 					$monthRecords = array(array());					
 				}
-				//echo "<pre>Line No. 715=>"; print_r($rates); exit;
 				$rate = isset($rates[$m]) ?  $rates[$m] : 0;
 				$yearForMonth = ($m >= 4 && $m <= 12) ? $firstYear : $secondYear;
 
-				// ── Month-level interest accumulators ────────────────────────────
 				$monthEmpInterest = 0;
 				$monthNmcInterest = 0;
 
-				
-				//echo "<pre>Line No. 724=>"; print_r($monthRecords); exit;
 				foreach ($monthRecords as $r) {		
-					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
+					if (empty($r) || !isset($r['id'])) {
 						$r = array(
 							'salary_type' => '',
 							'Ideal_contribution_of_employee_for_DCPS' => 0,
 							'emp_DCPS_contribution' => 0,
-							'emp_supplimentory_contribution' => 0,
+							'emp_DCPS_supplimentory_contribution' => 0,
 							'NMC_DCPS_contribution' => 0,
 							'NMC_supplimentory_DCPS_contribution' => 0,
 							'loan_installment_paid_through_salary' => 0,
@@ -1020,9 +1035,18 @@ class MisreportModel extends CI_Model
 					}
 					
 					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
-					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
-						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
+					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
 						? (int) $r['Ideal_contribution_of_employee_for_DCPS'] : 0;
+
+					$empRegActual = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
+					$empSuppActual = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
+					$nmcRegActual = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : 0;
+					$nmcSuppActual = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+
+					$sDate = trim(isset($r['salary_start_date']) ? $r['salary_start_date'] : '');
+					$eDate = trim(isset($r['salary_end_date']) ? $r['salary_end_date'] : '');
+					$periodKey = ($sDate !== '' && $eDate !== '' && $sDate !== 'No Date') ? ($sDate . '_' . $eDate) : '';
+					$isRecoveredLater = ($periodKey !== '' && isset($recoveredPeriods[$periodKey]));
 
 					$empRegular = 0;
 					$empSupp = 0;
@@ -1032,23 +1056,31 @@ class MisreportModel extends CI_Model
 					$loanTaken = 0;
 
 					if ($salaryType === 'Regular') {
-						/*$empRegular = !empty($r['emp_DCPS_contribution'])
-						? (int)$r['emp_DCPS_contribution'] : $ideal;
-						$nmcRegular = !empty($r['NMC_DCPS_contribution'])
-						? (int)$r['NMC_DCPS_contribution'] : $ideal;
-						} elseif ($salaryType === 'Suplimentory') {
-						$empSupp = !empty($r['emp_supplimentory_contribution'])
-						? (int)$r['emp_supplimentory_contribution'] : $ideal;
-						$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
-						? (int)$r['NMC_supplimentory_DCPS_contribution'] : $ideal;*/
-
-
-						$empRegular = $ideal;
-						$nmcRegular = $ideal;
-					} elseif ($salaryType === 'Suplimentory') {
-						$empSupp = $ideal;
-						$nmcSupp = $ideal;
-
+						if ($empRegActual > 0) {
+							$empRegular = $ideal;
+							$nmcRegular = $ideal;
+						} else {
+							$empRegular = $isRecoveredLater ? 0 : $ideal;
+							$nmcRegular = $isRecoveredLater ? 0 : $ideal;
+						}
+					} elseif ($salaryType === 'Suplimentory' || $salaryType === 'Supplementary') {
+						if ($empSuppActual > 0) {
+							$empSupp = $ideal;
+							$nmcSupp = $ideal;
+						} else {
+							$empSupp = $isRecoveredLater ? 0 : $ideal;
+							$nmcSupp = $isRecoveredLater ? 0 : $ideal;
+						}
+					} else {
+						if ($empRegActual > 0 || $empSuppActual > 0) {
+							$empRegular = $empRegActual > 0 ? $ideal : 0;
+							$empSupp = $empSuppActual > 0 ? $ideal : 0;
+							$nmcRegular = $empRegActual > 0 ? $ideal : 0;
+							$nmcSupp = $empSuppActual > 0 ? $ideal : 0;
+						} else {
+							$empRegular = $isRecoveredLater ? 0 : $ideal;
+							$nmcRegular = $isRecoveredLater ? 0 : $ideal;
+						}
 					}
 
 					$loanInstallment = !empty($r['loan_installment_paid_through_salary'])
@@ -1352,8 +1384,8 @@ class MisreportModel extends CI_Model
 						$empActual = $empRegular;
 						$nmcActual = $nmcRegular;
 					} else {
-						$empSupp = !empty($r['emp_supplimentory_contribution'])
-							? (int) $r['emp_supplimentory_contribution'] : $ideal;
+						$empSupp = !empty($r['emp_DCPS_supplimentory_contribution'])
+							? (int) $r['emp_DCPS_supplimentory_contribution'] : $ideal;
 						$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
 							? (int) $r['NMC_supplimentory_DCPS_contribution'] : $ideal;
 						$empActual = $empSupp;
@@ -1699,6 +1731,7 @@ class MisreportModel extends CI_Model
 
 		$empBase = $employeeContributionOpening;
 		$nmcBase = $employeeContributionOpening;
+		$recoveredPeriods = $this->_getRecoveredSalaryPeriods($empId);
 
 		$sumEmp = 0;
 		$sumEmpSupp = 0;
@@ -1779,12 +1812,12 @@ class MisreportModel extends CI_Model
 			}
 
 			foreach ($monthRecords as $r) {
-					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
+					if (empty($r) || !isset($r['id'])) {
 						$r = array(
 							'salary_type' => '',
 							'Ideal_contribution_of_employee_for_DCPS' => 0,
 							'emp_DCPS_contribution' => 0,
-							'emp_supplimentory_contribution' => 0,
+							'emp_DCPS_supplimentory_contribution' => 0,
 							'NMC_DCPS_contribution' => 0,
 							'NMC_supplimentory_DCPS_contribution' => 0,
 							'loan_installment_paid_through_salary' => 0,
@@ -1793,9 +1826,18 @@ class MisreportModel extends CI_Model
 						);
 					}
 					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
-					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
-						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
+					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
 						? (int) $r['Ideal_contribution_of_employee_for_DCPS'] : 0;
+
+					$empRegActual = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
+					$empSuppActual = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
+					$nmcRegActual = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : 0;
+					$nmcSuppActual = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+
+					$sDate = trim(isset($r['salary_start_date']) ? $r['salary_start_date'] : '');
+					$eDate = trim(isset($r['salary_end_date']) ? $r['salary_end_date'] : '');
+					$periodKey = ($sDate !== '' && $eDate !== '' && $sDate !== 'No Date') ? ($sDate . '_' . $eDate) : '';
+					$isRecoveredLater = ($periodKey !== '' && isset($recoveredPeriods[$periodKey]));
 
 					$rowEmp = 0;
 					$rowEmpSupp = 0;
@@ -1805,21 +1847,31 @@ class MisreportModel extends CI_Model
 					$rowLoanTaken = 0;
 
 					if ($salaryType === 'Regular') {
-						/*$rowEmp  = !empty($r['emp_DCPS_contribution'])
-						? (int)$r['emp_DCPS_contribution'] : $ideal;
-						$rowNmc  = !empty($r['NMC_DCPS_contribution'])
-						? (int)$r['NMC_DCPS_contribution'] : $ideal;
-						} elseif ($salaryType === 'Suplimentory') {
-						$rowEmpSupp = !empty($r['emp_supplimentory_contribution'])
-						? (int)$r['emp_supplimentory_contribution'] : $ideal;
-						$rowNmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
-						? (int)$r['NMC_supplimentory_DCPS_contribution'] : $ideal;*/
-
-						$rowEmp = $ideal;
-						$rowNmc = $ideal;
-					} elseif ($salaryType === 'Suplimentory') {
-						$rowEmpSupp = $ideal;
-						$rowNmcSupp = $ideal;
+						if ($empRegActual > 0) {
+							$rowEmp = $ideal;
+							$rowNmc = $ideal;
+						} else {
+							$rowEmp = $isRecoveredLater ? 0 : $ideal;
+							$rowNmc = $isRecoveredLater ? 0 : $ideal;
+						}
+					} elseif ($salaryType === 'Suplimentory' || $salaryType === 'Supplementary') {
+						if ($empSuppActual > 0) {
+							$rowEmpSupp = $ideal;
+							$rowNmcSupp = $ideal;
+						} else {
+							$rowEmpSupp = $isRecoveredLater ? 0 : $ideal;
+							$rowNmcSupp = $isRecoveredLater ? 0 : $ideal;
+						}
+					} else {
+						if ($empRegActual > 0 || $empSuppActual > 0) {
+							$rowEmp = $empRegActual > 0 ? $ideal : 0;
+							$rowEmpSupp = $empSuppActual > 0 ? $ideal : 0;
+							$rowNmc = $empRegActual > 0 ? $ideal : 0;
+							$rowNmcSupp = $empSuppActual > 0 ? $ideal : 0;
+						} else {
+							$rowEmp = $isRecoveredLater ? 0 : $ideal;
+							$rowNmc = $isRecoveredLater ? 0 : $ideal;
+						}
 					}
 
 
@@ -2001,6 +2053,7 @@ class MisreportModel extends CI_Model
 
 		$empBase = $opening;
 		$nmcBase = $opening;
+		$recoveredPeriods = $this->_getRecoveredSalaryPeriods($empId);
 
 		$sumEmp = 0;
 		$sumEmpSupp = 0;
@@ -2077,12 +2130,12 @@ class MisreportModel extends CI_Model
 
 			if (!empty($monthRecords)) {
 				foreach ($monthRecords as $r) {
-					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
+					if (empty($r) || !isset($r['id'])) {
 						$r = array(
 							'salary_type' => '',
 							'Ideal_contribution_of_employee_for_DCPS' => 0,
 							'emp_DCPS_contribution' => 0,
-							'emp_supplimentory_contribution' => 0,
+							'emp_DCPS_supplimentory_contribution' => 0,
 							'NMC_DCPS_contribution' => 0,
 							'NMC_supplimentory_DCPS_contribution' => 0,
 							'loan_installment_paid_through_salary' => 0,
@@ -2095,6 +2148,16 @@ class MisreportModel extends CI_Model
 						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
 						? (int) $r['Ideal_contribution_of_employee_for_DCPS'] : 0;
 
+					$empRegActual = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
+					$empSuppActual = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
+					$nmcRegActual = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : 0;
+					$nmcSuppActual = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+
+					$sDate = trim(isset($r['salary_start_date']) ? $r['salary_start_date'] : '');
+					$eDate = trim(isset($r['salary_end_date']) ? $r['salary_end_date'] : '');
+					$periodKey = ($sDate !== '' && $eDate !== '' && $sDate !== 'No Date') ? ($sDate . '_' . $eDate) : '';
+					$isRecoveredLater = ($periodKey !== '' && isset($recoveredPeriods[$periodKey]));
+
 					$rowEmp = 0;
 					$rowEmpSupp = 0;
 					$rowNmc = 0;
@@ -2102,16 +2165,32 @@ class MisreportModel extends CI_Model
 					$rowLoanInst = 0;
 					$rowLoanTaken = 0;
 
-					if ($salaryType === 'Regular' || empty($salaryType)) {
-						$empRegular = !empty($r['emp_DCPS_contribution'])
-							? (int) $r['emp_DCPS_contribution'] : $ideal;
-						$nmcRegular = !empty($r['NMC_DCPS_contribution'])
-							? (int) $r['NMC_DCPS_contribution'] : $ideal;
+					if ($salaryType === 'Regular') {
+						if ($empRegActual > 0) {
+							$rowEmp = $empRegActual;
+							$rowNmc = $nmcRegActual > 0 ? $nmcRegActual : $empRegActual;
+						} else {
+							$rowEmp = $isRecoveredLater ? 0 : $ideal;
+							$rowNmc = $isRecoveredLater ? 0 : $ideal;
+						}
+					} elseif ($salaryType === 'Suplimentory' || $salaryType === 'Supplementary') {
+						if ($empSuppActual > 0) {
+							$rowEmpSupp = $empSuppActual;
+							$rowNmcSupp = $nmcSuppActual > 0 ? $nmcSuppActual : $empSuppActual;
+						} else {
+							$rowEmpSupp = $isRecoveredLater ? 0 : $ideal;
+							$rowNmcSupp = $isRecoveredLater ? 0 : $ideal;
+						}
 					} else {
-						$empSupp = !empty($r['emp_supplimentory_contribution'])
-							? (int) $r['emp_supplimentory_contribution'] : $ideal;
-						$nmcSupp = !empty($r['NMC_supplimentory_DCPS_contribution'])
-							? (int) $r['NMC_supplimentory_DCPS_contribution'] : $ideal;
+						if ($empRegActual > 0 || $empSuppActual > 0) {
+							$rowEmp = $empRegActual;
+							$rowEmpSupp = $empSuppActual;
+							$rowNmc = $nmcRegActual > 0 ? $nmcRegActual : $empRegActual;
+							$rowNmcSupp = $nmcSuppActual > 0 ? $nmcSuppActual : $empSuppActual;
+						} else {
+							$rowEmp = $isRecoveredLater ? 0 : $ideal;
+							$rowNmc = $isRecoveredLater ? 0 : $ideal;
+						}
 					}
 
 
@@ -2517,6 +2596,7 @@ class MisreportModel extends CI_Model
 			// Seed interest bases from ecOpening (matching getFinalLedgerCumulativeRows)
 			$empBase = $ecOpening;
 			$nmcBase = $ecOpening;
+			$recoveredPeriods = $this->_getRecoveredSalaryPeriods($empId);
 
 			$sumEmp = 0;
 			$sumEmpSupp = 0;
@@ -2567,13 +2647,12 @@ class MisreportModel extends CI_Model
 				}
 
 				foreach ($monthRecords as $r) {
-					// Zero-salary guard (matching getFinalLedgerCumulativeRows)
-					if($r['basic'] == 0 && $r['da'] == 0 && $r['grade_pay'] == 0) {
+					if (empty($r) || !isset($r['id'])) {
 						$r = array(
 							'salary_type' => '',
 							'Ideal_contribution_of_employee_for_DCPS' => 0,
 							'emp_DCPS_contribution' => 0,
-							'emp_supplimentory_contribution' => 0,
+							'emp_DCPS_supplimentory_contribution' => 0,
 							'NMC_DCPS_contribution' => 0,
 							'NMC_supplimentory_DCPS_contribution' => 0,
 							'loan_installment_paid_through_salary' => 0,
@@ -2583,9 +2662,18 @@ class MisreportModel extends CI_Model
 					}
 					
 					$salaryType = isset($r['salary_type']) ? (string) $r['salary_type'] : '';
-					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS'])
-						&& $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
+					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
 						? (int) $r['Ideal_contribution_of_employee_for_DCPS'] : 0;
+
+					$empRegActual = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
+					$empSuppActual = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
+					$nmcRegActual = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : 0;
+					$nmcSuppActual = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+
+					$sDate = trim(isset($r['salary_start_date']) ? $r['salary_start_date'] : '');
+					$eDate = trim(isset($r['salary_end_date']) ? $r['salary_end_date'] : '');
+					$periodKey = ($sDate !== '' && $eDate !== '' && $sDate !== 'No Date') ? ($sDate . '_' . $eDate) : '';
+					$isRecoveredLater = ($periodKey !== '' && isset($recoveredPeriods[$periodKey]));
 
 					$rowEmp = 0;
 					$rowEmpSupp = 0;
@@ -2595,11 +2683,31 @@ class MisreportModel extends CI_Model
 					$rowLoanTaken = 0;
 
 					if ($salaryType === 'Regular') {
-						$rowEmp = $ideal;
-						$rowNmc = $ideal;
-					} elseif ($salaryType === 'Suplimentory') {
-						$rowEmpSupp = $ideal;
-						$rowNmcSupp = $ideal;
+						if ($empRegActual > 0) {
+							$rowEmp = $ideal;
+							$rowNmc = $ideal;
+						} else {
+							$rowEmp = $isRecoveredLater ? 0 : $ideal;
+							$rowNmc = $isRecoveredLater ? 0 : $ideal;
+						}
+					} elseif ($salaryType === 'Suplimentory' || $salaryType === 'Supplementary') {
+						if ($empSuppActual > 0) {
+							$rowEmpSupp = $ideal;
+							$rowNmcSupp = $ideal;
+						} else {
+							$rowEmpSupp = $isRecoveredLater ? 0 : $ideal;
+							$rowNmcSupp = $isRecoveredLater ? 0 : $ideal;
+						}
+					} else {
+						if ($empRegActual > 0 || $empSuppActual > 0) {
+							$rowEmp = $empRegActual > 0 ? $ideal : 0;
+							$rowEmpSupp = $empSuppActual > 0 ? $ideal : 0;
+							$rowNmc = $empRegActual > 0 ? $ideal : 0;
+							$rowNmcSupp = $empSuppActual > 0 ? $ideal : 0;
+						} else {
+							$rowEmp = $isRecoveredLater ? 0 : $ideal;
+							$rowNmc = $isRecoveredLater ? 0 : $ideal;
+						}
 					}
 
 					$rowLoanInst = !empty($r['loan_installment_paid_through_salary'])
