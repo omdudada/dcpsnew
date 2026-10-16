@@ -946,7 +946,7 @@ class MisreportModel extends CI_Model
 
 			$empBase = (int) $opening;
 			$nmcBase = (int) $opening;
-			$totalBase = (int) $opening;
+			$totalBase = $empBase + $nmcBase;
 
 			$totals = array(
 				'emp_regular' => 0,
@@ -956,6 +956,9 @@ class MisreportModel extends CI_Model
 				'loan_installment' => 0,
 				'total_deposit' => 0,
 				'loan_taken' => 0,
+				'emp_base' => 0,
+				'nmc_base' => 0,
+				'total_base' => 0,
 				'emp_interest' => 0,
 				'nmc_interest' => 0,
 				'total_interest' => 0,
@@ -1099,7 +1102,7 @@ class MisreportModel extends CI_Model
 					// ── Update bases PER RECORD (continuous carry-forward) ─────────
 					$empBase = ($empBase + $empRegular + $empSupp + $loanInstallment) - $loanTaken;
 					$nmcBase = ($nmcBase + $nmcRegular + $nmcSupp);
-					$totalBase = ($totalBase + $totalDeposit) - $loanTaken;
+					$totalBase = ($empBase + $nmcBase);
 
 					// ── Interest calculated on updated base AFTER EACH RECORD ────
 					$rowEmpInterest = round((($empBase * $rate) / 100 / 12), 0);
@@ -1134,7 +1137,7 @@ class MisreportModel extends CI_Model
 						'loan_taken' => $loanTaken,
 						'emp_base' => $empBase,
 						'nmc_base' => $nmcBase,
-						'total_base' => $totalBase,
+						'total_base' => ($empBase + $nmcBase),
 						'emp_interest' => $rowEmpInterest,
 						'nmc_interest' => $rowNmcInterest,
 						'total_interest' => ($rowEmpInterest + $rowNmcInterest),
@@ -1154,6 +1157,9 @@ class MisreportModel extends CI_Model
 					$totals['loan_installment'] += $loanInstallment;
 					$totals['total_deposit'] += $totalDeposit;
 					$totals['loan_taken'] += $loanTaken;
+					$totals['emp_base'] += $empBase;
+					$totals['nmc_base'] += $nmcBase;
+					$totals['total_base'] += ($empBase + $nmcBase);
 					$totals['emp_interest'] += $rowEmpInterest;
 					$totals['nmc_interest'] += $rowNmcInterest;
 					$totals['total_interest'] += ($rowEmpInterest + $rowNmcInterest);
@@ -1581,15 +1587,15 @@ class MisreportModel extends CI_Model
 		$firstYear = (int) $firstYear;
 
 		if ($empId <= 0 || $firstYear <= 2005) {
-			return 0;
+			return array(0, 0);
 		}
 
 		static $closingCache = array();   // [empId][fyStart] => main closing (carry forward only)
 		static $ecClosingCache = array(); // [empId][fyStart] => employee contribution closing
 
 		$targetFYStart = $firstYear - 1;
-		if (isset($ecClosingCache[$empId][$targetFYStart])) {
-			return (int) $ecClosingCache[$empId][$targetFYStart];
+		if (isset($closingCache[$empId][$targetFYStart]) && isset($ecClosingCache[$empId][$targetFYStart])) {
+			return array((int) $closingCache[$empId][$targetFYStart], (int) $ecClosingCache[$empId][$targetFYStart]);
 		}
 
 		$opening = 0;
@@ -1835,10 +1841,10 @@ class MisreportModel extends CI_Model
 					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
 						? (int) $r['Ideal_contribution_of_employee_for_DCPS'] : 0;
 
-					$empRegActual = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
-					$empSuppActual = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
-					$nmcRegActual = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : 0;
-					$nmcSuppActual = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+					$empRegActual = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : $ideal;
+					$empSuppActual = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : $ideal;
+					$nmcRegActual = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : $ideal;
+					$nmcSuppActual = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : $ideal;
 
 					$sDate = trim(isset($r['salary_start_date']) ? $r['salary_start_date'] : '');
 					$eDate = trim(isset($r['salary_end_date']) ? $r['salary_end_date'] : '');
@@ -1989,12 +1995,8 @@ class MisreportModel extends CI_Model
 
 		
 		// ── Employee Contribution running balance (carry-forward) ──────────────
-		// ecClosing = current FY's employee deposits + current FY's employee interest.
-		// The prior ecOpening is intentionally excluded from ecClosing so it does NOT
-		// compound into the base for the next year. The prior ecOpening IS used above
-		// to seed $empBase (so interest this FY is computed on the full running balance),
-		// but only the current year's new increments carry forward as next year's opening.
-		$employeeContributionClosing = (int) (($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken + $totalEmpInterest);
+		// ecClosing = employee contribution opening + current FY's employee deposits + current FY's employee interest.
+		$employeeContributionClosing = (int) ($employeeContributionOpening + ($sumEmp + $sumEmpSupp + $sumLoanInst) - $sumLoanTaken + $totalEmpInterest);
 
 		/*file_put_contents($_dbg_model_log,
 		"[MODEL-COMPUTE] FY: {$_dbg_fy_label}  EmpId: {$empId}" .

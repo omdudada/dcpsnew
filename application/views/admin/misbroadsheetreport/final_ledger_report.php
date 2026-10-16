@@ -433,7 +433,7 @@
                                                     <td style="text-align:right;"><?= _n0($row['loan_taken']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['emp_base']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['nmc_base']); ?></td>
-                                                    <td style="text-align:right;"><?= _n0($row['total_base']); ?></td>
+                                                    <td style="text-align:right;"><?= _n0((int)$row['emp_base'] + (int)$row['nmc_base']); ?></td>
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['emp_interest']); ?></td>
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['nmc_interest']); ?></td>
                                                     <td style="text-align:right; font-weight:600;"><?= _n0($row['total_interest']); ?></td>
@@ -453,7 +453,7 @@
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['loan_taken']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_base']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['nmc_base']); ?></strong></td>
-                                                <td style="text-align:right;"><strong><?= _n0($totShow['total_base']); ?></strong></td>
+                                                <td style="text-align:right;"><strong><?= _n0((int)$totShow['emp_base'] + (int)$totShow['nmc_base']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['emp_interest']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['nmc_interest']); ?></strong></td>
                                                 <td style="text-align:right;"><strong><?= _n0($totShow['total_interest']); ?></strong></td>
