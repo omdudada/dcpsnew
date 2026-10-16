@@ -882,6 +882,8 @@ class MisreportModel extends CI_Model
 		}
 
 		$dcpsRows = $this->getdcpsAllDetailsForFinalLedger($data);
+		
+		//echo "<pre>"; print_r($dcpsRows); exit;
 
 		$byEmpMonth = array();
 		$empIds = array();
@@ -1018,6 +1020,10 @@ class MisreportModel extends CI_Model
 
 				$monthEmpInterest = 0;
 				$monthNmcInterest = 0;
+				
+				if($m == 6){
+				    //echo "<pre>"; print_r($monthRecords); exit;
+				}
 
 				foreach ($monthRecords as $r) {		
 					if (empty($r) || !isset($r['id'])) {
@@ -1038,10 +1044,10 @@ class MisreportModel extends CI_Model
 					$ideal = isset($r['Ideal_contribution_of_employee_for_DCPS']) && $r['Ideal_contribution_of_employee_for_DCPS'] !== ''
 						? (int) $r['Ideal_contribution_of_employee_for_DCPS'] : 0;
 
-					$empRegActual = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : 0;
-					$empSuppActual = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : 0;
-					$nmcRegActual = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : 0;
-					$nmcSuppActual = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : 0;
+					$empRegActual = !empty($r['emp_DCPS_contribution']) ? (int)$r['emp_DCPS_contribution'] : $ideal;
+					$empSuppActual = !empty($r['emp_DCPS_supplimentory_contribution']) ? (int)$r['emp_DCPS_supplimentory_contribution'] : $ideal;
+					$nmcRegActual = !empty($r['NMC_DCPS_contribution']) ? (int)$r['NMC_DCPS_contribution'] : $ideal;
+					$nmcSuppActual = !empty($r['NMC_supplimentory_DCPS_contribution']) ? (int)$r['NMC_supplimentory_DCPS_contribution'] : $ideal;
 
 					$sDate = trim(isset($r['salary_start_date']) ? $r['salary_start_date'] : '');
 					$eDate = trim(isset($r['salary_end_date']) ? $r['salary_end_date'] : '');

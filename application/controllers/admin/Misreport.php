@@ -266,7 +266,7 @@
 				
 				$dcpsDetails = $this->mrModel->getdcpsDetailsNewFinalLedger($searchData);
 				
-				if(!empty($dcpsDetails) && $searchData['emp_id'] == 9719){
+				if(!empty($dcpsDetails) && $searchData['emp_id'] == 9255){
 				    //echo $this->db->last_query(); exit;
 					//echo "<pre>"; print_r($dcpsDetails); exit;
 				}
@@ -282,8 +282,7 @@
                 
                     // If you want integer month: 8 instead of 08
                     $voucherMonth = $voucherDate ? (int)$voucherDate->format('m') : null;
-					//$data['dcpsDetails'][$dcpsDetail['emp_td']][$voucherMonth][] = $dcpsDetail;
-					$data['dcpsDetails'][$dcpsDetail['emp_td']][$dcpsDetail['for_month']] = $dcpsDetail;
+					$data['dcpsDetails'][$dcpsDetail['emp_td']][$voucherMonth][] = $dcpsDetail;
 					if (!in_array($dcpsDetail['emp_td'], $processedEmpTDs)) {
 						$data['ownerDetails'][$dcpsDetail['emp_td']] = [
                         'emp_id' => $dcpsDetail['emp_td'],
@@ -322,7 +321,7 @@
 			}
 			
 			$this->load->view('admin/common/header');
-			if($searchData['emp_id'] == 9719){
+			if($searchData['emp_id'] == 8866){
 			    //echo "<pre>"; print_r($data); exit; 
 			}
 			$this->load->view('admin/misbroadsheetreport/final_ledger_report',$data);

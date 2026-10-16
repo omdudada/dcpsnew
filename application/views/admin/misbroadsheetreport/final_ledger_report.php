@@ -430,13 +430,13 @@
                                                     <td style="text-align:right; font-weight:600;"><?= _n0((int)$row['nmc_regular'] + (int)$row['nmc_supp']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['loan_installment']); ?></td>
                                                     <td style="text-align:right;"><?= _n0($row['total_deposit']); ?></td>
-                                                    <td style="text-align:right;"><?= _n0(($row['total_deposit']>0 )?$row['loan_taken']:0); ?></td>
-                                                    <td style="text-align:right;"><?= _n0(($row['total_deposit']>0 )?$row['emp_base']:0); ?></td>
-                                                    <td style="text-align:right;"><?= _n0(($row['total_deposit']>0 )?$row['nmc_base']:0); ?></td>
-                                                    <td style="text-align:right;"><?= _n0(($row['total_deposit']>0 )?$row['total_base']:0); ?></td>
-                                                    <td style="text-align:right; font-weight:600;"><?= _n0(($row['total_deposit']>0 )?$row['emp_interest']:0); ?></td>
-                                                    <td style="text-align:right; font-weight:600;"><?= _n0(($row['total_deposit']>0 )?$row['nmc_interest']:0); ?></td>
-                                                    <td style="text-align:right; font-weight:600;"><?= _n0(($row['total_deposit']>0 )?$row['total_interest']:0); ?></td>
+                                                    <td style="text-align:right;"><?= _n0($row['loan_taken']); ?></td>
+                                                    <td style="text-align:right;"><?= _n0($row['emp_base']); ?></td>
+                                                    <td style="text-align:right;"><?= _n0($row['nmc_base']); ?></td>
+                                                    <td style="text-align:right;"><?= _n0($row['total_base']); ?></td>
+                                                    <td style="text-align:right; font-weight:600;"><?= _n0($row['emp_interest']); ?></td>
+                                                    <td style="text-align:right; font-weight:600;"><?= _n0($row['nmc_interest']); ?></td>
+                                                    <td style="text-align:right; font-weight:600;"><?= _n0($row['total_interest']); ?></td>
                                                     <td><?= htmlspecialchars($rateLabel); ?></td>
                                                 </tr>
                                             <?php } ?>
